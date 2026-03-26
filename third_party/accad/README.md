@@ -19,3 +19,9 @@ Why these were selected:
 - `Wait`: the most obviously idle-adjacent loop candidate in the package
 
 These are raw BVH source files. This repository does not currently load BVH directly; convert or retarget them before runtime use.
+
+Converted VRMA outputs generated on 2026-03-27 with the official `vrm-c/bvh2vrma` tool (MIT), using `scale = 0.01`:
+
+- `public/motions/accad_female1_stand.vrma`
+- `public/motions/accad_female1_sway.vrma`
+- `public/motions/accad_female1_wait.vrma`

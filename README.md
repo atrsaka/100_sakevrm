@@ -1,37 +1,71 @@
-# GeminiVRM
+<div align="center">
+  <img src="./public/repo-hero.svg" alt="GeminiVRM hero" width="960" />
+  <h1>GeminiVRM</h1>
+  <p>Browser-first VRM chat powered by Gemini Live native audio.</p>
+  <p>
+    <a href="https://github.com/Sunwood-ai-labs/GeminiVRM/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Sunwood-ai-labs/GeminiVRM/ci.yml?branch=main&label=ci" /></a>
+    <a href="./LICENSE"><img alt="License" src="https://img.shields.io/github/license/Sunwood-ai-labs/GeminiVRM" /></a>
+    <img alt="Next.js" src="https://img.shields.io/badge/Next.js-15-black" />
+    <img alt="Gemini Live" src="https://img.shields.io/badge/Gemini-Live-2F7CF6" />
+    <img alt="VRM" src="https://img.shields.io/badge/VRM-Avatar-00B894" />
+  </p>
+  <p>
+    <strong>Languages</strong><br />
+    <a href="./README.md">English</a> |
+    <a href="./README.ja.md">日本語</a>
+  </p>
+</div>
 
-`GeminiVRM` is a `ChatVRM`-based browser app that makes a VRM avatar answer with `Gemini Live` native audio.
+## ✨ Overview
 
-## What changed
+GeminiVRM is a polished fork of [`pixiv/ChatVRM`](https://github.com/pixiv/ChatVRM) that replaces the old OpenAI + Koeiromap response path with Gemini Live native audio while keeping the browser-first VRM experience intact.
 
-- Kept the original browser VRM viewer and speech-to-text input flow from [`pixiv/ChatVRM`](https://github.com/pixiv/ChatVRM).
-- Replaced the old `OpenAI + Koeiromap` response path with `Gemini Live`.
-- Switched Gemini audio playback to streamed PCM scheduling so the avatar can start speaking before the full turn finishes.
+The current build focuses on:
 
-## Features
+- streamed Gemini Live audio playback so the avatar starts speaking before the full turn finishes
+- a default `public/Kiyoka.vrm` model and configurable Gemini voice presets
+- a local-first workflow where you can run everything in the browser with your own Gemini API key
 
-- Start with the bundled `public/Kiyoka.vrm` avatar, or load a local `.vrm` file in the browser.
-- Type a prompt or dictate it with the browser microphone.
-- Receive a streamed Gemini Live transcript while the response is being generated.
-- Start VRM lip sync playback from streamed Gemini Live audio chunks as they arrive.
-- Change the live model, Gemini voice preset, and system prompt from the UI.
+## ✨ Features
 
-## Setup
+- Stream Gemini Live transcript and audio in the browser
+- Start with `public/Kiyoka.vrm` or load your own local `.vrm`
+- Change the live model, prebuilt voice, and system prompt from the UI
+- Reuse the existing VRM lip-sync pipeline with chunked PCM scheduling
+- Run a lightweight smoke E2E check with Playwright
+- Publish the static app to GitHub Pages
+
+## 🧱 Tech Stack
+
+- Next.js 15
+- React 18
+- `@google/genai`
+- `@pixiv/three-vrm`
+- TypeScript
+- Tailwind CSS
+- Playwright
+
+## 🚀 Quick Start
 
 ```bash
 npm install
-npm run dev
-npm run e2e:smoke
+npm run dev -- --hostname 127.0.0.1 --port 3100
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://127.0.0.1:3100](http://127.0.0.1:3100), paste a Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey), and press `Start`.
 
-## Usage
+## 🔐 Environment Variables
 
-1. Paste your Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey).
-2. Leave the default live model as-is first.
-3. Start chatting with the default `Kiyoka.vrm` avatar, or load another VRM from the settings panel.
-4. Send a text prompt or use the microphone button.
+See [.env.example](./.env.example).
+
+- `NEXT_PUBLIC_GEMINI_API_KEY`
+  - Optional local default key for browser use
+- `BASE_PATH`
+  - Optional prefix for GitHub Pages or subpath deployments
+- `NEXT_PUBLIC_GEMINI_LIVE_MODEL`
+  - Optional default model shown in the UI
+- `NEXT_PUBLIC_GEMINI_LIVE_VOICE`
+  - Optional default Gemini prebuilt voice name
 
 If the default preview alias is not available for your account, switch the model to:
 
@@ -39,25 +73,66 @@ If the default preview alias is not available for your account, switch the model
 gemini-2.5-flash-native-audio-preview-12-2025
 ```
 
-## Environment variables
+## 🕹️ How To Use
 
-See [.env.example](./.env.example).
+1. Launch the app and enter a Gemini API key.
+2. Keep the default `Kiyoka.vrm` model or load another VRM from `Settings`.
+3. Send a text prompt or use the microphone button.
+4. Adjust the live model, voice preset, and system prompt as needed.
 
-- `BASE_PATH`
-  - Optional prefix for GitHub Pages or subpath deployment.
-- `NEXT_PUBLIC_GEMINI_LIVE_MODEL`
-  - Optional default model shown in the UI.
-- `NEXT_PUBLIC_GEMINI_LIVE_VOICE`
-  - Optional default Gemini prebuilt voice name.
+## 🏗️ Project Structure
 
-## Verification
+```text
+public/                     Static VRM, images, and social assets
+scripts/e2e-smoke.mjs       Lightweight browser smoke test
+src/components/             UI components
+src/features/chat/          Gemini Live transport and config
+src/features/lipSync/       Audio playback and analysis
+src/features/vrmViewer/     Viewer and model runtime
+docs/                       Architecture, deployment, and QA notes
+```
+
+## 📚 Documentation
+
+- [Architecture notes](./docs/architecture.md)
+- [Deployment guide](./docs/deployment.md)
+- [Repository QA inventory](./docs/repository-qa-inventory.md)
+
+## 🧪 Verification
 
 ```bash
+npm run verify
+```
+
+or run each step manually:
+
+```bash
+npm run lint
 npm run build
 npm run e2e:smoke
 ```
 
-## Notes
+The smoke test checks that the local app boots, sends a prompt, stores an assistant response, and avoids known chunk/icon/fallback request failures.
 
-- This app currently sends the Gemini API key from the browser, matching the original local-first ChatVRM setup style.
-- Old `/api/chat` and `/api/tts` routes were removed because Gemini Live now handles the response audio path directly.
+## 🌐 Deployment
+
+The repository is prepared for GitHub Pages deployment through GitHub Actions.
+
+- Static export uses `BASE_PATH` for subpath hosting
+- `NEXT_EXPORT=true` enables a Pages-ready static build
+- Pages artifacts are produced from the app itself
+- CI validates lint, build, and smoke E2E on every push and pull request
+
+For step-by-step instructions, see [docs/deployment.md](./docs/deployment.md).
+
+## ⚠️ Security Notes
+
+- This project currently sends the Gemini API key from the browser, matching the original local-first ChatVRM setup style.
+- For public production deployments, prefer a token relay or another server-side key handling strategy.
+
+## 🙏 Acknowledgements
+
+- [`pixiv/ChatVRM`](https://github.com/pixiv/ChatVRM)
+- [`@pixiv/three-vrm`](https://github.com/pixiv/three-vrm)
+- [Gemini Live API](https://ai.google.dev/gemini-api/docs/live-api)
+- [`@google/genai`](https://www.npmjs.com/package/@google/genai)

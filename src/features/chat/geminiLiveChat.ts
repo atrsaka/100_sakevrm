@@ -10,6 +10,7 @@ import {
   DEFAULT_GEMINI_LIVE_MODEL,
   FALLBACK_GEMINI_LIVE_MODEL,
   DEFAULT_GEMINI_VOICE_NAME,
+  resolveGeminiVoiceName,
 } from "./geminiLiveConfig";
 
 type WavConversionOptions = {
@@ -98,6 +99,7 @@ async function runGeminiLiveChat({
   let audioMimeType = "";
   let transcript = "";
   let turnSettled = false;
+  const resolvedVoiceName = resolveGeminiVoiceName(voiceName);
 
   let resolveTurn!: () => void;
   let rejectTurn!: (error: Error) => void;
@@ -151,7 +153,7 @@ async function runGeminiLiveChat({
       speechConfig: {
         voiceConfig: {
           prebuiltVoiceConfig: {
-            voiceName,
+            voiceName: resolvedVoiceName,
           },
         },
       },

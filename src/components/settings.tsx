@@ -3,7 +3,10 @@ import { IconButton } from "./iconButton";
 import { TextButton } from "./textButton";
 import { Link } from "./link";
 import { Message } from "@/features/messages/messages";
-import { GEMINI_VOICE_PRESETS } from "@/features/chat/geminiLiveConfig";
+import {
+  DEFAULT_GEMINI_VOICE_NAME,
+  GEMINI_VOICE_PRESETS,
+} from "@/features/chat/geminiLiveConfig";
 
 type Props = {
   geminiApiKey: string;
@@ -27,7 +30,7 @@ export const Settings = ({
   geminiModel,
   geminiVoiceName,
   systemPrompt,
-    chatLog,
+  chatLog,
   onClickClose,
   onChangeGeminiApiKey,
   onChangeGeminiModel,
@@ -47,6 +50,7 @@ export const Settings = ({
       <div className="absolute m-24">
         <IconButton
           iconName="24/Close"
+          label="Close settings"
           isProcessing={false}
           onClick={onClickClose}
         />
@@ -130,13 +134,18 @@ export const Settings = ({
                 onChangeGeminiVoiceName(selectedVoice);
               }}
             >
-              <option value="__custom__">カスタム入力</option>
+              <option value="__custom__">Custom voice</option>
               {GEMINI_VOICE_PRESETS.map((voiceName) => (
                 <option key={voiceName} value={voiceName}>
                   {voiceName}
                 </option>
               ))}
             </select>
+            <div className="mt-8 text-sm">
+              Pick a preset voice, or switch to Custom voice and enter a
+              prebuilt voice name manually. Blank custom input falls back to
+              `{DEFAULT_GEMINI_VOICE_NAME}`.
+            </div>
             {!isPresetVoice && (
               <div className="mt-8">
                 <label
@@ -200,9 +209,9 @@ export const Settings = ({
                   <div
                     key={index}
                     className="my-8 grid grid-flow-col grid-cols-[min-content_1fr] gap-x-fixed"
-                    >
-                      <div className="w-[80px] py-8">
-                        {value.role === "assistant"
+                  >
+                    <div className="w-[80px] py-8">
+                      {value.role === "assistant"
                         ? "Assistant"
                         : value.role === "system"
                           ? "System"

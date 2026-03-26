@@ -14,3 +14,8 @@ export const GEMINI_VOICE_PRESETS = [
   "Leda",
   "Fenrir",
 ] as const;
+
+export function resolveGeminiVoiceName(voiceName?: string) {
+  const trimmedVoiceName = voiceName?.trim();
+  return trimmedVoiceName || DEFAULT_GEMINI_VOICE_NAME;
+}

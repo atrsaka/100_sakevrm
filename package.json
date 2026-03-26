@@ -10,7 +10,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@charcoal-ui/icons": "^2.6.0",
     "@google/genai": "^1.46.0",
     "@tailwindcss/line-clamp": "^0.4.4",
     "@types/dom-speech-recognition": "^0.0.1",

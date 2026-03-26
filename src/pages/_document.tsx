@@ -15,6 +15,10 @@ export default function Document() {
           href="https://fonts.googleapis.com/css2?family=M+PLUS+2&family=Montserrat&display=swap"
           rel="stylesheet"
         />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1&icon_names=chat_bubble,close,menu,mic,more_horiz,send&display=block"
+          rel="stylesheet"
+        />
       </Head>
       <body style={{ backgroundImage: `url(${buildUrl("/bg-d.png")})` }}>
         <Main />

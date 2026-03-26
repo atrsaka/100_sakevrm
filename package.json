@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next build && next start",
     "export": "next export",
-    "lint": "next lint"
+    "lint": "next lint",
+    "e2e:smoke": "node scripts/e2e-smoke.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.46.0",

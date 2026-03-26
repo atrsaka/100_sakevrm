@@ -21,6 +21,7 @@
 ```bash
 npm install
 npm run dev
+npm run e2e:smoke
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
@@ -53,6 +54,7 @@ See [.env.example](./.env.example).
 
 ```bash
 npm run build
+npm run e2e:smoke
 ```
 
 ## Notes

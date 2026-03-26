@@ -112,7 +112,7 @@ npm run build
 npm run e2e:smoke
 ```
 
-smoke E2E では、ローカル起動、プロンプト送信、assistant 応答保存、既知の chunk/icon/fallback 系エラーの不在を確認します。
+smoke E2E では、アプリ起動、送信導線、既知の chunk/icon/fallback 系エラーの不在を確認します。Gemini API key がない環境では、missing-key エラー表示も合格扱いです。
 
 ## 🌐 デプロイ
 

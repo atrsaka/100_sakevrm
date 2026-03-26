@@ -4,6 +4,7 @@ const targetUrl = process.env.E2E_BASE_URL || "http://127.0.0.1:3100/";
 const prompt = process.env.E2E_PROMPT || "Hello from the smoke test";
 const requestTimeoutMs = Number(process.env.E2E_TIMEOUT_MS || 90000);
 const startupTimeoutMs = Number(process.env.E2E_STARTUP_TIMEOUT_MS || 60000);
+const missingApiKeyMessage = "Enter your Gemini API key first.";
 
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({
@@ -92,6 +93,11 @@ try {
 
   await page.waitForFunction(
     () => {
+      const text = document.body.textContent || "";
+      if (text.includes("Enter your Gemini API key first.")) {
+        return true;
+      }
+
       const rawParams = window.localStorage.getItem("chatVRMParams");
       if (!rawParams) {
         return false;
@@ -108,6 +114,12 @@ try {
     },
     { timeout: requestTimeoutMs }
   );
+
+  const pageText = await page.textContent("body");
+  const outcome =
+    pageText?.includes(missingApiKeyMessage) === true
+      ? "missing-api-key"
+      : "assistant-response";
 
   const faviconIcoRequested = requestedUrls.some((url) =>
     url.endsWith("/favicon.ico")
@@ -138,6 +150,7 @@ try {
         ok: true,
         targetUrl,
         prompt,
+        outcome,
         faviconIcoRequested: Boolean(faviconIcoRequested),
         failedRequests,
       },

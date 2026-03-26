@@ -112,7 +112,7 @@ npm run build
 npm run e2e:smoke
 ```
 
-The smoke test checks that the local app boots, sends a prompt, stores an assistant response, and avoids known chunk/icon/fallback request failures.
+The smoke test checks that the app boots, the send flow works, and known chunk/icon/fallback request failures stay absent. When no Gemini API key is present, the missing-key error path is treated as a valid smoke outcome.
 
 ## 🌐 Deployment
 

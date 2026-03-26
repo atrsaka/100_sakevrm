@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="gemini-vrm-favicon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2F7CF6" />
+      <stop offset="100%" stop-color="#00B894" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#gemini-vrm-favicon-gradient)" />
+  <path
+    d="M18 22c0-4.418 3.582-8 8-8h12c4.418 0 8 3.582 8 8v10c0 4.418-3.582 8-8 8h-8.2l-8.4 7V40H26c-4.418 0-8-3.582-8-8V22Z"
+    fill="#ffffff"
+    fill-opacity="0.96"
+  />
+  <circle cx="28" cy="27" r="2.5" fill="#2F7CF6" />
+  <circle cx="36" cy="27" r="2.5" fill="#2F7CF6" />
+  <path
+    d="M27.5 33c1.3 1.7 3 2.5 4.5 2.5s3.2-.8 4.5-2.5"
+    fill="none"
+    stroke="#2F7CF6"
+    stroke-linecap="round"
+    stroke-width="2.5"
+  />
+</svg>

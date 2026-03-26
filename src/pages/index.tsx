@@ -13,6 +13,7 @@ import {
   DEFAULT_GEMINI_LIVE_MODEL,
   DEFAULT_GEMINI_VOICE_NAME,
 } from "@/features/chat/geminiLiveConfig";
+import { getGeminiLiveChatResponse } from "@/features/chat/geminiLiveChat";
 
 export default function Home() {
   const { viewer } = useContext(ViewerContext);
@@ -93,10 +94,6 @@ export default function Home() {
       setChatLog(messageLog);
 
       try {
-        const { getGeminiLiveChatResponse } = await import(
-          "@/features/chat/geminiLiveChat"
-        );
-
         const response = await getGeminiLiveChatResponse({
           apiKey: geminiApiKey,
           messages: messageLog,

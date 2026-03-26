@@ -13,16 +13,14 @@ import {
   resolveGeminiVoiceName,
 } from "./geminiLiveConfig";
 
-type WavConversionOptions = {
-  numChannels: number;
-  sampleRate: number;
-  bitsPerSample: number;
-};
-
 export type GeminiLiveChatResponse = {
   transcript: string;
-  audioBuffer: ArrayBuffer;
   audioMimeType: string;
+};
+
+export type GeminiLiveAudioChunk = {
+  data: Uint8Array;
+  mimeType: string;
 };
 
 type GeminiLiveChatParams = {
@@ -32,6 +30,7 @@ type GeminiLiveChatParams = {
   model?: string;
   voiceName?: string;
   onPartialTranscript?: (transcript: string) => void;
+  onAudioChunk?: (chunk: GeminiLiveAudioChunk) => void;
 };
 
 export async function getGeminiLiveChatResponse({
@@ -41,16 +40,29 @@ export async function getGeminiLiveChatResponse({
   model = DEFAULT_GEMINI_LIVE_MODEL,
   voiceName = DEFAULT_GEMINI_VOICE_NAME,
   onPartialTranscript,
+  onAudioChunk,
 }: GeminiLiveChatParams): Promise<GeminiLiveChatResponse> {
   if (!apiKey) {
     throw new Error("Gemini API key is required.");
   }
+
+  let primaryStreamStarted = false;
+  const handlePrimaryAudioChunk = onAudioChunk
+    ? (chunk: GeminiLiveAudioChunk) => {
+        primaryStreamStarted = true;
+        onAudioChunk(chunk);
+      }
+    : (chunk: GeminiLiveAudioChunk) => {
+        primaryStreamStarted = true;
+        void chunk;
+      };
 
   try {
     return await runGeminiLiveChat({
       apiKey,
       messages,
       model,
+      onAudioChunk: handlePrimaryAudioChunk,
       onPartialTranscript,
       systemPrompt,
       voiceName,
@@ -58,7 +70,8 @@ export async function getGeminiLiveChatResponse({
   } catch (primaryError) {
     if (
       model !== DEFAULT_GEMINI_LIVE_MODEL ||
-      model === FALLBACK_GEMINI_LIVE_MODEL
+      model === FALLBACK_GEMINI_LIVE_MODEL ||
+      primaryStreamStarted
     ) {
       throw primaryError;
     }
@@ -68,6 +81,7 @@ export async function getGeminiLiveChatResponse({
         apiKey,
         messages,
         model: FALLBACK_GEMINI_LIVE_MODEL,
+        onAudioChunk,
         onPartialTranscript,
         systemPrompt,
         voiceName,
@@ -84,22 +98,24 @@ async function runGeminiLiveChat({
   systemPrompt,
   model,
   voiceName,
+  onAudioChunk,
   onPartialTranscript,
 }: Required<
   Pick<GeminiLiveChatParams, "apiKey" | "messages" | "systemPrompt" | "model" | "voiceName">
 > &
-  Pick<GeminiLiveChatParams, "onPartialTranscript">
+  Pick<GeminiLiveChatParams, "onAudioChunk" | "onPartialTranscript">
 ): Promise<GeminiLiveChatResponse> {
   const ai = new GoogleGenAI({
     apiKey,
     apiVersion: "v1alpha",
   });
 
-  const audioParts: string[] = [];
   let audioMimeType = "";
   let transcript = "";
   let turnSettled = false;
+  let hasReceivedAudio = false;
   const resolvedVoiceName = resolveGeminiVoiceName(voiceName);
+  let session: Awaited<ReturnType<typeof ai.live.connect>> | undefined;
 
   let resolveTurn!: () => void;
   let rejectTurn!: (error: Error) => void;
@@ -108,40 +124,63 @@ async function runGeminiLiveChat({
     rejectTurn = reject;
   });
 
-  const session = await ai.live.connect({
+  const failTurn = (error: unknown) => {
+    if (turnSettled) {
+      return;
+    }
+
+    turnSettled = true;
+    try {
+      session?.close();
+    } catch {
+      // Ignore best-effort close failures after a streaming error.
+    }
+
+    rejectTurn(
+      error instanceof Error
+        ? error
+        : new Error(String(error ?? "Gemini Live connection failed."))
+    );
+  };
+
+  session = await ai.live.connect({
     model,
     callbacks: {
       onmessage(message: LiveServerMessage) {
-        collectAudio(message, audioParts, (mimeType) => {
-          if (!audioMimeType && mimeType) {
-            audioMimeType = mimeType;
+        try {
+          collectAudio(message, ({ data, mimeType }) => {
+            const resolvedMimeType = mimeType || audioMimeType;
+
+            hasReceivedAudio = true;
+            if (!audioMimeType && resolvedMimeType) {
+              audioMimeType = resolvedMimeType;
+            }
+
+            onAudioChunk?.({
+              data,
+              mimeType: resolvedMimeType,
+            });
+          });
+
+          const nextTranscript = getTranscriptChunk(message);
+          if (nextTranscript) {
+            transcript += nextTranscript;
+            onPartialTranscript?.(transcript);
           }
-        });
 
-        const nextTranscript = getTranscriptChunk(message);
-        if (nextTranscript) {
-          transcript += nextTranscript;
-          onPartialTranscript?.(transcript);
-        }
-
-        if (message.serverContent?.turnComplete && !turnSettled) {
-          turnSettled = true;
-          resolveTurn();
+          if (message.serverContent?.turnComplete && !turnSettled) {
+            turnSettled = true;
+            resolveTurn();
+          }
+        } catch (error) {
+          failTurn(error);
         }
       },
       onerror(event: ErrorEvent) {
-        if (!turnSettled) {
-          turnSettled = true;
-          rejectTurn(new Error(event.message || "Gemini Live connection failed."));
-        }
+        failTurn(new Error(event.message || "Gemini Live connection failed."));
       },
       onclose(event: CloseEvent) {
-        if (!turnSettled) {
-          turnSettled = true;
-          rejectTurn(
-            new Error(event.reason || "Gemini Live connection closed early.")
-          );
-        }
+        failTurn(new Error(event.reason || "Gemini Live connection closed early."));
       },
       onopen() {
         // The session is ready once connect resolves.
@@ -173,13 +212,12 @@ async function runGeminiLiveChat({
     session.close();
   }
 
-  if (!audioParts.length || !audioMimeType) {
+  if (!hasReceivedAudio || !audioMimeType) {
     throw new Error("Gemini Live returned no audio.");
   }
 
   return {
     transcript: transcript.trim(),
-    audioBuffer: convertToWav(audioParts, audioMimeType),
     audioMimeType,
   };
 }
@@ -211,8 +249,7 @@ function messagesToGeminiTurns(messages: Message[]): Content[] {
 
 function collectAudio(
   message: LiveServerMessage,
-  audioParts: string[],
-  onMimeType: (mimeType: string) => void
+  onAudioChunk: (chunk: GeminiLiveAudioChunk) => void
 ) {
   const parts = message.serverContent?.modelTurn?.parts;
   if (!parts?.length) {
@@ -224,94 +261,15 @@ function collectAudio(
       continue;
     }
 
-    audioParts.push(part.inlineData.data);
-    onMimeType(part.inlineData.mimeType ?? "");
+    onAudioChunk({
+      data: decodeBase64(part.inlineData.data),
+      mimeType: part.inlineData.mimeType ?? "",
+    });
   }
 }
 
 function getTranscriptChunk(message: LiveServerMessage): string {
   return message.serverContent?.outputTranscription?.text ?? "";
-}
-
-function convertToWav(rawData: string[], mimeType: string): ArrayBuffer {
-  const options = parseMimeType(mimeType);
-  const pcmChunks = rawData.map((data) => decodeBase64(data));
-  const totalLength = pcmChunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
-  const wavHeader = createWavHeader(totalLength, options);
-  const wavBytes = new Uint8Array(wavHeader.byteLength + totalLength);
-
-  wavBytes.set(wavHeader, 0);
-
-  let offset = wavHeader.byteLength;
-  for (const chunk of pcmChunks) {
-    wavBytes.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-
-  return wavBytes.buffer;
-}
-
-function parseMimeType(mimeType: string): WavConversionOptions {
-  const [fileType = "", ...params] = mimeType.split(";").map((value) => value.trim());
-  const [, format = "L16"] = fileType.split("/");
-
-  const options: WavConversionOptions = {
-    numChannels: 1,
-    sampleRate: 24000,
-    bitsPerSample: 16,
-  };
-
-  if (format.startsWith("L")) {
-    const bitsPerSample = Number.parseInt(format.slice(1), 10);
-    if (!Number.isNaN(bitsPerSample)) {
-      options.bitsPerSample = bitsPerSample;
-    }
-  }
-
-  for (const param of params) {
-    const [key, value] = param.split("=").map((item) => item.trim());
-    if (key === "rate") {
-      const sampleRate = Number.parseInt(value, 10);
-      if (!Number.isNaN(sampleRate)) {
-        options.sampleRate = sampleRate;
-      }
-    }
-  }
-
-  return options;
-}
-
-function createWavHeader(
-  dataLength: number,
-  options: WavConversionOptions
-): Uint8Array {
-  const { numChannels, sampleRate, bitsPerSample } = options;
-  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
-  const blockAlign = (numChannels * bitsPerSample) / 8;
-  const buffer = new ArrayBuffer(44);
-  const view = new DataView(buffer);
-
-  writeAscii(view, 0, "RIFF");
-  view.setUint32(4, 36 + dataLength, true);
-  writeAscii(view, 8, "WAVE");
-  writeAscii(view, 12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, byteRate, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, bitsPerSample, true);
-  writeAscii(view, 36, "data");
-  view.setUint32(40, dataLength, true);
-
-  return new Uint8Array(buffer);
-}
-
-function writeAscii(view: DataView, offset: number, text: string) {
-  for (let index = 0; index < text.length; index += 1) {
-    view.setUint8(offset + index, text.charCodeAt(index));
-  }
 }
 
 function decodeBase64(data: string): Uint8Array {

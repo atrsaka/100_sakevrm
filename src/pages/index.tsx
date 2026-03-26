@@ -29,6 +29,7 @@ export default function Home() {
   const [chatProcessing, setChatProcessing] = useState(false);
   const [chatLog, setChatLog] = useState<Message[]>([]);
   const [assistantMessage, setAssistantMessage] = useState("");
+  const [assistantStatus, setAssistantStatus] = useState("");
 
   useEffect(() => {
     if (window.localStorage.getItem("chatVRMParams")) {
@@ -67,13 +68,6 @@ export default function Home() {
     [chatLog]
   );
 
-  const handleSpeakAi = useCallback(
-    async (screenplay: Screenplay, audioBuffer: ArrayBuffer) => {
-      await viewer.model?.speak(audioBuffer, screenplay);
-    },
-    [viewer]
-  );
-
   const handleSendChat = useCallback(
     async (text: string) => {
       if (!geminiApiKey) {
@@ -86,28 +80,44 @@ export default function Home() {
       }
 
       setChatProcessing(true);
+      setAssistantMessage("");
+      setAssistantStatus("Connecting to Gemini Live...");
 
       const messageLog: Message[] = [
         ...chatLog,
         { role: "user", content: text },
       ];
       setChatLog(messageLog);
+      const screenplay = createNeutralScreenplay("");
+      const activeModel = viewer.model;
+      let hasStartedAudio = false;
 
       try {
+        await activeModel?.beginStreamingSpeak(screenplay);
+
         const response = await getGeminiLiveChatResponse({
           apiKey: geminiApiKey,
           messages: messageLog,
           systemPrompt,
           model: geminiModel,
           voiceName: geminiVoiceName,
+          onAudioChunk: (chunk) => {
+            if (!hasStartedAudio) {
+              hasStartedAudio = true;
+              setAssistantStatus("Playing audio...");
+            }
+            activeModel?.appendPCMChunk(chunk.data, chunk.mimeType);
+          },
           onPartialTranscript: (partialTranscript) => {
+            if (!hasStartedAudio) {
+              setAssistantStatus("Receiving response...");
+            }
             setAssistantMessage(partialTranscript);
           },
         });
 
         const transcript =
           response.transcript.trim() || "Audio response received.";
-        const screenplay = createNeutralScreenplay(transcript);
 
         setAssistantMessage(transcript);
         setChatLog([
@@ -115,9 +125,12 @@ export default function Home() {
           { role: "assistant", content: transcript },
         ]);
 
-        await handleSpeakAi(screenplay, response.audioBuffer);
+        await activeModel?.finishStreamingSpeak();
+        setAssistantStatus("");
       } catch (error) {
+        activeModel?.stopSpeaking();
         console.error(error);
+        setAssistantStatus("Error");
         setAssistantMessage(
           error instanceof Error
             ? error.message
@@ -132,8 +145,8 @@ export default function Home() {
       geminiApiKey,
       geminiModel,
       geminiVoiceName,
-      handleSpeakAi,
       systemPrompt,
+      viewer.model,
     ]
   );
 
@@ -156,7 +169,7 @@ export default function Home() {
         systemPrompt={systemPrompt}
         chatLog={chatLog}
         assistantMessage={assistantMessage}
-        isChatProcessing={chatProcessing}
+        assistantStatus={assistantStatus}
         onChangeGeminiApiKey={setGeminiApiKey}
         onChangeGeminiModel={setGeminiModel}
         onChangeGeminiVoiceName={setGeminiVoiceName}

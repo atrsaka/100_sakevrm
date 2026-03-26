@@ -6,14 +6,14 @@
 
 - Kept the original browser VRM viewer and speech-to-text input flow from [`pixiv/ChatVRM`](https://github.com/pixiv/ChatVRM).
 - Replaced the old `OpenAI + Koeiromap` response path with `Gemini Live`.
-- Reused the WAV conversion pattern from the provided `ai_studio_code.ts` so Gemini PCM audio can drive the existing lip sync playback path.
+- Switched Gemini audio playback to streamed PCM scheduling so the avatar can start speaking before the full turn finishes.
 
 ## Features
 
 - Start with the bundled `public/Kiyoka.vrm` avatar, or load a local `.vrm` file in the browser.
 - Type a prompt or dictate it with the browser microphone.
 - Receive a streamed Gemini Live transcript while the response is being generated.
-- Play the final Gemini Live audio through the existing VRM lip sync pipeline.
+- Start VRM lip sync playback from streamed Gemini Live audio chunks as they arrive.
 - Change the live model, Gemini voice preset, and system prompt from the UI.
 
 ## Setup

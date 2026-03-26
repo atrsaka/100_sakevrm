@@ -13,7 +13,7 @@ type Props = {
   systemPrompt: string;
   chatLog: Message[];
   assistantMessage: string;
-  isChatProcessing: boolean;
+  assistantStatus: string;
   onChangeSystemPrompt: (systemPrompt: string) => void;
   onChangeGeminiApiKey: (key: string) => void;
   onChangeGeminiModel: (model: string) => void;
@@ -30,7 +30,7 @@ export const Menu = ({
   systemPrompt,
   chatLog,
   assistantMessage,
-  isChatProcessing,
+  assistantStatus,
   onChangeSystemPrompt,
   onChangeGeminiApiKey,
   onChangeGeminiModel,
@@ -144,10 +144,10 @@ export const Menu = ({
           onClickResetSystemPrompt={handleClickResetSystemPrompt}
         />
       )}
-      {!showChatLog && (assistantMessage || isChatProcessing) && (
+      {!showChatLog && (assistantMessage || assistantStatus) && (
         <AssistantText
-          message={assistantMessage || "Generating response..."}
-          status={isChatProcessing ? "Generating response" : undefined}
+          message={assistantMessage || assistantStatus}
+          status={assistantStatus || undefined}
         />
       )}
       <input

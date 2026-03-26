@@ -78,6 +78,23 @@ export class Model {
     });
   }
 
+  public async beginStreamingSpeak(screenplay: Screenplay) {
+    this.emoteController?.playEmotion(screenplay.expression);
+    await this._lipSync?.beginStreaming();
+  }
+
+  public appendPCMChunk(buffer: Uint8Array, mimeType: string) {
+    this._lipSync?.enqueuePCMChunk(buffer, mimeType);
+  }
+
+  public async finishStreamingSpeak() {
+    await this._lipSync?.finishStreaming();
+  }
+
+  public stopSpeaking() {
+    this._lipSync?.stop();
+  }
+
   public update(delta: number): void {
     if (this._lipSync) {
       const { volume } = this._lipSync.update();

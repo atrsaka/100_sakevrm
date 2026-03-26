@@ -1,0 +1,15 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  assetPrefix: process.env.BASE_PATH || "",
+  basePath: process.env.BASE_PATH || "",
+  trailingSlash: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  env: {
+    NEXT_PUBLIC_BASE_PATH: process.env.BASE_PATH || "",
+  },
+};
+
+module.exports = nextConfig;

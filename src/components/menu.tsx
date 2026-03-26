@@ -66,8 +66,8 @@ export const Menu = ({
   );
 
   const handleGeminiVoiceNameChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      onChangeGeminiVoiceName(event.target.value);
+    (voiceName: string) => {
+      onChangeGeminiVoiceName(voiceName);
     },
     [onChangeGeminiVoiceName]
   );

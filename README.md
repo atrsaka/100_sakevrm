@@ -10,11 +10,11 @@
 
 ## Features
 
-- Load a local `.vrm` file in the browser.
+- Start with the bundled `public/Kiyoka.vrm` avatar, or load a local `.vrm` file in the browser.
 - Type a prompt or dictate it with the browser microphone.
 - Receive a streamed Gemini Live transcript while the response is being generated.
 - Play the final Gemini Live audio through the existing VRM lip sync pipeline.
-- Change the live model, voice name, and system prompt from the UI.
+- Change the live model, Gemini voice preset, and system prompt from the UI.
 
 ## Setup
 
@@ -29,7 +29,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 1. Paste your Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey).
 2. Leave the default live model as-is first.
-3. Load a VRM model from the settings panel.
+3. Start chatting with the default `Kiyoka.vrm` avatar, or load another VRM from the settings panel.
 4. Send a text prompt or use the microphone button.
 
 If the default preview alias is not available for your account, switch the model to:

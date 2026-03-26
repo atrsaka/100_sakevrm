@@ -3,6 +3,7 @@ import { IconButton } from "./iconButton";
 import { TextButton } from "./textButton";
 import { Link } from "./link";
 import { Message } from "@/features/messages/messages";
+import { GEMINI_VOICE_PRESETS } from "@/features/chat/geminiLiveConfig";
 
 type Props = {
   geminiApiKey: string;
@@ -13,7 +14,7 @@ type Props = {
   onClickClose: () => void;
   onChangeGeminiApiKey: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onChangeGeminiModel: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onChangeGeminiVoiceName: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onChangeGeminiVoiceName: (voiceName: string) => void;
   onChangeSystemPrompt: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onChangeChatLog: (index: number, text: string) => void;
   onClickOpenVrmFile: () => void;
@@ -26,7 +27,7 @@ export const Settings = ({
   geminiModel,
   geminiVoiceName,
   systemPrompt,
-  chatLog,
+    chatLog,
   onClickClose,
   onChangeGeminiApiKey,
   onChangeGeminiModel,
@@ -37,6 +38,10 @@ export const Settings = ({
   onClickResetChatLog,
   onClickResetSystemPrompt,
 }: Props) => {
+  const isPresetVoice = (GEMINI_VOICE_PRESETS as readonly string[]).includes(
+    geminiVoiceName
+  );
+
   return (
     <div className="absolute z-40 h-full w-full bg-white/80 backdrop-blur">
       <div className="absolute m-24">
@@ -111,14 +116,47 @@ export const Settings = ({
             >
               Voice
             </label>
-            <input
+            <select
               id="settings-gemini-voice"
               className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
-              type="text"
-              placeholder="Charon"
-              value={geminiVoiceName}
-              onChange={onChangeGeminiVoiceName}
-            />
+              value={isPresetVoice ? geminiVoiceName : "__custom__"}
+              onChange={(event) => {
+                const selectedVoice = event.target.value;
+                if (selectedVoice === "__custom__") {
+                  onChangeGeminiVoiceName("");
+                  return;
+                }
+
+                onChangeGeminiVoiceName(selectedVoice);
+              }}
+            >
+              <option value="__custom__">カスタム入力</option>
+              {GEMINI_VOICE_PRESETS.map((voiceName) => (
+                <option key={voiceName} value={voiceName}>
+                  {voiceName}
+                </option>
+              ))}
+            </select>
+            {!isPresetVoice && (
+              <div className="mt-8">
+                <label
+                  htmlFor="settings-gemini-voice-custom"
+                  className="my-16 block text-sm"
+                >
+                  Custom voice name
+                </label>
+                <input
+                  id="settings-gemini-voice-custom"
+                  className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
+                  type="text"
+                  placeholder="custom voice"
+                  value={geminiVoiceName}
+                  onChange={(event) =>
+                    onChangeGeminiVoiceName(event.target.value)
+                  }
+                />
+              </div>
+            )}
           </div>
 
           <div className="my-40">

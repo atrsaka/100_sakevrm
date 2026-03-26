@@ -4,13 +4,14 @@ import Head from "next/head";
 export const Meta = () => {
   const title = "GeminiVRM";
   const description =
-    "Browser-based VRM chat powered by Gemini Live native audio.";
+    "Browser-first VRM chat powered by Gemini Live native audio and streamed playback.";
   const imageUrl = buildUrl("/ogp.png");
 
   return (
     <Head>
       <title>{title}</title>
       <meta name="description" content={description} />
+      <meta name="theme-color" content="#2F7CF6" />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={imageUrl} />

@@ -1,5 +1,5 @@
 import { MessageInput } from "@/components/messageInput";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 type Props = {
   isChatProcessing: boolean;
@@ -20,6 +20,7 @@ export const MessageInputContainer = ({
   const [speechRecognition, setSpeechRecognition] =
     useState<SpeechRecognition>();
   const [isMicRecording, setIsMicRecording] = useState(false);
+  const hasMountedRef = useRef(false);
 
   // 音声認識の結果を処理する
   const handleRecognitionResult = useCallback(
@@ -78,6 +79,11 @@ export const MessageInputContainer = ({
   }, [handleRecognitionResult, handleRecognitionEnd]);
 
   useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
+    }
+
     if (!isChatProcessing) {
       setUserMessage("");
     }

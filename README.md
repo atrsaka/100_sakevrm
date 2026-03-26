@@ -120,7 +120,7 @@ The repository is prepared for GitHub Pages deployment through GitHub Actions.
 
 - Static export uses `BASE_PATH` for subpath hosting
 - `NEXT_EXPORT=true` enables a Pages-ready static build
-- Pages artifacts are produced from the app itself
+- Pages artifacts are produced from `.next-pages`
 - CI validates lint, build, and smoke E2E on every push and pull request
 
 For step-by-step instructions, see [docs/deployment.md](./docs/deployment.md).

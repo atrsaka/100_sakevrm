@@ -33,7 +33,7 @@ smoke E2E は `http://127.0.0.1:3100` にローカルサーバーがある前提
 
 - `BASE_PATH` を `/<repo-name>` に設定
 - `NEXT_EXPORT=true` で静的 export を有効化して build
-- 生成物 `out/` を artifact として upload
+- 生成物 `.next-pages/` を artifact として upload
 
 Pages workflow は次を対象にしています。
 

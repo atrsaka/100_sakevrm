@@ -33,7 +33,7 @@ Deployment assumptions:
 
 - `BASE_PATH` is set to `/<repo-name>`
 - `NEXT_EXPORT=true` enables static export during the build
-- the generated artifact is uploaded from `out/`
+- the generated artifact is uploaded from `.next-pages/`
 
 The Pages workflow is designed for:
 

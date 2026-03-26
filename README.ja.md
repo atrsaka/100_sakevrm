@@ -120,7 +120,7 @@ smoke E2E では、ローカル起動、プロンプト送信、assistant 応答
 
 - `BASE_PATH` を使ったサブパス配信
 - `NEXT_EXPORT=true` による Pages 向け静的 build
-- アプリ本体をそのまま静的 export
+- Pages artifact は `.next-pages` から upload
 - push / pull request ごとの lint・build・smoke E2E 実行
 
 詳細は [docs/deployment.ja.md](./docs/deployment.ja.md) を参照してください。

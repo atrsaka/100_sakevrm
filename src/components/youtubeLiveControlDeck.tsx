@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { TextButton } from "./textButton";
 
 export type YoutubeBroadcastState =
   | "upcoming"
@@ -55,40 +56,12 @@ type Props = {
   onOpenStreamingHint?: () => void;
 };
 
-const AUTH_BADGE = {
-  idle: { label: "Not connected", tone: "bg-black/5 text-text2" },
-  connecting: {
-    label: "Connecting",
-    tone: "bg-secondary/10 text-secondary",
-  },
-  authenticated: {
-    label: "Connected",
-    tone: "bg-primary/10 text-primary",
-  },
-  error: { label: "Connection error", tone: "bg-rose-100 text-rose-700" },
-};
-
-const RECEIVE_BADGE: Record<
-  YoutubeLiveReceiveState,
-  { label: string; tone: string }
-> = {
-  idle: { label: "Idle", tone: "bg-black/5 text-text2" },
-  listening: {
-    label: "Listening",
-    tone: "bg-emerald-100 text-emerald-700",
-  },
-  error: { label: "Receive error", tone: "bg-rose-100 text-rose-700" },
-};
-
 const STATE_BADGE = {
-  active: "bg-emerald-100 text-emerald-700",
+  active: "bg-emerald-200 text-emerald-900",
   upcoming: "bg-amber-100 text-amber-700",
   completed: "bg-slate-100 text-slate-500",
   unknown: "bg-violet-100 text-violet-700",
 };
-
-const SWITCH_CLASS_NAME =
-  "relative h-6 w-11 cursor-pointer appearance-none rounded-full border border-black/20 bg-black/10 transition before:absolute before:left-0 before:top-1/2 before:h-4 before:w-4 before:-translate-y-1/2 before:rounded-full before:bg-white before:shadow-sm before:transition-all before:duration-150 before:content-[''] checked:bg-primary checked:before:translate-x-5 disabled:cursor-not-allowed disabled:opacity-50";
 
 const formatReceivedTime = (value: string) => {
   const timestamp = Date.parse(value);
@@ -102,6 +75,19 @@ const formatReceivedTime = (value: string) => {
     second: "2-digit",
     hour12: false,
   }).format(new Date(timestamp));
+};
+
+const AUTH_STATE_TEXT: Record<YoutubeAuthState, string> = {
+  idle: "Not connected",
+  connecting: "Connecting",
+  authenticated: "Connected",
+  error: "Connection error",
+};
+
+const RECEIVE_STATE_TEXT: Record<YoutubeLiveReceiveState, string> = {
+  idle: "Idle",
+  listening: "Listening",
+  error: "Receive error",
 };
 
 export const YoutubeLiveControlDeck = ({
@@ -128,8 +114,12 @@ export const YoutubeLiveControlDeck = ({
 }: Props) => {
   const summaryId = useId();
   const clientIdInputId = useId();
-  const relaySwitchId = useId();
-  const autoReplySwitchId = useId();
+  const relayButtonId = useId();
+  const relayDescriptionId = useId();
+  const relayStatusId = useId();
+  const autoReplyButtonId = useId();
+  const autoReplyDescriptionId = useId();
+  const autoReplyStatusId = useId();
 
   const selectedBroadcast = broadcasts.find(
     (value) => value.id === selectedBroadcastId,
@@ -144,353 +134,278 @@ export const YoutubeLiveControlDeck = ({
   const relayToggleDisabled =
     !onToggleRelayMode || (!canEnableRelayMode && !isRelayModeEnabled);
   const recentComments = incomingComments.slice(0, 8);
+
   const receiveStatusText =
     receiveState === "listening"
-      ? selectedBroadcast?.title
-        ? `Listening to ${selectedBroadcast.title} comments.`
-        : "Listening for incoming comments."
+      ? "Listening for incoming comments."
       : receiveState === "error"
         ? receiveError || "Unable to receive comments."
-        : "Choose a broadcast and enable relay when you are ready.";
+        : canEnableRelayMode
+          ? "Relay ready. Start listening to receive new comments."
+          : "Sign in and pick a broadcast with live chat enabled.";
 
   return (
     <section
-      className="rounded-24 border border-black/10 bg-white/70 p-16 shadow-[0_18px_40px_rgba(15,23,42,0.06)]"
+      className="space-y-24"
       aria-label="YouTube live chat relay settings"
     >
-      <div className="flex flex-wrap items-start justify-between gap-12">
-        <div>
-          <p className="text-[0.68rem] font-bold uppercase tracking-[0.24em] text-secondary">
-            YouTube companion
-          </p>
-          <h2 className="mt-4 typography-20 font-bold text-text1">
-            Live relay settings
-          </h2>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-text2">
-            Receive live chat comments from YouTube Studio or OBS and route them
-            into Gemini. This browser remembers your client ID and restores the
-            saved session until the access token expires.
+      <div className="space-y-8">
+        <label
+          htmlFor={clientIdInputId}
+          className="block typography-20 font-bold text-text1"
+        >
+          Google OAuth client ID
+        </label>
+        <input
+          id={clientIdInputId}
+          type="text"
+          value={googleClientId}
+          disabled={authState === "authenticated"}
+          onChange={(event) => onGoogleClientIdChange(event.target.value)}
+          placeholder="12345-abc.apps.googleusercontent.com"
+          className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover disabled:cursor-not-allowed disabled:bg-white/70 disabled:text-text2"
+        />
+        <p className="text-sm text-text2">
+          Use a Web application OAuth client with YouTube Data API enabled.
+        </p>
+        <div className="mt-8 flex flex-wrap items-center gap-8">
+          {authState === "authenticated" ? (
+            <button
+              type="button"
+              onClick={onSignOut}
+              className="rounded-oval border border-black/10 bg-white px-16 py-8 text-sm font-bold text-text1 transition hover:bg-surface1"
+            >
+              Sign out
+            </button>
+          ) : (
+            <TextButton onClick={onSignIn} disabled={!canStartSignIn}>
+              {authState === "connecting"
+                ? "Connecting..."
+                : "Sign in with Google"}
+            </TextButton>
+          )}
+          <p className="text-sm text-text2">
+            {AUTH_STATE_TEXT[authState]} / {RECEIVE_STATE_TEXT[receiveState]}
           </p>
         </div>
-        <div className="flex flex-wrap gap-8">
-          <span
-            className={`inline-flex min-w-fit items-center rounded-full px-10 py-4 text-xs font-bold ${AUTH_BADGE[authState].tone}`}
-          >
-            {AUTH_BADGE[authState].label}
-          </span>
-          <span
-            className={`inline-flex min-w-fit items-center rounded-full px-10 py-4 text-xs font-bold ${RECEIVE_BADGE[receiveState].tone}`}
-          >
-            {RECEIVE_BADGE[receiveState].label}
-          </span>
-        </div>
+        {authError ? (
+          <p className="mt-8 rounded-8 bg-rose-100 px-12 py-10 text-sm text-rose-700">
+            {authError}
+          </p>
+        ) : null}
       </div>
 
-      <div className="mt-16 grid gap-16 xl:grid-cols-[1.2fr_0.95fr]">
-        <div className="space-y-16">
-          <div className="rounded-20 border border-black/10 bg-surface1 p-14">
-            <label
-              htmlFor={clientIdInputId}
-              className="block text-sm font-bold text-text1"
-            >
-              Google OAuth client ID
-            </label>
-            <input
-              id={clientIdInputId}
-              type="text"
-              value={googleClientId}
-              disabled={authState === "authenticated"}
-              onChange={(event) => onGoogleClientIdChange(event.target.value)}
-              placeholder="12345-abc.apps.googleusercontent.com"
-              className="mt-6 w-full rounded-12 bg-white px-12 py-10 text-sm shadow-sm transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/60 disabled:cursor-not-allowed disabled:bg-white/70 disabled:text-text2"
-            />
-            <p className="mt-4 text-xs leading-relaxed text-text2">
-              Use a Web application OAuth client with YouTube Data API enabled.
-              Sign out if you need to switch to another client.
+      <div>
+        <div className="mb-10 flex flex-wrap items-center justify-between gap-8">
+          <div>
+            <h3 className="text-sm font-bold text-text1">Broadcast list</h3>
+            <p className="mt-1 text-xs text-text2">
+              Select the active or upcoming live stream for relay.
             </p>
-
-            <div className="mt-12 flex flex-wrap items-center gap-8">
-              {authState === "authenticated" ? (
-                <button
-                  onClick={onSignOut}
-                  type="button"
-                  className="rounded-full border border-black/15 bg-white px-12 py-6 text-sm font-bold text-text1 transition hover:border-black/30 hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/50"
-                >
-                  Sign out
-                </button>
-              ) : (
-                <button
-                  onClick={onSignIn}
-                  type="button"
-                  disabled={!canStartSignIn}
-                  className="rounded-full bg-secondary px-14 py-6 text-sm font-bold text-white transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/60 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {authState === "connecting"
-                    ? "Connecting..."
-                    : "Sign in with Google"}
-                </button>
-              )}
-              <span className="text-xs text-text2">
-                Saved locally on this browser until the token expires.
-              </span>
-            </div>
-
-            {authError ? (
-              <p className="mt-12 rounded-12 bg-rose-100 px-12 py-10 text-sm text-rose-700">
-                {authError}
-              </p>
-            ) : !googleClientId.trim() ? (
-              <p className="mt-12 rounded-12 bg-black/5 px-12 py-10 text-sm text-text2">
-                Enter a Google OAuth client ID to enable YouTube sign-in.
-              </p>
-            ) : null}
           </div>
+          <button
+            type="button"
+            onClick={onRefreshBroadcasts}
+            disabled={
+              authState !== "authenticated" || broadcastLoadState === "loading"
+            }
+            className="rounded-oval border border-black/10 bg-white px-16 py-8 text-sm font-bold text-text1 transition hover:bg-surface1 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {broadcastLoadState === "loading" ? "Refreshing..." : "Refresh"}
+          </button>
+        </div>
 
-          <div className="rounded-20 border border-black/10 bg-surface1 p-14">
-            <div className="flex flex-wrap items-center justify-between gap-8">
-              <div>
-                <p className="text-sm font-bold text-text1">Broadcast list</p>
-                <p className="mt-2 text-xs text-text2">
-                  Select the active or upcoming live stream that should feed the
-                  relay.
-                </p>
-              </div>
-              <button
-                onClick={onRefreshBroadcasts}
-                type="button"
-                disabled={
-                  authState !== "authenticated" ||
-                  broadcastLoadState === "loading"
-                }
-                className="rounded-full border border-black/15 bg-white px-10 py-4 text-xs font-bold text-text1 transition hover:border-black/30 hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {broadcastLoadState === "loading" ? "Refreshing..." : "Refresh"}
-              </button>
-            </div>
+        <div className="space-y-8">
+          {broadcastLoadState === "loading" ? (
+            <p className="rounded-8 bg-surface1 px-16 py-12 text-sm text-text2">
+              Loading live broadcasts...
+            </p>
+          ) : null}
 
-            <div className="mt-12 space-y-8">
-              {broadcastLoadState === "loading" ? (
-                <p className="rounded-12 bg-white px-12 py-10 text-sm text-text2">
-                  Loading live broadcasts...
-                </p>
-              ) : null}
+          {broadcastLoadState === "error" ? (
+            <p className="rounded-8 bg-rose-100 px-16 py-12 text-sm text-rose-700">
+              {broadcastError ?? "Failed to load broadcasts."}
+            </p>
+          ) : null}
 
-              {broadcastLoadState === "error" ? (
-                <p className="rounded-12 bg-rose-100 px-12 py-10 text-sm text-rose-700">
-                  {broadcastError ?? "Failed to load broadcasts."}
-                </p>
-              ) : null}
+          {broadcastLoadState === "ready" && broadcasts.length === 0 ? (
+            <p className="rounded-8 bg-surface1 px-16 py-12 text-sm text-text2">
+              No active or upcoming live broadcasts were found.
+            </p>
+          ) : null}
 
-              {broadcastLoadState === "ready" && broadcasts.length === 0 ? (
-                <p className="rounded-12 bg-white px-12 py-10 text-sm text-text2">
-                  No active or upcoming live broadcasts were found.
-                </p>
-              ) : null}
+          {broadcastLoadState === "ready" && broadcasts.length > 0 ? (
+            <div
+              aria-describedby={summaryId}
+              aria-live="polite"
+              className="max-h-72 space-y-8 overflow-y-auto pr-1"
+            >
+              {broadcasts.map((broadcast) => {
+                const isSelected = broadcast.id === selectedBroadcastId;
+                const isActive = broadcast.state === "active";
+                const rowTone = isSelected
+                  ? isActive
+                    ? "border-emerald-300 border-l-4 border-l-emerald-500 bg-emerald-50 ring-1 ring-emerald-200"
+                    : "border-primary/40 bg-white ring-1 ring-primary/15"
+                  : isActive
+                    ? "border-emerald-200 border-l-4 border-l-emerald-400 bg-emerald-50/90 hover:bg-emerald-50"
+                    : "border-black/5 bg-surface1 hover:bg-surface1-hover";
 
-              {broadcastLoadState === "ready" && broadcasts.length > 0 ? (
-                <div
-                  aria-describedby={summaryId}
-                  aria-live="polite"
-                  className="max-h-72 space-y-8 overflow-y-auto pr-1"
-                >
-                  {broadcasts.map((broadcast) => (
-                    <button
-                      key={broadcast.id}
-                      type="button"
-                      onClick={() => onSelectBroadcast(broadcast)}
-                      aria-pressed={broadcast.id === selectedBroadcastId}
-                      className={`w-full rounded-16 border px-12 py-12 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/60 ${
-                        broadcast.id === selectedBroadcastId
-                          ? "border-secondary/60 bg-white"
-                          : "border-black/10 bg-white/80 hover:border-secondary/40"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-10">
+                return (
+                  <button
+                    key={broadcast.id}
+                    type="button"
+                    onClick={() => onSelectBroadcast(broadcast)}
+                    aria-pressed={isSelected}
+                    className={`w-full rounded-[6px] border px-16 py-14 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/60 ${rowTone}`}
+                  >
+                    <div className="flex items-start justify-between gap-10">
+                      <div className="min-w-0">
                         <p className="text-sm font-bold leading-relaxed text-text1">
                           {broadcast.title}
                         </p>
-                        <span
-                          className={`rounded-full px-8 py-3 text-[0.68rem] font-bold ${STATE_BADGE[broadcast.state]}`}
-                        >
-                          {broadcast.state}
-                        </span>
+                        <p className="mt-3 text-xs text-text2">
+                          {broadcast.scheduledStartTime
+                            ? `Scheduled: ${broadcast.scheduledStartTime}`
+                            : "No scheduled time"}
+                        </p>
                       </div>
-                      <p className="mt-3 text-xs text-text2">
-                        {broadcast.scheduledStartTime
-                          ? `Scheduled: ${broadcast.scheduledStartTime}`
-                          : "No scheduled time"}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              ) : null}
+                      <span
+                        className={`shrink-0 rounded-full px-8 py-3 text-[0.68rem] font-bold ${STATE_BADGE[broadcast.state]}`}
+                      >
+                        {broadcast.state}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+          ) : null}
+        </div>
+        <p id={summaryId} className="sr-only">
+          Select a broadcast from the list to receive live comments.
+        </p>
+      </div>
 
-            <p id={summaryId} className="sr-only">
-              Select a broadcast from the list to receive live comments.
+      <div className="space-y-12">
+        <div className="rounded-16 bg-surface1 px-16 py-14">
+          <div className="text-sm font-bold text-text1">
+            Enable comment relay listener
+          </div>
+          <p id={relayDescriptionId} className="mt-2 text-xs text-text2">
+            Poll the selected broadcast and forward new comments into the chat.
+          </p>
+          <div className="mt-6 flex items-center justify-between gap-12">
+            <p
+              id={relayStatusId}
+              role="status"
+              aria-live="polite"
+              className="text-xs text-text2"
+            >
+              {receiveStatusText}
             </p>
+            <button
+              id={relayButtonId}
+              type="button"
+              aria-pressed={isRelayModeEnabled}
+              aria-label="Enable YouTube relay mode"
+              aria-describedby={`${relayDescriptionId} ${relayStatusId}`}
+              onClick={() => onToggleRelayMode?.(!isRelayModeEnabled)}
+              disabled={relayToggleDisabled}
+              className={`rounded-oval px-16 py-8 text-sm font-bold transition ${
+                isRelayModeEnabled
+                  ? "bg-primary text-white hover:bg-primary-hover"
+                  : "bg-white text-text1 hover:bg-surface1-hover"
+              } disabled:cursor-not-allowed disabled:opacity-50`}
+            >
+              {isRelayModeEnabled ? "On" : "Off"}
+            </button>
           </div>
         </div>
 
-        <div className="space-y-16">
-          <div className="rounded-20 border border-black/10 bg-surface1 p-14">
-            <div className="space-y-10">
-              <div className="rounded-16 bg-white px-12 py-10">
-                <div className="flex items-start justify-between gap-12">
-                  <div>
-                    <label
-                      htmlFor={relaySwitchId}
-                      className="text-sm font-bold text-text1"
-                    >
-                      Enable comment relay listener
-                    </label>
-                    <p className="mt-2 text-xs leading-relaxed text-text2">
-                      Start polling the selected broadcast and forward new chat
-                      comments into the main conversation.
-                    </p>
-                  </div>
-                  <input
-                    id={relaySwitchId}
-                    aria-checked={isRelayModeEnabled}
-                    aria-label="Enable YouTube relay mode"
-                    checked={isRelayModeEnabled}
-                    role="switch"
-                    type="checkbox"
-                    onChange={(event) =>
-                      onToggleRelayMode?.(event.target.checked)
-                    }
-                    disabled={relayToggleDisabled}
-                    className={SWITCH_CLASS_NAME}
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-16 bg-white px-12 py-10">
-                <div className="flex items-start justify-between gap-12">
-                  <div>
-                    <label
-                      htmlFor={autoReplySwitchId}
-                      className="text-sm font-bold text-text1"
-                    >
-                      Auto-reply incoming comments
-                    </label>
-                    <p className="mt-2 text-xs leading-relaxed text-text2">
-                      Let Gemini answer newly received YouTube comments through
-                      the existing chat flow.
-                    </p>
-                  </div>
-                  <input
-                    id={autoReplySwitchId}
-                    aria-checked={isAutoReplyEnabled}
-                    aria-label="Enable auto-reply"
-                    checked={isAutoReplyEnabled}
-                    role="switch"
-                    type="checkbox"
-                    onChange={(event) =>
-                      onToggleAutoReply(event.target.checked)
-                    }
-                    className={SWITCH_CLASS_NAME}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-12 flex flex-wrap gap-8 text-xs font-bold">
-              <span
-                className={`rounded-full px-10 py-4 ${
-                  isRelayModeEnabled
-                    ? "bg-secondary/10 text-secondary"
-                    : "bg-black/5 text-text2"
-                }`}
-              >
-                {isRelayModeEnabled ? "Relay on" : "Relay off"}
-              </span>
-              <span
-                className={`rounded-full px-10 py-4 ${
-                  isAutoReplyEnabled
-                    ? "bg-primary/10 text-primary"
-                    : "bg-black/5 text-text2"
-                }`}
-              >
-                {isAutoReplyEnabled ? "Auto-reply on" : "Auto-reply off"}
-              </span>
-            </div>
-
-            <p
-              role="status"
-              aria-live="polite"
-              className={`mt-12 rounded-12 px-12 py-10 text-sm leading-relaxed ${
-                receiveState === "listening"
-                  ? "bg-emerald-100 text-emerald-700"
-                  : receiveState === "error"
-                    ? "bg-rose-100 text-rose-700"
-                    : canEnableRelayMode
-                      ? "bg-secondary/10 text-secondary"
-                      : "bg-amber-100 text-amber-800"
+        <div className="rounded-16 bg-surface1 px-16 py-14">
+          <div className="text-sm font-bold text-text1">
+            Auto-reply incoming comments
+          </div>
+          <p id={autoReplyDescriptionId} className="mt-2 text-xs text-text2">
+            Let Gemini answer newly received YouTube comments.
+          </p>
+          <div className="mt-6 flex items-center justify-between gap-12">
+            <p id={autoReplyStatusId} className="text-xs text-text2">
+              {isAutoReplyEnabled
+                ? "Auto-reply enabled."
+                : "Auto-reply paused."}
+            </p>
+            <button
+              id={autoReplyButtonId}
+              type="button"
+              aria-pressed={isAutoReplyEnabled}
+              aria-label="Enable auto-reply"
+              aria-describedby={`${autoReplyDescriptionId} ${autoReplyStatusId}`}
+              onClick={() => onToggleAutoReply(!isAutoReplyEnabled)}
+              className={`rounded-oval px-16 py-8 text-sm font-bold transition ${
+                isAutoReplyEnabled
+                  ? "bg-primary text-white hover:bg-primary-hover"
+                  : "bg-white text-text1 hover:bg-surface1-hover"
               }`}
             >
-              {receiveState === "idle" && !canEnableRelayMode
-                ? "Sign in and pick a broadcast with live chat before starting the relay."
-                : receiveStatusText}
-            </p>
-
-            {onOpenStreamingHint ? (
-              <button
-                type="button"
-                onClick={onOpenStreamingHint}
-                className="mt-12 w-full rounded-12 border border-black/10 bg-white px-12 py-8 text-left text-sm font-bold text-text1 transition hover:border-black/20 hover:bg-black/5"
-              >
-                Open YouTube Studio / OBS guidance
-              </button>
-            ) : null}
-          </div>
-
-          <div className="rounded-20 border border-black/10 bg-surface1 p-14">
-            <div className="flex items-center justify-between gap-10">
-              <div>
-                <p className="text-sm font-bold text-text1">
-                  Incoming comment preview
-                </p>
-                <p className="mt-2 text-xs text-text2">
-                  New comments appear here before Gemini responds.
-                </p>
-              </div>
-              <span className="rounded-full bg-white px-10 py-4 text-xs font-bold text-text2 shadow-sm">
-                {incomingComments.length}
-              </span>
-            </div>
-
-            {recentComments.length === 0 ? (
-              <div className="mt-12 rounded-16 border border-dashed border-black/10 bg-white/70 px-12 py-14 text-sm leading-relaxed text-text2">
-                {receiveState === "listening"
-                  ? "Listening now. Incoming comments will appear here."
-                  : "No comments received yet."}
-              </div>
-            ) : (
-              <ul className="mt-12 max-h-80 space-y-8 overflow-y-auto pr-1">
-                {recentComments.map((comment) => (
-                  <li
-                    key={comment.id}
-                    className="rounded-16 border border-black/10 bg-white px-12 py-12"
-                  >
-                    <div className="flex items-start justify-between gap-10">
-                      <p className="text-sm font-bold leading-relaxed text-text1">
-                        {comment.author}
-                      </p>
-                      <time className="text-[0.7rem] font-bold text-text2">
-                        {formatReceivedTime(comment.receivedAt)}
-                      </time>
-                    </div>
-                    <p className="mt-4 text-sm leading-relaxed text-text2">
-                      {comment.comment}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
+              {isAutoReplyEnabled ? "On" : "Off"}
+            </button>
           </div>
         </div>
       </div>
+
+      <div>
+        <div className="mb-8 flex items-center justify-between gap-10">
+          <h3 className="text-sm font-bold text-text1">
+            Incoming comment preview
+          </h3>
+          <p className="rounded-full bg-black/10 px-10 py-4 text-xs font-bold text-text2">
+            {incomingComments.length}
+          </p>
+        </div>
+        <p className="mb-4 text-xs text-text2">
+          New comments appear here before Gemini replies.
+        </p>
+        {recentComments.length === 0 ? (
+          <div className="rounded-8 bg-surface1 px-16 py-14 text-sm leading-relaxed text-text2">
+            {receiveState === "listening"
+              ? "Listening now. Incoming comments will appear here."
+              : "No comments received yet."}
+          </div>
+        ) : (
+          <ul className="overflow-hidden rounded-16 bg-surface1">
+            {recentComments.map((comment) => (
+              <li
+                key={comment.id}
+                className="border-b border-black/5 px-16 py-12 last:border-b-0"
+              >
+                <div className="flex items-start justify-between gap-10">
+                  <p className="text-sm font-bold leading-relaxed text-text1">
+                    {comment.author}
+                  </p>
+                  <time className="text-[0.7rem] font-bold text-text2">
+                    {formatReceivedTime(comment.receivedAt)}
+                  </time>
+                </div>
+                <p className="mt-4 text-sm leading-relaxed text-text2">
+                  {comment.comment}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {onOpenStreamingHint ? (
+        <button
+          type="button"
+          onClick={onOpenStreamingHint}
+          className="text-sm font-bold text-primary hover:text-primary-hover"
+        >
+          Open YouTube Studio / OBS guidance
+        </button>
+      ) : null}
     </section>
   );
 };

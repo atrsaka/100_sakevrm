@@ -180,12 +180,10 @@ export const Settings = ({
 
           {youtubeSection ? (
             <div className="my-40">
-              <div className="my-16 typography-20 font-bold">
-                YouTube live chat
-              </div>
+              <div className="my-16 typography-20 font-bold">YouTube relay</div>
               <div className="mb-12 text-sm text-text2">
-                Connect your broadcast, listen for incoming comments, and let
-                Gemini answer from the existing chat flow.
+                Connect a broadcast and route incoming live chat into Gemini.
+                Start with sign-in, then choose a broadcast, then enable relay.
               </div>
               {youtubeSection}
             </div>

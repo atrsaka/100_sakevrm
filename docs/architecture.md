@@ -9,6 +9,7 @@ The current architecture optimizes for:
 - low-latency playback from streamed PCM chunks
 - simple local-first setup with no required backend
 - compatibility with VRM lip sync and expression playback
+- an optional YouTube Live relay that feeds broadcast comments into the existing chat flow
 
 ## Runtime Flow
 
@@ -18,6 +19,13 @@ The current architecture optimizes for:
 4. `src/features/lipSync/lipSync.ts` validates PCM metadata, queues chunk playback, and keeps the analyser fed for mouth movement.
 5. `src/features/vrmViewer/model.ts` bridges the audio stream into the VRM runtime.
 6. `src/features/emoteController/*` updates expression, eye, blink, and lip sync state each frame.
+
+## Optional YouTube Relay Flow
+
+1. The user opens `Settings`, then enters the optional `Streaming` subpage and the `YouTube relay` panel.
+2. `src/features/youtube/googleOAuth.ts` restores or refreshes browser-side Google auth for YouTube access.
+3. `src/features/youtube/youTubeLiveClient.ts` lists broadcasts, resolves live chat metadata, and polls incoming comments.
+4. `src/pages/index.tsx` pushes queued YouTube comments into the same chat flow that Gemini uses for normal turns, with optional auto-reply.
 
 ## Key Files
 
@@ -31,8 +39,16 @@ The current architecture optimizes for:
   - audio scheduling, PCM validation, analyser updates, and autoplay safety handling
 - `src/features/vrmViewer/model.ts`
   - VRM model audio bridge and streaming hooks
+- `src/features/youtube/googleOAuth.ts`
+  - browser-side Google OAuth client bootstrapping and saved session restore
+- `src/features/youtube/youTubeLiveClient.ts`
+  - broadcast discovery, live chat polling, and relay API helpers
 - `src/components/*`
   - UI for the viewer, settings, chat input, and assistant status
+- `src/components/settings.tsx`
+  - Settings modal navigation including the optional `Streaming` subpage entry
+- `src/components/youtubeLiveControlDeck.tsx`
+  - YouTube relay panel, broadcast selection, relay controls, and comment preview
 
 ## Streaming Notes
 
@@ -59,6 +75,7 @@ Safety guards now cover:
 - The Gemini API key is currently provided directly in the browser.
 - Playback is low-latency, but still depends on browser audio scheduling and network conditions.
 - The default preview model alias may not be enabled for every Gemini account.
+- The optional YouTube relay depends on a Google OAuth web client ID and the selected broadcast exposing a live chat.
 
 ## Documentation Surface
 

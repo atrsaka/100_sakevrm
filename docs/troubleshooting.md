@@ -32,3 +32,21 @@ gemini-2.5-flash-native-audio-preview-12-2025
 
 - hard refresh the tab
 - if the issue persists, stop the dev server and restart it
+
+## Google Blocks YouTube Sign-In
+
+- if the OAuth consent screen is still in testing, add the Google account you use for the relay as a test user
+- confirm the authorized JavaScript origin matches the exact app URL, including `127.0.0.1` vs `localhost`
+- sign in again from `Settings` -> `Streaming` -> `YouTube relay` after the change propagates
+
+## YouTube Relay Does Not Receive Comments
+
+- confirm the relay listener is enabled from `Settings` -> `Streaming` -> `YouTube relay`
+- select the broadcast again and refresh if the stream just went live
+- wait a moment and retry if the broadcast has not exposed its live chat yet
+
+## YouTube Comments Appear But Gemini Does Not Answer
+
+- make sure auto-reply is enabled in the YouTube relay page
+- test with a new comment sent after relay mode starts; older comments are not replayed into Gemini
+- use a separate viewer account for testing because the stream owner's own comments are ignored

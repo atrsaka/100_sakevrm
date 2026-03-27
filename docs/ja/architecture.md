@@ -13,6 +13,7 @@ GeminiVRM は、ChatVRM のブラウザ完結な VRM 会話体験を保ったま
 - PCM chunk 単位の低遅延再生
 - バックエンド必須にしないローカルファースト構成
 - VRM の口パクと表情制御との互換性
+- 既存チャットフローへ配信コメントを流し込める任意の YouTube Live relay
 
 ## Runtime Flow
 
@@ -22,6 +23,13 @@ GeminiVRM は、ChatVRM のブラウザ完結な VRM 会話体験を保ったま
 4. `src/features/lipSync/lipSync.ts` が PCM metadata を検証し、chunk を再生キューへ積み、analyser を更新して口パクを駆動します。
 5. `src/features/vrmViewer/model.ts` が音声ストリームを VRM ランタイムへ橋渡しします。
 6. `src/features/emoteController/*` が毎フレーム表情、視線、まばたき、口パクを更新します。
+
+## Optional YouTube Relay Flow
+
+1. ユーザーは `Settings` を開き、任意の `Streaming` サブページから `YouTube relay` パネルへ進みます。
+2. `src/features/youtube/googleOAuth.ts` が YouTube 用のブラウザ側 Google 認証を復元または更新します。
+3. `src/features/youtube/youTubeLiveClient.ts` が broadcast 一覧、live chat 情報、コメント受信ポーリングを扱います。
+4. `src/pages/index.tsx` が受信した YouTube コメントを通常の Gemini チャットフローへ渡し、必要なら auto-reply も実行します。
 
 ## Key Files
 
@@ -35,8 +43,16 @@ GeminiVRM は、ChatVRM のブラウザ完結な VRM 会話体験を保ったま
   - 音声スケジューリング、PCM 検証、analyser 更新、autoplay 安全策
 - `src/features/vrmViewer/model.ts`
   - VRM model への音声橋渡しとストリーミング用フック
+- `src/features/youtube/googleOAuth.ts`
+  - ブラウザ側 Google OAuth 初期化と保存済みセッション復元
+- `src/features/youtube/youTubeLiveClient.ts`
+  - broadcast 取得、live chat ポーリング、relay API 補助
 - `src/components/*`
   - viewer、settings、chat input、assistant 状態表示 UI
+- `src/components/settings.tsx`
+  - `Streaming` サブページ入口を含む Settings モーダル導線
+- `src/components/youtubeLiveControlDeck.tsx`
+  - YouTube relay パネル、broadcast 選択、relay 操作、コメントプレビュー
 
 ## Streaming Notes
 
@@ -63,6 +79,7 @@ GeminiVRM は、ChatVRM のブラウザ完結な VRM 会話体験を保ったま
 - Gemini API key は現状ブラウザ側で直接扱います。
 - 低遅延化はしていますが、再生開始タイミングはブラウザの音声スケジューリングと通信状態に依存します。
 - 既定 preview model alias は Gemini アカウントによって使えない場合があります。
+- 任意の YouTube relay は Google OAuth Web client ID と、選択した配信の live chat 公開状態に依存します。
 
 ## Documentation Surface
 

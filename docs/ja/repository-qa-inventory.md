@@ -18,6 +18,7 @@ title: Repository QA Inventory
 - `docs/index.md`
 - `docs/getting-started.md`
 - `docs/usage.md`
+- `docs/youtube-relay.md`
 - `docs/architecture.md`
 - `docs/deployment.md`
 - `docs/troubleshooting.md`
@@ -25,6 +26,7 @@ title: Repository QA Inventory
 - `docs/ja/index.md`
 - `docs/ja/getting-started.md`
 - `docs/ja/usage.md`
+- `docs/ja/youtube-relay.md`
 - `docs/ja/architecture.md`
 - `docs/ja/deployment.md`
 - `docs/ja/troubleshooting.md`
@@ -36,7 +38,8 @@ title: Repository QA Inventory
 
 - README から英日 docs 導線が分かる
 - VitePress docs に英日 locale 導線がある
-- docs surface が home、getting started、usage、architecture、deployment、troubleshooting、QA inventory を含む
+- docs surface が home、getting started、usage、YouTube relay、architecture、deployment、troubleshooting、QA inventory を含む
+- 任意の `Settings` -> `Streaming` -> `YouTube relay` フローが README と VitePress docs の両方で説明されている
 - docs の local development / build / preview / Pages build 手順が文書化されている
 - Pages docs URL の前提が現在の repo 名と出力構造に一致している
 - 旧来のフラットな日本語ページを `docs/ja/` 構成へ整理した
@@ -44,25 +47,25 @@ title: Repository QA Inventory
 
 ## Local Verification Results
 
-Verification date: `2026-03-27`
+Latest docs sync verification date: `2026-03-28`
 
 - `npm run docs:build`
   - passed
-- `npm run docs:preview`
-  - `http://127.0.0.1:4174/` で `GeminiVRM Documentation` を返すことを確認
 - `npm run build`
   - passed
-- `BASE_PATH=/GeminiVRM NEXT_EXPORT=true npm run build:pages`
+- `BASE_PATH=/GeminiVRM npm run build:pages`
   - passed
   - `.next-pages/docs/index.html` を生成
   - `.next-pages/docs/ja/index.html` を生成
-  - app root output に `/GeminiVRM/docs/` への `Docs` リンクを含むことを確認
+  - VitePress build に新しい `youtube-relay` ガイドが含まれることを確認
 
 ## Content and Structure Checks
 
 - README 英日 docs links、commands、structure
+- README 英日 YouTube relay 手順と security note
 - VitePress config の nav/sidebar/locale path coherence
-- 英語ページ: home、getting started、usage、architecture、deployment、troubleshooting、QA inventory
-- 日本語ページ: home、getting started、usage、architecture、deployment、troubleshooting、QA inventory
+- 英語ページ: home、getting started、usage、YouTube relay、architecture、deployment、troubleshooting、QA inventory
+- 日本語ページ: home、getting started、usage、YouTube relay、architecture、deployment、troubleshooting、QA inventory
+- README、docs navigation、getting-started、usage、troubleshooting、architecture 間の YouTube relay 同期チェック
 - intended docs structure から orphaned locale pages がない
 - 旧 `docs/architecture.ja.md` と `docs/deployment.ja.md` を削除し、`docs/ja/...` に統合

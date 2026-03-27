@@ -14,6 +14,7 @@
 - `docs/index.md`
 - `docs/getting-started.md`
 - `docs/usage.md`
+- `docs/youtube-relay.md`
 - `docs/architecture.md`
 - `docs/deployment.md`
 - `docs/troubleshooting.md`
@@ -21,6 +22,7 @@
 - `docs/ja/index.md`
 - `docs/ja/getting-started.md`
 - `docs/ja/usage.md`
+- `docs/ja/youtube-relay.md`
 - `docs/ja/architecture.md`
 - `docs/ja/deployment.md`
 - `docs/ja/troubleshooting.md`
@@ -32,7 +34,8 @@
 
 - the repository has bilingual top-level docs guidance in README
 - the VitePress docs expose parallel English and Japanese navigation
-- the docs surface covers home, getting started, usage, architecture, deployment, troubleshooting, and QA inventory
+- the docs surface covers home, getting started, usage, YouTube relay, architecture, deployment, troubleshooting, and QA inventory
+- the optional `Settings` -> `Streaming` -> `YouTube relay` flow is documented in both README and VitePress guides
 - local docs development, build, and preview commands are documented
 - the Pages docs URL assumptions match the current repository name and output layout
 - legacy flat Japanese pages were replaced with a locale-aware `docs/ja/` structure
@@ -40,25 +43,25 @@
 
 ## Local Verification Results
 
-Verification date: `2026-03-27`
+Latest docs sync verification date: `2026-03-28`
 
 - `npm run docs:build`
   - passed
-- `npm run docs:preview`
-  - served `http://127.0.0.1:4174/` and returned the `GeminiVRM Documentation` page
 - `npm run build`
   - passed
-- `BASE_PATH=/GeminiVRM NEXT_EXPORT=true npm run build:pages`
+- `BASE_PATH=/GeminiVRM npm run build:pages`
   - passed
   - generated `.next-pages/docs/index.html`
   - generated `.next-pages/docs/ja/index.html`
-  - generated app root output containing a `Docs` link to `/GeminiVRM/docs/`
+  - generated Pages docs output with the new `youtube-relay` guide in the VitePress build
 
 ## Content and Structure Checks
 
 - README English/Japanese docs links, commands, and structure
+- README English/Japanese YouTube relay setup wording and security notes
 - VitePress config nav/sidebar/locale path coherence
-- English pages: home, getting started, usage, architecture, deployment, troubleshooting, QA inventory
-- Japanese pages: home, getting started, usage, architecture, deployment, troubleshooting, QA inventory
+- English pages: home, getting started, usage, YouTube relay, architecture, deployment, troubleshooting, QA inventory
+- Japanese pages: home, getting started, usage, YouTube relay, architecture, deployment, troubleshooting, QA inventory
+- YouTube relay docs sync check across README, docs navigation, getting-started, usage, troubleshooting, and architecture
 - no orphaned locale pages from the intended docs structure
 - removed obsolete `docs/architecture.ja.md` and `docs/deployment.ja.md` in favor of `docs/ja/...`

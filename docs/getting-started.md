@@ -9,6 +9,7 @@ title: Getting Started
 - Node.js 20 or later
 - A Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
 - A browser with microphone and WebGL support if you want the full chat + avatar flow
+- A Google OAuth web client ID if you want to use the optional YouTube Live relay
 
 ## Install Dependencies
 
@@ -43,9 +44,22 @@ This starts:
 4. Wait for the assistant transcript and streamed audio playback.
 5. Open `Settings` to tune the model, voice, and system prompt.
 
+## Optional YouTube Relay Setup
+
+If you want live chat comments to flow into Gemini:
+
+1. Create a Google OAuth web client ID that allows the exact origin you use for the app.
+2. Set `NEXT_PUBLIC_GOOGLE_CLIENT_ID` or paste the client ID into `Settings` -> `Streaming` -> `YouTube relay`.
+3. Sign in with Google, refresh the broadcast list, and pick the active or upcoming stream you want to monitor.
+4. Enable relay mode, then optionally enable auto-reply once the stream is ready.
+5. The browser restores the saved client ID and short-lived access token from local storage until you sign out or the token expires.
+
+For the full setup, relay behavior, and troubleshooting flow, see the [YouTube Relay Guide](./youtube-relay.md).
+
 ## Useful Environment Variables
 
 - `NEXT_PUBLIC_GEMINI_API_KEY`
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
 - `NEXT_PUBLIC_GEMINI_LIVE_MODEL`
 - `NEXT_PUBLIC_GEMINI_LIVE_VOICE`
 - `BASE_PATH`

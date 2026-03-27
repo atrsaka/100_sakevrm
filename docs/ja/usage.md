@@ -19,6 +19,25 @@ title: 使い方
 - system prompt
 - chat history のリセット
 - ローカル VRM ファイル入力
+- `Streaming` から開く任意の YouTube relay ページ
+
+## 任意の YouTube Live relay
+
+YouTube の配信コメントを既存の Gemini チャットフローへ流したい場合は、次の手順を使います。
+
+1. `Settings` -> `Streaming` -> `YouTube relay` を開きます。
+2. Google でログインし、broadcast list を更新します。
+3. relay 元にしたい active または upcoming の配信を選びます。
+4. relay listener を有効化し、必要なら auto-reply も有効化して Gemini が自動返答できるようにします。
+5. 配信中は YouTube Live Control Room または OBS からこのアプリ画面を配信します。
+
+補足:
+
+- Gemini に流れるのは relay 開始後に受信した新着コメントのみです
+- 無限ループ防止のため、配信者本人アカウントのコメントは無視されます
+- 保存済みの Google client ID と短命の access token は、サインアウトまたは期限切れまで local storage から復元されます
+
+前提条件、設定手順、失敗時の確認ポイントは [YouTube リレーガイド](./youtube-relay.md) を参照してください。
 
 ## Docs ショートカット
 

@@ -78,8 +78,14 @@ Pages workflow は次を対象にしています。
 - `NEXT_PUBLIC_GEMINI_LIVE_MODEL`
 - `NEXT_PUBLIC_GEMINI_LIVE_VOICE`
 - `NEXT_PUBLIC_GEMINI_API_KEY`
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
 
-ただし公開運用では、クライアント公開前提の secret に実 API key を入れるのは避けてください。本番ではバックエンド中継やサーバー管理トークン方式を推奨します。
+任意の YouTube relay を公開環境で使う場合は、次も必要です。
+
+- 公開するブラウザ origin と完全一致する Google OAuth Web client の設定
+- サインイン情報と relay 用 token が、サインアウトまたは期限切れまでは browser local storage から復元される前提
+
+ただし公開運用では、クライアント公開前提の secret に実 API key を入れるのは避けてください。本番ではバックエンド中継やサーバー管理トークン方式を推奨します。YouTube 認証についても、より厳密な運用が必要ならブラウザ依存だけにしない構成を検討してください。
 
 ## Troubleshooting
 

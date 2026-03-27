@@ -32,3 +32,21 @@ gemini-2.5-flash-native-audio-preview-12-2025
 
 - タブをハードリロードする
 - 改善しない場合は dev server を止めて再起動する
+
+## Google ログインが YouTube relay でブロックされる
+
+- OAuth 同意画面が testing のままなら、relay に使う Google アカウントを test user に追加する
+- `127.0.0.1` と `localhost` の違いも含めて、authorized JavaScript origin がアプリ URL と完全一致しているか確認する
+- 反映後に `Settings` -> `Streaming` -> `YouTube relay` から再ログインする
+
+## YouTube relay がコメントを受信しない
+
+- `Settings` -> `Streaming` -> `YouTube relay` で relay listener が有効か確認する
+- 配信開始直後なら、broadcast を選び直して refresh する
+- live chat の準備がまだ終わっていない場合は、少し待ってから再試行する
+
+## コメントは見えるのに Gemini が返答しない
+
+- YouTube relay ページで auto-reply が有効か確認する
+- relay 開始後に送られた新着コメントで試す。古いコメントは Gemini へ再投入されない
+- 配信者本人コメントは無限ループ防止で無視されるため、別の視聴者アカウントでテストする

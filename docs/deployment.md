@@ -74,8 +74,14 @@ Optional public environment variables:
 - `NEXT_PUBLIC_GEMINI_LIVE_MODEL`
 - `NEXT_PUBLIC_GEMINI_LIVE_VOICE`
 - `NEXT_PUBLIC_GEMINI_API_KEY`
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
 
-For public deployments, avoid shipping a real Gemini API key in repository secrets intended for client-side exposure. The recommended production path is a backend relay or another server-managed token design.
+If you expose the optional YouTube relay in a deployed environment:
+
+- configure the Google OAuth web client for the exact browser origin you publish
+- expect sign-in and relay tokens to stay browser-side and to be restored from local storage until sign-out or expiry
+
+For public deployments, avoid shipping a real Gemini API key in repository secrets intended for client-side exposure. The recommended production path is a backend relay or another server-managed token design. The same caution applies if you want tighter control over YouTube auth in production.
 
 ## Troubleshooting
 

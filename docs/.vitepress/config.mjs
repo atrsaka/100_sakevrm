@@ -22,6 +22,7 @@ const rootNav = [
   { text: "Home", link: "/" },
   { text: "Getting Started", link: "/getting-started" },
   { text: "Usage", link: "/usage" },
+  { text: "YouTube Relay", link: "/youtube-relay" },
   { text: "Architecture", link: "/architecture" },
   { text: "Troubleshooting", link: "/troubleshooting" },
 ];
@@ -33,6 +34,7 @@ const rootSidebar = [
       { text: "Documentation Home", link: "/" },
       { text: "Getting Started", link: "/getting-started" },
       { text: "Usage Guide", link: "/usage" },
+      { text: "YouTube Relay Guide", link: "/youtube-relay" },
       { text: "Deployment Guide", link: "/deployment" },
     ],
   },
@@ -50,6 +52,7 @@ const jaNav = [
   { text: "ホーム", link: "/ja/" },
   { text: "開始手順", link: "/ja/getting-started" },
   { text: "使い方", link: "/ja/usage" },
+  { text: "YouTube リレー", link: "/ja/youtube-relay" },
   { text: "アーキテクチャ", link: "/ja/architecture" },
   { text: "トラブルシュート", link: "/ja/troubleshooting" },
 ];
@@ -61,6 +64,7 @@ const jaSidebar = [
       { text: "ドキュメントホーム", link: "/ja/" },
       { text: "開始手順", link: "/ja/getting-started" },
       { text: "使い方", link: "/ja/usage" },
+      { text: "YouTube リレーガイド", link: "/ja/youtube-relay" },
       { text: "デプロイ", link: "/ja/deployment" },
     ],
   },

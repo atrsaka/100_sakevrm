@@ -31,7 +31,7 @@ The current build focuses on:
 - Stream Gemini Live transcript and audio in the browser
 - Start with `public/Kiyoka.vrm` or load your own local `.vrm`
 - Change the live model, prebuilt voice, and system prompt from the UI
-- Configure a YouTube Live relay from Settings and receive live chat comments from a broadcast
+- Configure an optional YouTube Live relay from `Settings` -> `Streaming` and receive live chat comments from a broadcast
 - Reuse the existing VRM lip-sync pipeline with chunked PCM scheduling
 - Run a lightweight smoke E2E check with Playwright
 - Publish the static app to GitHub Pages
@@ -90,7 +90,8 @@ gemini-2.5-flash-native-audio-preview-12-2025
 2. Keep the default `Kiyoka.vrm` model or load another VRM from `Settings`.
 3. Send a text prompt or use the microphone button.
 4. Adjust the live model, voice preset, and system prompt as needed.
-5. Open `Settings`, connect YouTube, pick an active or upcoming broadcast, enable relay mode, and let incoming YouTube live chat comments flow into Gemini while streaming this app window through YouTube Live Control Room or OBS.
+5. Open `Settings` to tune the live model, voice preset, system prompt, and other core chat settings.
+6. If you want live streaming support, open `Settings` -> `Streaming` -> `YouTube relay`, use `NEXT_PUBLIC_GOOGLE_CLIENT_ID` or paste a Google OAuth client ID into the page, sign in with Google, pick an active or upcoming broadcast, turn relay on, and toggle auto-reply separately if you want Gemini to answer incoming comments automatically while streaming this app window through YouTube Live Control Room or OBS.
 
 ## 🏗️ Project Structure
 
@@ -110,6 +111,7 @@ docs/                       Architecture, deployment, and QA notes
 - Live docs (Japanese): [https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/](https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/)
 - [Getting Started](./docs/getting-started.md)
 - [Usage Guide](./docs/usage.md)
+- [YouTube Relay Guide](./docs/youtube-relay.md)
 - [Architecture notes](./docs/architecture.md)
 - [Deployment guide](./docs/deployment.md)
 - [Troubleshooting](./docs/troubleshooting.md)

@@ -19,6 +19,25 @@ title: Usage Guide
 - system prompt
 - chat history reset
 - local VRM file input
+- optional `Streaming` entry that opens the YouTube relay page
+
+## Optional YouTube Live Relay
+
+Use this flow when you want YouTube live chat comments to enter the existing Gemini chat pipeline:
+
+1. Open `Settings` -> `Streaming` -> `YouTube relay`.
+2. Sign in with Google and refresh the broadcast list.
+3. Pick the active or upcoming broadcast that should feed the relay.
+4. Turn on the relay listener, then enable auto-reply if you want Gemini to answer incoming comments automatically.
+5. Stream this app window through YouTube Live Control Room or OBS while the relay page stays available from Settings.
+
+Important notes:
+
+- only new comments received after relay starts are forwarded into Gemini
+- comments posted by the stream owner's own account are ignored to prevent reply loops
+- the saved Google client ID and short-lived access token are restored from local storage until sign-out or token expiry
+
+See the [YouTube Relay Guide](./youtube-relay.md) for prerequisites, step-by-step setup, and failure cases.
 
 ## Docs Shortcut
 

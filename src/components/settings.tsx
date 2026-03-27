@@ -29,6 +29,7 @@ type Props = {
   onClickOpenVrmFile: () => void;
   onClickResetChatLog: () => void;
   onClickResetSystemPrompt: () => void;
+  youtubeSection?: React.ReactNode;
 };
 
 export const Settings = ({
@@ -48,9 +49,10 @@ export const Settings = ({
   onClickOpenVrmFile,
   onClickResetChatLog,
   onClickResetSystemPrompt,
+  youtubeSection,
 }: Props) => {
   const isPresetVoice = (GEMINI_VOICE_PRESETS as readonly string[]).includes(
-    geminiVoiceName
+    geminiVoiceName,
   );
 
   return (
@@ -151,8 +153,8 @@ export const Settings = ({
             </select>
             <div className="mt-8 text-sm">
               Pick a preset voice, or switch to Custom voice and enter a
-              prebuilt voice name manually. Blank custom input falls back to
-              `{DEFAULT_GEMINI_VOICE_NAME}`.
+              prebuilt voice name manually. Blank custom input falls back to{" "}
+              <code>{DEFAULT_GEMINI_VOICE_NAME}</code>.
             </div>
             {!isPresetVoice && (
               <div className="mt-8">
@@ -175,6 +177,19 @@ export const Settings = ({
               </div>
             )}
           </div>
+
+          {youtubeSection ? (
+            <div className="my-40">
+              <div className="my-16 typography-20 font-bold">
+                YouTube live chat
+              </div>
+              <div className="mb-12 text-sm text-text2">
+                Connect your broadcast, listen for incoming comments, and let
+                Gemini answer from the existing chat flow.
+              </div>
+              {youtubeSection}
+            </div>
+          ) : null}
 
           <div className="my-40">
             <div className="my-16 typography-20 font-bold">VRM model</div>
@@ -271,13 +286,13 @@ export const Settings = ({
                         ? "Assistant"
                         : value.role === "system"
                           ? "System"
-                          : "You"}
+                          : (value.name ?? "You")}
                     </div>
                     <input
                       aria-label={`Chat log entry ${index + 1}`}
                       className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
                       type="text"
-                      value={value.content}
+                      value={value.displayContent ?? value.content}
                       onChange={(event) =>
                         onChangeChatLog(index, event.target.value)
                       }

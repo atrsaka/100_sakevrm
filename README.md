@@ -31,6 +31,7 @@ The current build focuses on:
 - Stream Gemini Live transcript and audio in the browser
 - Start with `public/Kiyoka.vrm` or load your own local `.vrm`
 - Change the live model, prebuilt voice, and system prompt from the UI
+- Configure a YouTube Live relay from Settings and receive live chat comments from a broadcast
 - Reuse the existing VRM lip-sync pipeline with chunked PCM scheduling
 - Run a lightweight smoke E2E check with Playwright
 - Publish the static app to GitHub Pages
@@ -68,6 +69,8 @@ See [.env.example](./.env.example).
 
 - `NEXT_PUBLIC_GEMINI_API_KEY`
   - Optional local default key for browser use
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
+  - Optional Google OAuth web client ID for the YouTube Live relay settings
 - `BASE_PATH`
   - Optional prefix for GitHub Pages or subpath deployments
 - `NEXT_PUBLIC_GEMINI_LIVE_MODEL`
@@ -87,6 +90,7 @@ gemini-2.5-flash-native-audio-preview-12-2025
 2. Keep the default `Kiyoka.vrm` model or load another VRM from `Settings`.
 3. Send a text prompt or use the microphone button.
 4. Adjust the live model, voice preset, and system prompt as needed.
+5. Open `Settings`, connect YouTube, pick an active or upcoming broadcast, enable relay mode, and let incoming YouTube live chat comments flow into Gemini while streaming this app window through YouTube Live Control Room or OBS.
 
 ## 🏗️ Project Structure
 
@@ -150,6 +154,7 @@ For step-by-step instructions, see [docs/deployment.md](./docs/deployment.md).
 ## ⚠️ Security Notes
 
 - This project currently sends the Gemini API key from the browser, matching the original local-first ChatVRM setup style.
+- The YouTube relay stores the Google OAuth client ID and short-lived YouTube access token in browser local storage until sign-out or token expiry so the session can be restored after reload.
 - For public production deployments, prefer a token relay or another server-side key handling strategy.
 
 ## 🙏 Acknowledgements

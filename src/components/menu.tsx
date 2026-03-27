@@ -24,6 +24,7 @@ type Props = {
   onChangeChatLog: (index: number, text: string) => void;
   handleClickResetChatLog: () => void;
   handleClickResetSystemPrompt: () => void;
+  youtubeSection?: React.ReactNode;
 };
 
 export const Menu = ({
@@ -43,6 +44,7 @@ export const Menu = ({
   onChangeChatLog,
   handleClickResetChatLog,
   handleClickResetSystemPrompt,
+  youtubeSection,
 }: Props) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showChatLog, setShowChatLog] = useState(false);
@@ -53,28 +55,28 @@ export const Menu = ({
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
       onChangeSystemPrompt(event.target.value);
     },
-    [onChangeSystemPrompt]
+    [onChangeSystemPrompt],
   );
 
   const handleGeminiApiKeyChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       onChangeGeminiApiKey(event.target.value);
     },
-    [onChangeGeminiApiKey]
+    [onChangeGeminiApiKey],
   );
 
   const handleGeminiModelChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       onChangeGeminiModel(event.target.value);
     },
-    [onChangeGeminiModel]
+    [onChangeGeminiModel],
   );
 
   const handleGeminiVoiceNameChange = useCallback(
     (voiceName: string) => {
       onChangeGeminiVoiceName(voiceName);
     },
-    [onChangeGeminiVoiceName]
+    [onChangeGeminiVoiceName],
   );
 
   const handleClickOpenVrmFile = useCallback(() => {
@@ -99,7 +101,7 @@ export const Menu = ({
 
       event.target.value = "";
     },
-    [viewer]
+    [viewer],
   );
 
   return (
@@ -149,6 +151,7 @@ export const Menu = ({
           onClickOpenVrmFile={handleClickOpenVrmFile}
           onClickResetChatLog={handleClickResetChatLog}
           onClickResetSystemPrompt={handleClickResetSystemPrompt}
+          youtubeSection={youtubeSection}
         />
       )}
       {!showChatLog && (assistantMessage || assistantStatus) && (

@@ -61,7 +61,8 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    void viewer.setMotion(BUILT_IN_MOTIONS[selectedMotionId].path);
+    const motion = BUILT_IN_MOTIONS[selectedMotionId];
+    void viewer.setMotion(motion.path, motion.smoothingWindowSize);
   }, [selectedMotionId, viewer]);
 
   useEffect(() => {

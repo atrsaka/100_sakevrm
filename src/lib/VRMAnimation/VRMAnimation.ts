@@ -111,4 +111,130 @@ export class VRMAnimation {
     track.name = trackName;
     return track;
   }
+
+  public applyMovingAverage(windowRadius: number): void {
+    if (windowRadius <= 0) {
+      return;
+    }
+
+    for (const track of this.humanoidTracks.translation.values()) {
+      this.applyVectorTrackMovingAverage(track, windowRadius);
+    }
+
+    for (const track of this.humanoidTracks.rotation.values()) {
+      this.applyQuaternionTrackMovingAverage(track, windowRadius);
+    }
+  }
+
+  private applyVectorTrackMovingAverage(
+    track: THREE.VectorKeyframeTrack,
+    windowRadius: number
+  ): void {
+    const frameCount = track.times.length;
+    const stride = track.getValueSize();
+    if (frameCount < 2 || stride <= 0) {
+      return;
+    }
+
+    const smoothedValues = new Float32Array(track.values.length);
+
+    for (let frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+      for (let componentIndex = 0; componentIndex < stride; componentIndex++) {
+        let sum = 0.0;
+        let sampleCount = 0;
+
+        for (
+          let offset = -windowRadius;
+          offset <= windowRadius;
+          offset++
+        ) {
+          const sampleFrameIndex = this.wrapFrameIndex(
+            frameIndex + offset,
+            frameCount
+          );
+          const valueIndex = sampleFrameIndex * stride + componentIndex;
+          sum += track.values[valueIndex];
+          sampleCount++;
+        }
+
+        smoothedValues[frameIndex * stride + componentIndex] = sum / sampleCount;
+      }
+    }
+
+    track.values = smoothedValues;
+  }
+
+  private applyQuaternionTrackMovingAverage(
+    track: THREE.QuaternionKeyframeTrack,
+    windowRadius: number
+  ): void {
+    const frameCount = track.times.length;
+    const stride = track.getValueSize();
+    if (frameCount < 2 || stride !== 4) {
+      return;
+    }
+
+    const smoothedValues = new Float32Array(track.values.length);
+    const centerQuat = new THREE.Quaternion();
+    const sampleQuat = new THREE.Quaternion();
+    const averageQuat = new THREE.Quaternion();
+
+    for (let frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+      centerQuat.fromArray(track.values, frameIndex * stride).normalize();
+
+      let x = 0.0;
+      let y = 0.0;
+      let z = 0.0;
+      let w = 0.0;
+      let sampleCount = 0;
+
+      for (
+        let offset = -windowRadius;
+        offset <= windowRadius;
+        offset++
+      ) {
+        const sampleFrameIndex = this.wrapFrameIndex(
+          frameIndex + offset,
+          frameCount
+        );
+        sampleQuat.fromArray(track.values, sampleFrameIndex * stride).normalize();
+
+        if (centerQuat.dot(sampleQuat) < 0.0) {
+          sampleQuat.set(
+            -sampleQuat.x,
+            -sampleQuat.y,
+            -sampleQuat.z,
+            -sampleQuat.w
+          );
+        }
+
+        x += sampleQuat.x;
+        y += sampleQuat.y;
+        z += sampleQuat.z;
+        w += sampleQuat.w;
+        sampleCount++;
+      }
+
+      averageQuat.set(
+        x / sampleCount,
+        y / sampleCount,
+        z / sampleCount,
+        w / sampleCount
+      );
+
+      if (averageQuat.lengthSq() === 0.0) {
+        averageQuat.copy(centerQuat);
+      } else {
+        averageQuat.normalize();
+      }
+
+      averageQuat.toArray(smoothedValues, frameIndex * stride);
+    }
+
+    track.values = smoothedValues;
+  }
+
+  private wrapFrameIndex(index: number, frameCount: number): number {
+    return ((index % frameCount) + frameCount) % frameCount;
+  }
 }

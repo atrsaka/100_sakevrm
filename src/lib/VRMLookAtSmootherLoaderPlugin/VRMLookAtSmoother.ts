@@ -57,7 +57,7 @@ export class VRMLookAtSmoother extends VRMLookAt {
   public constructor(humanoid: VRMHumanoid, applier: VRMLookAtApplier) {
     super(humanoid, applier);
 
-    this.enableSaccade = true;
+    this.enableSaccade = false;
   }
 
   public update(delta: number): void {

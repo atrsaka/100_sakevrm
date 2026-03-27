@@ -23,11 +23,14 @@ export class Viewer {
   private _camera?: THREE.PerspectiveCamera;
   private _cameraControls?: OrbitControls;
   private _motionUrl: string;
+  private _motionSmoothingWindowSize: number;
   private _motionLoadToken: number;
 
   constructor() {
     this.isReady = false;
-    this._motionUrl = buildUrl(BUILT_IN_MOTIONS[DEFAULT_BUILT_IN_MOTION_ID].path);
+    const defaultMotion = BUILT_IN_MOTIONS[DEFAULT_BUILT_IN_MOTION_ID];
+    this._motionUrl = buildUrl(defaultMotion.path);
+    this._motionSmoothingWindowSize = defaultMotion.smoothingWindowSize;
     this._motionLoadToken = 0;
 
     const scene = new THREE.Scene();
@@ -73,8 +76,12 @@ export class Viewer {
       });
   }
 
-  public async setMotion(motionPath: string): Promise<void> {
+  public async setMotion(
+    motionPath: string,
+    smoothingWindowSize = 0
+  ): Promise<void> {
     this._motionUrl = buildUrl(motionPath);
+    this._motionSmoothingWindowSize = smoothingWindowSize;
     await this.loadCurrentMotion();
   }
 
@@ -180,7 +187,9 @@ export class Viewer {
 
     const token = ++this._motionLoadToken;
     try {
-      const vrma = await loadVRMAnimation(this._motionUrl);
+      const vrma = await loadVRMAnimation(this._motionUrl, {
+        smoothingWindowSize: this._motionSmoothingWindowSize,
+      });
       if (vrma == null) {
         return;
       }

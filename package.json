@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@charcoal-ui/tailwind-config": "^5.8.1",
-    "@gltf-transform/core": "^2.4.6",
+    "@gltf-transform/core": "^4.3.0",
     "@pixiv/three-vrm": "^1.0.9",
     "@types/node": "18.15.10",
     "@types/react": "18.0.29",

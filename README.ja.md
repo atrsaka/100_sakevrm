@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./public/ogp.png" alt="GeminiVRM hero" width="960" />
+  <img src="./public/ogp.jpg" alt="GeminiVRM hero" width="960" />
   <h1>GeminiVRM</h1>
   <p>Gemini Live ネイティブ音声で動く、ブラウザ完結の VRM チャットアプリです。</p>
   <p>

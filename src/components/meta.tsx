@@ -5,7 +5,7 @@ export const Meta = () => {
   const title = "GeminiVRM";
   const description =
     "Browser-first VRM chat powered by Gemini Live native audio and streamed playback.";
-  const imageUrl = buildUrl("/ogp.png");
+  const imageUrl = buildUrl("/ogp.jpg");
 
   return (
     <Head>

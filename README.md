@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./public/ogp.png" alt="GeminiVRM hero" width="960" />
+  <img src="./public/ogp.jpg" alt="GeminiVRM hero" width="960" />
   <h1>GeminiVRM</h1>
   <p>Browser-first VRM chat powered by Gemini Live native audio.</p>
   <p>

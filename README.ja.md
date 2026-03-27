@@ -54,6 +54,14 @@ npm run dev -- --hostname 127.0.0.1 --port 3100
 
 [http://127.0.0.1:3100](http://127.0.0.1:3100) を開き、[Google AI Studio](https://aistudio.google.com/apikey) で発行した Gemini API key を入力して `Start` を押してください。
 
+アプリと docs を同時に起動する場合は:
+
+```bash
+npm run dev:all
+```
+
+アプリは `http://127.0.0.1:3100`、docs は `http://127.0.0.1:4173` で確認できます。
+
 ## 🔐 環境変数
 
 [.env.example](./.env.example) を参照してください。
@@ -94,9 +102,21 @@ docs/                       設計・デプロイ・QA ドキュメント
 
 ## 📚 ドキュメント
 
-- [Architecture notes](./docs/architecture.ja.md)
-- [Deployment guide](./docs/deployment.ja.md)
-- [Repository QA inventory](./docs/repository-qa-inventory.md)
+- Live docs (English): [https://sunwood-ai-labs.github.io/GeminiVRM/docs/](https://sunwood-ai-labs.github.io/GeminiVRM/docs/)
+- Live docs (Japanese): [https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/](https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/)
+- [開始手順](./docs/ja/getting-started.md)
+- [使い方](./docs/ja/usage.md)
+- [Architecture notes](./docs/ja/architecture.md)
+- [Deployment guide](./docs/ja/deployment.md)
+- [トラブルシュート](./docs/ja/troubleshooting.md)
+- [Repository QA inventory](./docs/ja/repository-qa-inventory.md)
+
+ローカル docs 用コマンド:
+
+```bash
+npm run docs:build
+npm run docs:preview
+```
 
 ## 🧪 検証
 
@@ -109,6 +129,8 @@ npm run verify
 ```bash
 npm run lint
 npm run build
+npm run docs:build
+npm run build:pages
 npm run e2e:smoke
 ```
 
@@ -123,7 +145,7 @@ smoke E2E では、アプリ起動、送信導線、既知の chunk/icon/fallbac
 - Pages artifact は `.next-pages` から upload
 - push / pull request ごとの lint・build・smoke E2E 実行
 
-詳細は [docs/deployment.ja.md](./docs/deployment.ja.md) を参照してください。
+詳細は [docs/ja/deployment.md](./docs/ja/deployment.md) を参照してください。
 
 ## ⚠️ セキュリティ注意
 

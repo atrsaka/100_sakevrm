@@ -9,6 +9,7 @@
     "build:pages": "node scripts/build-pages.mjs",
     "docs:dev": "vitepress dev docs --host 127.0.0.1 --port 4173",
     "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs --host 127.0.0.1 --port 4174",
     "start": "next start",
     "lint": "next lint",
     "e2e:smoke": "node scripts/e2e-smoke.mjs",

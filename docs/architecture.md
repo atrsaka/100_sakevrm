@@ -59,3 +59,11 @@ Safety guards now cover:
 - The Gemini API key is currently provided directly in the browser.
 - Playback is low-latency, but still depends on browser audio scheduling and network conditions.
 - The default preview model alias may not be enabled for every Gemini account.
+
+## Documentation Surface
+
+The public docs are served with VitePress under `/docs/`, while the main application remains a Next.js static export.
+
+- local authoring uses `npm run dev:all`
+- Pages builds bundle the exported app plus VitePress output into `.next-pages/`
+- the app exposes a `Docs` shortcut so the runtime and docs stay connected

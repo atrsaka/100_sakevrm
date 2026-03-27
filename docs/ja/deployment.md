@@ -1,3 +1,7 @@
+---
+title: デプロイ
+---
+
 # GeminiVRM Deployment Guide
 
 ## Local Development
@@ -8,6 +12,17 @@ npm run dev -- --hostname 127.0.0.1 --port 3100
 ```
 
 `http://127.0.0.1:3100` を開き、Gemini API key を入力して会話を開始します。
+
+app と docs を同時に起動する場合は:
+
+```bash
+npm run dev:all
+```
+
+起動先は次のとおりです。
+
+- アプリ: `http://127.0.0.1:3100`
+- docs: `http://127.0.0.1:4173`
 
 ## Local Verification
 
@@ -25,6 +40,15 @@ npm run e2e:smoke
 
 smoke E2E は `http://127.0.0.1:3100` にローカルサーバーがある前提です。
 
+## Docs Build And Preview
+
+```bash
+npm run docs:build
+npm run docs:preview
+```
+
+`docs:preview` は生成済み VitePress site を `http://127.0.0.1:4174` で確認します。
+
 ## GitHub Pages
 
 このリポジトリは、静的アプリとして GitHub Pages へ配信できるように整備しています。
@@ -34,11 +58,18 @@ smoke E2E は `http://127.0.0.1:3100` にローカルサーバーがある前提
 - `BASE_PATH` を `/<repo-name>` に設定
 - `NEXT_EXPORT=true` で静的 export を有効化して build
 - 生成物 `.next-pages/` を artifact として upload
+- VitePress docs を `.next-pages/docs/` へコピー
 
 Pages workflow は次を対象にしています。
 
 - `main` への push
 - 手動 `workflow_dispatch`
+
+公開 URL は次の形になります。
+
+- app root: `https://<account>.github.io/<repo>/`
+- docs root: `https://<account>.github.io/<repo>/docs/`
+- Japanese docs root: `https://<account>.github.io/<repo>/docs/ja/`
 
 ## Runtime Configuration
 
@@ -55,3 +86,4 @@ Pages workflow は次を対象にしています。
 - preview model alias が使えない場合は `gemini-2.5-flash-native-audio-preview-12-2025` を使用
 - 再生がブロックされる場合はページを一度操作して再試行
 - 古い dev chunk を握ったタブはハードリロード
+- 公開 docs surface まで確認する場合は `npm run build` だけでなく `npm run build:pages` を使う

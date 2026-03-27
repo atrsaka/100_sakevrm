@@ -54,6 +54,14 @@ npm run dev -- --hostname 127.0.0.1 --port 3100
 
 Open [http://127.0.0.1:3100](http://127.0.0.1:3100), paste a Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey), and press `Start`.
 
+To run the app and docs together, use:
+
+```bash
+npm run dev:all
+```
+
+This starts the app at `http://127.0.0.1:3100` and the docs at `http://127.0.0.1:4173`.
+
 ## 🔐 Environment Variables
 
 See [.env.example](./.env.example).
@@ -94,9 +102,21 @@ docs/                       Architecture, deployment, and QA notes
 
 ## 📚 Documentation
 
+- Live docs (English): [https://sunwood-ai-labs.github.io/GeminiVRM/docs/](https://sunwood-ai-labs.github.io/GeminiVRM/docs/)
+- Live docs (Japanese): [https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/](https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/)
+- [Getting Started](./docs/getting-started.md)
+- [Usage Guide](./docs/usage.md)
 - [Architecture notes](./docs/architecture.md)
 - [Deployment guide](./docs/deployment.md)
+- [Troubleshooting](./docs/troubleshooting.md)
 - [Repository QA inventory](./docs/repository-qa-inventory.md)
+
+Local docs commands:
+
+```bash
+npm run docs:build
+npm run docs:preview
+```
 
 ## 🧪 Verification
 
@@ -109,6 +129,8 @@ or run each step manually:
 ```bash
 npm run lint
 npm run build
+npm run docs:build
+npm run build:pages
 npm run e2e:smoke
 ```
 

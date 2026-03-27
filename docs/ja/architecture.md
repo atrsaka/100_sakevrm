@@ -1,3 +1,7 @@
+---
+title: アーキテクチャ
+---
+
 # GeminiVRM Architecture
 
 ## Goals
@@ -59,3 +63,11 @@ GeminiVRM は、ChatVRM のブラウザ完結な VRM 会話体験を保ったま
 - Gemini API key は現状ブラウザ側で直接扱います。
 - 低遅延化はしていますが、再生開始タイミングはブラウザの音声スケジューリングと通信状態に依存します。
 - 既定 preview model alias は Gemini アカウントによって使えない場合があります。
+
+## Documentation Surface
+
+公開 docs は VitePress で `/docs/` 配下に配信し、メインアプリは Next.js の静的 export として公開します。
+
+- ローカルの執筆・確認には `npm run dev:all`
+- Pages build では exported app と VitePress 出力を `.next-pages/` へ同梱
+- アプリ右上の `Docs` ショートカットから実行時 docs へ遷移

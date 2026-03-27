@@ -7,17 +7,23 @@ import {
   DEFAULT_GEMINI_VOICE_NAME,
   GEMINI_VOICE_PRESETS,
 } from "@/features/chat/geminiLiveConfig";
+import {
+  BUILT_IN_MOTION_LIST,
+  BuiltInMotionId,
+} from "@/features/vrmViewer/builtInMotions";
 
 type Props = {
   geminiApiKey: string;
   geminiModel: string;
   geminiVoiceName: string;
+  selectedMotionId: BuiltInMotionId;
   systemPrompt: string;
   chatLog: Message[];
   onClickClose: () => void;
   onChangeGeminiApiKey: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onChangeGeminiModel: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onChangeGeminiVoiceName: (voiceName: string) => void;
+  onChangeMotion: (motionId: BuiltInMotionId) => void;
   onChangeSystemPrompt: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onChangeChatLog: (index: number, text: string) => void;
   onClickOpenVrmFile: () => void;
@@ -29,12 +35,14 @@ export const Settings = ({
   geminiApiKey,
   geminiModel,
   geminiVoiceName,
+  selectedMotionId,
   systemPrompt,
   chatLog,
   onClickClose,
   onChangeGeminiApiKey,
   onChangeGeminiModel,
   onChangeGeminiVoiceName,
+  onChangeMotion,
   onChangeSystemPrompt,
   onChangeChatLog,
   onClickOpenVrmFile,
@@ -172,6 +180,54 @@ export const Settings = ({
             <div className="my-16 typography-20 font-bold">VRM model</div>
             <div className="my-8">
               <TextButton onClick={onClickOpenVrmFile}>Load VRM</TextButton>
+            </div>
+          </div>
+
+          <div className="my-40">
+            <div className="my-16 typography-20 font-bold">Idle motion</div>
+            <div className="grid gap-12 md:grid-cols-3">
+              {BUILT_IN_MOTION_LIST.map((motion) => {
+                const isSelected = motion.id === selectedMotionId;
+
+                return (
+                  <button
+                    key={motion.id}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => onChangeMotion(motion.id)}
+                    className={`rounded-16 border px-16 py-16 text-left transition ${
+                      isSelected
+                        ? "border-primary bg-primary text-white shadow-lg"
+                        : "border-black/10 bg-white/70 text-text1 hover:border-primary/40 hover:bg-surface1"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-12">
+                      <div className="typography-20 font-bold">
+                        {motion.label}
+                      </div>
+                      <div
+                        className={`rounded-full px-10 py-4 text-xs font-bold ${
+                          isSelected
+                            ? "bg-white/20 text-white"
+                            : "bg-black/5 text-text2"
+                        }`}
+                      >
+                        {motion.durationLabel}
+                      </div>
+                    </div>
+                    <p
+                      className={`mt-10 text-sm leading-relaxed ${
+                        isSelected ? "text-white/90" : "text-text2"
+                      }`}
+                    >
+                      {motion.description}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-8 text-sm">
+              Switches the built-in idle motion immediately for the active VRM.
             </div>
           </div>
 

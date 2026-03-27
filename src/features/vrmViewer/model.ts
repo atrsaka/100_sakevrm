@@ -16,6 +16,7 @@ export class Model {
   public emoteController?: EmoteController;
 
   private _lookAtTargetParent: THREE.Object3D;
+  private _currentAnimationAction?: THREE.AnimationAction;
   private _lipSync?: LipSync;
 
   constructor(lookAtTargetParent: THREE.Object3D) {
@@ -44,6 +45,10 @@ export class Model {
   }
 
   public unLoadVrm() {
+    this._currentAnimationAction?.stop();
+    this._currentAnimationAction = undefined;
+    this.mixer?.stopAllAction();
+
     if (this.vrm) {
       VRMUtils.deepDispose(this.vrm.scene);
       this.vrm = null;
@@ -61,9 +66,14 @@ export class Model {
       throw new Error("You have to load VRM first");
     }
 
+    this._currentAnimationAction?.stop();
+
     const clip = vrmAnimation.createAnimationClip(vrm);
     const action = mixer.clipAction(clip);
+    action.reset();
+    action.setLoop(THREE.LoopRepeat, Infinity);
     action.play();
+    this._currentAnimationAction = action;
   }
 
   /**

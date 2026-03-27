@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { VRM, VRMExpressionManager, VRMHumanBoneName } from "@pixiv/three-vrm";
 
+const LOOK_AT_CONTROLLED_BONES = new Set<VRMHumanBoneName>(["neck", "head"]);
+
 export class VRMAnimation {
   public duration: number;
   public restHipsPosition: THREE.Vector3;
@@ -49,8 +51,13 @@ export class VRMAnimation {
     const humanoid = vrm.humanoid;
     const metaVersion = vrm.meta.metaVersion;
     const tracks: THREE.KeyframeTrack[] = [];
+    const hasLookAt = vrm.lookAt != null;
 
     for (const [name, origTrack] of this.humanoidTracks.rotation.entries()) {
+      if (hasLookAt && LOOK_AT_CONTROLLED_BONES.has(name)) {
+        continue;
+      }
+
       const nodeName = humanoid.getNormalizedBoneNode(name)?.name;
 
       if (nodeName != null) {

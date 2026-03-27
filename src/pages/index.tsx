@@ -14,6 +14,12 @@ import {
   DEFAULT_GEMINI_VOICE_NAME,
 } from "@/features/chat/geminiLiveConfig";
 import { getGeminiLiveChatResponse } from "@/features/chat/geminiLiveChat";
+import {
+  BUILT_IN_MOTIONS,
+  BuiltInMotionId,
+  DEFAULT_BUILT_IN_MOTION_ID,
+  isBuiltInMotionId,
+} from "@/features/vrmViewer/builtInMotions";
 
 export default function Home() {
   const { viewer } = useContext(ViewerContext);
@@ -25,6 +31,9 @@ export default function Home() {
   const [geminiModel, setGeminiModel] = useState(DEFAULT_GEMINI_LIVE_MODEL);
   const [geminiVoiceName, setGeminiVoiceName] = useState(
     DEFAULT_GEMINI_VOICE_NAME
+  );
+  const [selectedMotionId, setSelectedMotionId] = useState<BuiltInMotionId>(
+    DEFAULT_BUILT_IN_MOTION_ID
   );
   const [chatProcessing, setChatProcessing] = useState(false);
   const [chatLog, setChatLog] = useState<Message[]>([]);
@@ -42,8 +51,18 @@ export default function Home() {
       setGeminiVoiceName(
         params.geminiVoiceName ?? DEFAULT_GEMINI_VOICE_NAME
       );
+      if (
+        typeof params.selectedMotionId === "string" &&
+        isBuiltInMotionId(params.selectedMotionId)
+      ) {
+        setSelectedMotionId(params.selectedMotionId);
+      }
     }
   }, []);
+
+  useEffect(() => {
+    void viewer.setMotion(BUILT_IN_MOTIONS[selectedMotionId].path);
+  }, [selectedMotionId, viewer]);
 
   useEffect(() => {
     window.localStorage.setItem(
@@ -53,9 +72,10 @@ export default function Home() {
         chatLog,
         geminiModel,
         geminiVoiceName,
+        selectedMotionId,
       })
     );
-  }, [systemPrompt, chatLog, geminiModel, geminiVoiceName]);
+  }, [systemPrompt, chatLog, geminiModel, geminiVoiceName, selectedMotionId]);
 
   const handleChangeChatLog = useCallback(
     (targetIndex: number, text: string) => {
@@ -166,6 +186,7 @@ export default function Home() {
         geminiApiKey={geminiApiKey}
         geminiModel={geminiModel}
         geminiVoiceName={geminiVoiceName}
+        selectedMotionId={selectedMotionId}
         systemPrompt={systemPrompt}
         chatLog={chatLog}
         assistantMessage={assistantMessage}
@@ -173,6 +194,7 @@ export default function Home() {
         onChangeGeminiApiKey={setGeminiApiKey}
         onChangeGeminiModel={setGeminiModel}
         onChangeGeminiVoiceName={setGeminiVoiceName}
+        onChangeMotion={setSelectedMotionId}
         onChangeSystemPrompt={setSystemPrompt}
         onChangeChatLog={handleChangeChatLog}
         handleClickResetChatLog={() => setChatLog([])}

@@ -5,11 +5,13 @@ import React, { useCallback, useContext, useRef, useState } from "react";
 import { Settings } from "./settings";
 import { ViewerContext } from "@/features/vrmViewer/viewerContext";
 import { AssistantText } from "./assistantText";
+import { BuiltInMotionId } from "@/features/vrmViewer/builtInMotions";
 
 type Props = {
   geminiApiKey: string;
   geminiModel: string;
   geminiVoiceName: string;
+  selectedMotionId: BuiltInMotionId;
   systemPrompt: string;
   chatLog: Message[];
   assistantMessage: string;
@@ -18,6 +20,7 @@ type Props = {
   onChangeGeminiApiKey: (key: string) => void;
   onChangeGeminiModel: (model: string) => void;
   onChangeGeminiVoiceName: (voiceName: string) => void;
+  onChangeMotion: (motionId: BuiltInMotionId) => void;
   onChangeChatLog: (index: number, text: string) => void;
   handleClickResetChatLog: () => void;
   handleClickResetSystemPrompt: () => void;
@@ -27,6 +30,7 @@ export const Menu = ({
   geminiApiKey,
   geminiModel,
   geminiVoiceName,
+  selectedMotionId,
   systemPrompt,
   chatLog,
   assistantMessage,
@@ -35,6 +39,7 @@ export const Menu = ({
   onChangeGeminiApiKey,
   onChangeGeminiModel,
   onChangeGeminiVoiceName,
+  onChangeMotion,
   onChangeChatLog,
   handleClickResetChatLog,
   handleClickResetSystemPrompt,
@@ -131,12 +136,14 @@ export const Menu = ({
           geminiApiKey={geminiApiKey}
           geminiModel={geminiModel}
           geminiVoiceName={geminiVoiceName}
+          selectedMotionId={selectedMotionId}
           chatLog={chatLog}
           systemPrompt={systemPrompt}
           onClickClose={() => setShowSettings(false)}
           onChangeGeminiApiKey={handleGeminiApiKeyChange}
           onChangeGeminiModel={handleGeminiModelChange}
           onChangeGeminiVoiceName={handleGeminiVoiceNameChange}
+          onChangeMotion={onChangeMotion}
           onChangeSystemPrompt={handleChangeSystemPrompt}
           onChangeChatLog={onChangeChatLog}
           onClickOpenVrmFile={handleClickOpenVrmFile}

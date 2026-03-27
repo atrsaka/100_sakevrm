@@ -1,5 +1,6 @@
 const isStaticExport = process.env.NEXT_EXPORT === "true";
 const basePath = process.env.BASE_PATH || "";
+const docsUrl = process.env.NEXT_PUBLIC_DOCS_URL || `${basePath || ""}/docs/`;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -7,7 +8,6 @@ const nextConfig = {
   assetPrefix: basePath,
   basePath,
   trailingSlash: true,
-  distDir: isStaticExport ? ".next-pages" : ".next",
   output: isStaticExport ? "export" : undefined,
   images: {
     unoptimized: isStaticExport,
@@ -17,6 +17,7 @@ const nextConfig = {
   },
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
+    NEXT_PUBLIC_DOCS_URL: docsUrl,
   },
 };
 

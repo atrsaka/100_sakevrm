@@ -2,8 +2,20 @@ import Image from "next/image";
 import { buildUrl } from "@/utils/buildUrl";
 
 export const GitHubLink = () => {
+  const docsUrl = process.env.NEXT_PUBLIC_DOCS_URL || buildUrl("/docs/");
+
   return (
-    <div className="absolute right-0 z-10 m-24">
+    <div className="absolute right-0 z-10 m-24 grid gap-[8px] justify-items-end">
+      <a
+        draggable={false}
+        href={docsUrl}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        <div className="flex rounded-16 bg-[#0B57D0] p-8 hover:bg-[#0A4CB8] active:bg-[#083D93]">
+          <div className="mx-4 font-bold text-white">Docs</div>
+        </div>
+      </a>
       <a
         draggable={false}
         href="https://github.com/Sunwood-ai-labs/GeminiVRM"

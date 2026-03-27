@@ -29,6 +29,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Build Pages artifact
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}
+          NEXT_EXPORT: "true"
+        run: npm run build:pages
+
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 

@@ -4,8 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:all": "node scripts/dev-all.mjs",
     "build": "next build",
-    "build:pages": "next build",
+    "build:pages": "node scripts/build-pages.mjs",
+    "docs:dev": "vitepress dev docs --host 127.0.0.1 --port 4173",
+    "docs:build": "vitepress build docs",
     "start": "next start",
     "lint": "next lint",
     "e2e:smoke": "node scripts/e2e-smoke.mjs",
@@ -34,7 +37,8 @@
     "autoprefixer": "^10.4.14",
     "playwright": "^1.58.2",
     "postcss": "^8.4.21",
-    "tailwindcss": "^3.3.1"
+    "tailwindcss": "^3.3.1",
+    "vitepress": "^1.6.4"
   },
   "engines": {
     "node": ">=20"

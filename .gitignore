@@ -12,6 +12,9 @@
 /.next/
 /.next-pages/
 /out/
+/.vitepress/
+/docs/.vitepress/dist/
+/docs/.vitepress/cache/
 
 # production
 /build

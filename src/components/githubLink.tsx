@@ -12,8 +12,14 @@ export const GitHubLink = () => {
         rel="noopener noreferrer"
         target="_blank"
       >
-        <div className="flex rounded-16 bg-[#0B57D0] p-8 hover:bg-[#0A4CB8] active:bg-[#083D93]">
-          <div className="mx-4 font-bold text-white">Docs</div>
+        <div className="flex items-center gap-4 rounded-16 bg-[#0B57D0] p-8 hover:bg-[#0A4CB8] active:bg-[#083D93]">
+          <span
+            aria-hidden="true"
+            className="material-symbols-outlined h-6 w-6 shrink-0 leading-none text-white"
+          >
+            description
+          </span>
+          <div className="font-bold text-white">Docs</div>
         </div>
       </a>
       <a

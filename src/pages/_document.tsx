@@ -17,7 +17,7 @@ export default function Document() {
         />
         <link rel="icon" href={buildUrl("/favicon.svg")} type="image/svg+xml" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1&icon_names=chat_bubble,close,menu,mic,more_horiz,send&display=block"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1&icon_names=chat_bubble,close,description,menu,mic,more_horiz,send&display=block"
           rel="stylesheet"
         />
       </Head>

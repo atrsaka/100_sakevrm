@@ -1,15 +1,13 @@
 import * as THREE from "three";
 import { VRM, VRMExpressionManager, VRMHumanBoneName } from "@pixiv/three-vrm";
 
-const LOOK_AT_CONTROLLED_BONES = new Set<VRMHumanBoneName>(["neck", "head"]);
-
 export class VRMAnimation {
   public duration: number;
   public restHipsPosition: THREE.Vector3;
 
   public humanoidTracks: {
     translation: Map<VRMHumanBoneName, THREE.VectorKeyframeTrack>;
-    rotation: Map<VRMHumanBoneName, THREE.VectorKeyframeTrack>;
+    rotation: Map<VRMHumanBoneName, THREE.QuaternionKeyframeTrack>;
   };
   public expressionTracks: Map<string, THREE.NumberKeyframeTrack>;
   public lookAtTrack: THREE.QuaternionKeyframeTrack | null;
@@ -51,22 +49,15 @@ export class VRMAnimation {
     const humanoid = vrm.humanoid;
     const metaVersion = vrm.meta.metaVersion;
     const tracks: THREE.KeyframeTrack[] = [];
-    const hasLookAt = vrm.lookAt != null;
 
     for (const [name, origTrack] of this.humanoidTracks.rotation.entries()) {
-      if (hasLookAt && LOOK_AT_CONTROLLED_BONES.has(name)) {
-        continue;
-      }
-
       const nodeName = humanoid.getNormalizedBoneNode(name)?.name;
 
       if (nodeName != null) {
-        const track = new THREE.VectorKeyframeTrack(
-          `${nodeName}.quaternion`,
-          origTrack.times,
-          origTrack.values.map((v, i) =>
-            metaVersion === "0" && i % 2 === 0 ? -v : v
-          )
+        const track = origTrack.clone();
+        track.name = `${nodeName}.quaternion`;
+        track.values = Float32Array.from(origTrack.values, (v, i) =>
+          metaVersion === "0" && i % 2 === 0 ? -v : v
         );
         tracks.push(track);
       }

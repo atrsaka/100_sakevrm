@@ -111,6 +111,7 @@ docs/                       設計・デプロイ・QA ドキュメント
 - [開始手順](./docs/ja/getting-started.md)
 - [使い方](./docs/ja/usage.md)
 - [YouTube リレーガイド](./docs/ja/youtube-relay.md)
+- [リリースノート](./docs/ja/releases.md)
 - [Architecture notes](./docs/ja/architecture.md)
 - [Deployment guide](./docs/ja/deployment.md)
 - [トラブルシュート](./docs/ja/troubleshooting.md)

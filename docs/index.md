@@ -28,6 +28,7 @@ Use this site when you want to run, understand, publish, verify, or configure th
 
 ## Reference
 
+- [Release Notes](./releases.md)
 - [Repository QA Inventory](./repository-qa-inventory.md)
 
 ## Languages

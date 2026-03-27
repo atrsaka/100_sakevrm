@@ -112,6 +112,7 @@ docs/                       Architecture, deployment, and QA notes
 - [Getting Started](./docs/getting-started.md)
 - [Usage Guide](./docs/usage.md)
 - [YouTube Relay Guide](./docs/youtube-relay.md)
+- [Release Notes](./docs/releases.md)
 - [Architecture notes](./docs/architecture.md)
 - [Deployment guide](./docs/deployment.md)
 - [Troubleshooting](./docs/troubleshooting.md)

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { IconButton } from "./iconButton";
 import { TextButton } from "./textButton";
 import { Link } from "./link";
@@ -51,9 +51,31 @@ export const Settings = ({
   onClickResetSystemPrompt,
   youtubeSection,
 }: Props) => {
+  const [activePage, setActivePage] = useState<"main" | "youtube">("main");
+  const previousPageRef = useRef<"main" | "youtube">("main");
+  const streamingEntryButtonRef = useRef<HTMLButtonElement | null>(null);
+  const youtubeTitleRef = useRef<HTMLDivElement | null>(null);
   const isPresetVoice = (GEMINI_VOICE_PRESETS as readonly string[]).includes(
     geminiVoiceName,
   );
+
+  useEffect(() => {
+    if (!youtubeSection && activePage === "youtube") {
+      setActivePage("main");
+    }
+  }, [activePage, youtubeSection]);
+
+  useEffect(() => {
+    const previousPage = previousPageRef.current;
+
+    if (activePage === "youtube") {
+      youtubeTitleRef.current?.focus();
+    } else if (previousPage === "youtube") {
+      streamingEntryButtonRef.current?.focus();
+    }
+
+    previousPageRef.current = activePage;
+  }, [activePage]);
 
   return (
     <div className="absolute z-40 h-full w-full bg-white/80 backdrop-blur">
@@ -72,233 +94,287 @@ export const Settings = ({
           aria-labelledby="settings-title"
           className="mx-auto max-w-3xl px-24 py-64 text-text1"
         >
-          <div id="settings-title" className="my-24 typography-32 font-bold">
-            Settings
-          </div>
-
-          <div className="my-24">
-            <label
-              htmlFor="settings-gemini-api-key"
-              className="my-16 block typography-20 font-bold"
-            >
-              Gemini API key
-            </label>
-            <input
-              id="settings-gemini-api-key"
-              className="w-col-span-2 rounded-8 bg-surface1 px-16 py-8 text-ellipsis hover:bg-surface1-hover"
-              type="password"
-              placeholder="AIza..."
-              value={geminiApiKey}
-              onChange={onChangeGeminiApiKey}
-              aria-describedby="settings-gemini-api-key-help"
-            />
-            <div id="settings-gemini-api-key-help" className="mt-8">
-              Generate a key in{" "}
-              <Link
-                url="https://aistudio.google.com/apikey"
-                label="Google AI Studio"
-              />
-              .
-            </div>
-          </div>
-
-          <div className="my-24">
-            <label
-              htmlFor="settings-gemini-model"
-              className="my-16 block typography-20 font-bold"
-            >
-              Live model
-            </label>
-            <input
-              id="settings-gemini-model"
-              className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
-              type="text"
-              placeholder="gemini-3.1-flash-live-preview"
-              value={geminiModel}
-              onChange={onChangeGeminiModel}
-            />
-            <div className="mt-8 text-sm">
-              If your account does not expose the default preview alias, try
-              `gemini-2.5-flash-native-audio-preview-12-2025`.
-            </div>
-          </div>
-
-          <div className="my-24">
-            <label
-              htmlFor="settings-gemini-voice"
-              className="my-16 block typography-20 font-bold"
-            >
-              Voice
-            </label>
-            <select
-              id="settings-gemini-voice"
-              className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
-              value={isPresetVoice ? geminiVoiceName : "__custom__"}
-              onChange={(event) => {
-                const selectedVoice = event.target.value;
-                if (selectedVoice === "__custom__") {
-                  onChangeGeminiVoiceName("");
-                  return;
-                }
-
-                onChangeGeminiVoiceName(selectedVoice);
-              }}
-            >
-              <option value="__custom__">Custom voice</option>
-              {GEMINI_VOICE_PRESETS.map((voiceName) => (
-                <option key={voiceName} value={voiceName}>
-                  {voiceName}
-                </option>
-              ))}
-            </select>
-            <div className="mt-8 text-sm">
-              Pick a preset voice, or switch to Custom voice and enter a
-              prebuilt voice name manually. Blank custom input falls back to{" "}
-              <code>{DEFAULT_GEMINI_VOICE_NAME}</code>.
-            </div>
-            {!isPresetVoice && (
-              <div className="mt-8">
-                <label
-                  htmlFor="settings-gemini-voice-custom"
-                  className="my-16 block text-sm"
-                >
-                  Custom voice name
-                </label>
-                <input
-                  id="settings-gemini-voice-custom"
-                  className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
-                  type="text"
-                  placeholder="custom voice"
-                  value={geminiVoiceName}
-                  onChange={(event) =>
-                    onChangeGeminiVoiceName(event.target.value)
-                  }
-                />
+          {activePage === "youtube" ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setActivePage("main")}
+                aria-label="Back to main settings"
+                className="my-16 text-sm font-bold text-primary hover:text-primary-hover"
+              >
+                Back to settings
+              </button>
+              <div
+                ref={youtubeTitleRef}
+                id="settings-title"
+                tabIndex={-1}
+                className="my-12 typography-32 font-bold"
+              >
+                YouTube relay
               </div>
-            )}
-          </div>
-
-          {youtubeSection ? (
-            <div className="my-40">
-              <div className="my-16 typography-20 font-bold">YouTube relay</div>
-              <div className="mb-12 text-sm text-text2">
-                Connect a broadcast and route incoming live chat into Gemini.
-                Start with sign-in, then choose a broadcast, then enable relay.
+              <div className="mb-16 text-sm text-text2">
+                Optional streaming tools for live broadcasts, comment relay, and
+                auto-reply.
               </div>
               {youtubeSection}
-            </div>
-          ) : null}
-
-          <div className="my-40">
-            <div className="my-16 typography-20 font-bold">VRM model</div>
-            <div className="my-8">
-              <TextButton onClick={onClickOpenVrmFile}>Load VRM</TextButton>
-            </div>
-          </div>
-
-          <div className="my-40">
-            <div className="my-16 typography-20 font-bold">Idle motion</div>
-            <div className="grid gap-12 md:grid-cols-3">
-              {BUILT_IN_MOTION_LIST.map((motion) => {
-                const isSelected = motion.id === selectedMotionId;
-
-                return (
-                  <button
-                    key={motion.id}
-                    type="button"
-                    aria-pressed={isSelected}
-                    onClick={() => onChangeMotion(motion.id)}
-                    className={`rounded-16 border px-16 py-16 text-left transition ${
-                      isSelected
-                        ? "border-primary bg-primary text-white shadow-lg"
-                        : "border-black/10 bg-white/70 text-text1 hover:border-primary/40 hover:bg-surface1"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-12">
-                      <div className="typography-20 font-bold">
-                        {motion.label}
-                      </div>
-                      <div
-                        className={`rounded-full px-10 py-4 text-xs font-bold ${
-                          isSelected
-                            ? "bg-white/20 text-white"
-                            : "bg-black/5 text-text2"
-                        }`}
-                      >
-                        {motion.durationLabel}
-                      </div>
-                    </div>
-                    <p
-                      className={`mt-10 text-sm leading-relaxed ${
-                        isSelected ? "text-white/90" : "text-text2"
-                      }`}
-                    >
-                      {motion.description}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mt-8 text-sm">
-              Switches the built-in idle motion immediately for the active VRM.
-            </div>
-          </div>
-
-          <div className="my-40">
-            <div className="my-8">
-              <label
-                htmlFor="settings-system-prompt"
-                className="my-16 block typography-20 font-bold"
+            </>
+          ) : (
+            <>
+              <div
+                id="settings-title"
+                className="my-24 typography-32 font-bold"
               >
-                System prompt
-              </label>
-              <TextButton onClick={onClickResetSystemPrompt}>
-                Reset prompt
-              </TextButton>
-            </div>
-
-            <textarea
-              id="settings-system-prompt"
-              value={systemPrompt}
-              onChange={onChangeSystemPrompt}
-              className="h-168 w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
-            />
-          </div>
-
-          {chatLog.length > 0 && (
-            <div className="my-40">
-              <div className="my-8 grid-cols-2">
-                <div className="my-16 typography-20 font-bold">Chat log</div>
-                <TextButton onClick={onClickResetChatLog}>
-                  Reset chat log
-                </TextButton>
+                Settings
               </div>
-              <div className="my-8">
-                {chatLog.map((value, index) => (
-                  <div
-                    key={index}
-                    className="my-8 grid grid-flow-col grid-cols-[min-content_1fr] gap-x-fixed"
-                  >
-                    <div className="w-[80px] py-8">
-                      {value.role === "assistant"
-                        ? "Assistant"
-                        : value.role === "system"
-                          ? "System"
-                          : (value.name ?? "You")}
-                    </div>
+
+              <div className="my-24">
+                <label
+                  htmlFor="settings-gemini-api-key"
+                  className="my-16 block typography-20 font-bold"
+                >
+                  Gemini API key
+                </label>
+                <input
+                  id="settings-gemini-api-key"
+                  className="w-col-span-2 rounded-8 bg-surface1 px-16 py-8 text-ellipsis hover:bg-surface1-hover"
+                  type="password"
+                  placeholder="AIza..."
+                  value={geminiApiKey}
+                  onChange={onChangeGeminiApiKey}
+                  aria-describedby="settings-gemini-api-key-help"
+                />
+                <div id="settings-gemini-api-key-help" className="mt-8">
+                  Generate a key in{" "}
+                  <Link
+                    url="https://aistudio.google.com/apikey"
+                    label="Google AI Studio"
+                  />
+                  .
+                </div>
+              </div>
+
+              <div className="my-24">
+                <label
+                  htmlFor="settings-gemini-model"
+                  className="my-16 block typography-20 font-bold"
+                >
+                  Live model
+                </label>
+                <input
+                  id="settings-gemini-model"
+                  className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
+                  type="text"
+                  placeholder="gemini-3.1-flash-live-preview"
+                  value={geminiModel}
+                  onChange={onChangeGeminiModel}
+                />
+                <div className="mt-8 text-sm">
+                  If your account does not expose the default preview alias, try
+                  `gemini-2.5-flash-native-audio-preview-12-2025`.
+                </div>
+              </div>
+
+              <div className="my-24">
+                <label
+                  htmlFor="settings-gemini-voice"
+                  className="my-16 block typography-20 font-bold"
+                >
+                  Voice
+                </label>
+                <select
+                  id="settings-gemini-voice"
+                  className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
+                  value={isPresetVoice ? geminiVoiceName : "__custom__"}
+                  onChange={(event) => {
+                    const selectedVoice = event.target.value;
+                    if (selectedVoice === "__custom__") {
+                      onChangeGeminiVoiceName("");
+                      return;
+                    }
+
+                    onChangeGeminiVoiceName(selectedVoice);
+                  }}
+                >
+                  <option value="__custom__">Custom voice</option>
+                  {GEMINI_VOICE_PRESETS.map((voiceName) => (
+                    <option key={voiceName} value={voiceName}>
+                      {voiceName}
+                    </option>
+                  ))}
+                </select>
+                <div className="mt-8 text-sm">
+                  Pick a preset voice, or switch to Custom voice and enter a
+                  prebuilt voice name manually. Blank custom input falls back to{" "}
+                  <code>{DEFAULT_GEMINI_VOICE_NAME}</code>.
+                </div>
+                {!isPresetVoice && (
+                  <div className="mt-8">
+                    <label
+                      htmlFor="settings-gemini-voice-custom"
+                      className="my-16 block text-sm"
+                    >
+                      Custom voice name
+                    </label>
                     <input
-                      aria-label={`Chat log entry ${index + 1}`}
+                      id="settings-gemini-voice-custom"
                       className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
                       type="text"
-                      value={value.displayContent ?? value.content}
+                      placeholder="custom voice"
+                      value={geminiVoiceName}
                       onChange={(event) =>
-                        onChangeChatLog(index, event.target.value)
+                        onChangeGeminiVoiceName(event.target.value)
                       }
                     />
                   </div>
-                ))}
+                )}
               </div>
-            </div>
+
+              {youtubeSection ? (
+                <div className="my-40">
+                  <div className="my-16 typography-20 font-bold">Streaming</div>
+                  <button
+                    ref={streamingEntryButtonRef}
+                    type="button"
+                    onClick={() => setActivePage("youtube")}
+                    aria-label="Open YouTube relay streaming settings"
+                    className="w-full rounded-16 border border-black/10 bg-white/70 px-16 py-16 text-left transition hover:border-primary/30 hover:bg-surface1"
+                  >
+                    <div className="flex items-start justify-between gap-12">
+                      <div>
+                        <div className="typography-20 font-bold">
+                          YouTube relay
+                        </div>
+                        <div className="mt-6 text-sm leading-relaxed text-text2">
+                          Optional tools for live streaming, comment relay, and
+                          auto-reply.
+                        </div>
+                      </div>
+                      <div className="rounded-full bg-secondary/10 px-10 py-4 text-xs font-bold text-secondary">
+                        Optional
+                      </div>
+                    </div>
+                    <div className="mt-10 text-sm font-bold text-primary">
+                      Open streaming settings
+                    </div>
+                  </button>
+                </div>
+              ) : null}
+
+              <div className="my-40">
+                <div className="my-16 typography-20 font-bold">VRM model</div>
+                <div className="my-8">
+                  <TextButton onClick={onClickOpenVrmFile}>Load VRM</TextButton>
+                </div>
+              </div>
+
+              <div className="my-40">
+                <div className="my-16 typography-20 font-bold">Idle motion</div>
+                <div className="grid gap-12 md:grid-cols-3">
+                  {BUILT_IN_MOTION_LIST.map((motion) => {
+                    const isSelected = motion.id === selectedMotionId;
+
+                    return (
+                      <button
+                        key={motion.id}
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() => onChangeMotion(motion.id)}
+                        className={`rounded-16 border px-16 py-16 text-left transition ${
+                          isSelected
+                            ? "border-primary bg-primary text-white shadow-lg"
+                            : "border-black/10 bg-white/70 text-text1 hover:border-primary/40 hover:bg-surface1"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-12">
+                          <div className="typography-20 font-bold">
+                            {motion.label}
+                          </div>
+                          <div
+                            className={`rounded-full px-10 py-4 text-xs font-bold ${
+                              isSelected
+                                ? "bg-white/20 text-white"
+                                : "bg-black/5 text-text2"
+                            }`}
+                          >
+                            {motion.durationLabel}
+                          </div>
+                        </div>
+                        <p
+                          className={`mt-10 text-sm leading-relaxed ${
+                            isSelected ? "text-white/90" : "text-text2"
+                          }`}
+                        >
+                          {motion.description}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-8 text-sm">
+                  Switches the built-in idle motion immediately for the active
+                  VRM.
+                </div>
+              </div>
+
+              <div className="my-40">
+                <div className="my-8">
+                  <label
+                    htmlFor="settings-system-prompt"
+                    className="my-16 block typography-20 font-bold"
+                  >
+                    System prompt
+                  </label>
+                  <TextButton onClick={onClickResetSystemPrompt}>
+                    Reset prompt
+                  </TextButton>
+                </div>
+
+                <textarea
+                  id="settings-system-prompt"
+                  value={systemPrompt}
+                  onChange={onChangeSystemPrompt}
+                  className="h-168 w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
+                />
+              </div>
+
+              {chatLog.length > 0 && (
+                <div className="my-40">
+                  <div className="my-8 grid-cols-2">
+                    <div className="my-16 typography-20 font-bold">
+                      Chat log
+                    </div>
+                    <TextButton onClick={onClickResetChatLog}>
+                      Reset chat log
+                    </TextButton>
+                  </div>
+                  <div className="my-8">
+                    {chatLog.map((value, index) => (
+                      <div
+                        key={index}
+                        className="my-8 grid grid-flow-col grid-cols-[min-content_1fr] gap-x-fixed"
+                      >
+                        <div className="w-[80px] py-8">
+                          {value.role === "assistant"
+                            ? "Assistant"
+                            : value.role === "system"
+                              ? "System"
+                              : (value.name ?? "You")}
+                        </div>
+                        <input
+                          aria-label={`Chat log entry ${index + 1}`}
+                          className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
+                          type="text"
+                          value={value.displayContent ?? value.content}
+                          onChange={(event) =>
+                            onChangeChatLog(index, event.target.value)
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

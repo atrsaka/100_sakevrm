@@ -12,4 +12,4 @@ GeminiVRM keeps versioned release notes here. Initial releases can pair the scop
 
 | Version | Status | Scope |
 | --- | --- | --- |
-| [v0.1.0](./releases/v0.1.0.md) | Initial release package | Full shipped history from the root commit `991bff6` |
+| [v0.1.0](./releases/v0.1.0.md) | Published initial release | Exact compare range `991bff6..v0.1.0` |

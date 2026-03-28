@@ -4,10 +4,10 @@
 
 - repository: `GeminiVRM`
 - release tag: `v0.1.0`
-- compare range: full shipped history from the root commit for the initial release candidate (no previous tag exists yet)
+- compare range: `991bff6..v0.1.0` for the initial release with no previous tag
 - requested outputs: GitHub release body, docs-backed release notes, companion walkthrough article
-- validation commands run: `npm run lint`, `npm run build`, `npm run docs:build`, `$env:BASE_PATH='/GeminiVRM'; npm run build:pages`, `npm run e2e:smoke`, `powershell -ExecutionPolicy Bypass -File D:\Prj\gh-release-notes-skill\scripts\verify-svg-assets.ps1 -RepoPath . -Path public/repo-hero.svg,docs/public/releases/release-header-v0.1.0.svg`, `powershell -ExecutionPolicy Bypass -File D:\Prj\gh-release-notes-skill\scripts\verify-release-qa-inventory.ps1 -RepoPath . -Tag v0.1.0`
-- release URLs: docs URLs will be verified live before the GitHub release is published
+- validation commands run: `npm run lint`, `npm run build`, `npm run docs:build`, `$env:BASE_PATH='/GeminiVRM'; npm run build:pages`, `npm run e2e:smoke`, `powershell -ExecutionPolicy Bypass -File D:\Prj\gh-release-notes-skill\scripts\verify-svg-assets.ps1 -RepoPath . -Path public/repo-hero.svg,docs/public/releases/release-header-v0.1.0.svg`, `powershell -ExecutionPolicy Bypass -File D:\Prj\gh-release-notes-skill\scripts\verify-release-qa-inventory.ps1 -RepoPath . -Tag v0.1.0`, `git ls-remote --tags origin v0.1.0`, `gh release view v0.1.0 --json url,name,body,publishedAt,tagName,targetCommitish`
+- release URLs: `https://github.com/Sunwood-ai-labs/GeminiVRM/releases/tag/v0.1.0`, `https://sunwood-ai-labs.github.io/GeminiVRM/docs/releases/v0.1.0`, `https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/releases/v0.1.0`, `https://sunwood-ai-labs.github.io/GeminiVRM/docs/articles/v0.1.0-launch`, `https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/articles/v0.1.0-launch`
 
 ## Claim Matrix
 
@@ -33,7 +33,7 @@
 
 | criterion_id | status | evidence |
 | --- | --- | --- |
-| compare_range | pass | Full shipped history from the root commit for the initial release, with no previous tag available |
+| compare_range | pass | `991bff6..v0.1.0` for the published initial release, with no previous tag available |
 | release_claims_backed | pass | Release collector output, inspected implementation files, and the claim matrix rows above back every shipped claim in the draft notes |
 | docs_release_notes | pass | `docs/releases.md`, `docs/releases/v0.1.0.md`, `docs/ja/releases.md`, `docs/ja/releases/v0.1.0.md` |
 | companion_walkthrough | pass | `docs/articles/v0.1.0-launch.md`, `docs/ja/articles/v0.1.0-launch.md` |
@@ -44,15 +44,15 @@
 | latest_release_links_updated | pass | Added release-note entry points in `README.md`, `README.ja.md`, `docs/index.md`, `docs/ja/index.md`, and `docs/.vitepress/config.mjs` |
 | svg_assets_validated | pass | `powershell -ExecutionPolicy Bypass -File D:\Prj\gh-release-notes-skill\scripts\verify-svg-assets.ps1 -RepoPath . -Path public/repo-hero.svg,docs/public/releases/release-header-v0.1.0.svg` |
 | docs_assets_committed_before_tag | pass | The release docs, draft body, QA inventory, and release header asset were committed before any `v0.1.0` tag was created |
-| docs_deployed_live | not_applicable | This task drafted and validated docs locally but did not wait for a live Pages deployment before publishing because no release was published |
-| tag_local_remote | user_waived | No `v0.1.0` tag exists locally or on origin, and the user requested release notes rather than tag publication |
-| github_release_verified | user_waived | GitHub Release creation or editing was not part of this task |
+| docs_deployed_live | pass | Verified live 200 responses for the English/Japanese release notes, English/Japanese launch guides, and the published release header asset |
+| tag_local_remote | pass | `git ls-remote --tags origin v0.1.0` and local tag inspection confirm `v0.1.0` exists locally and on origin |
+| github_release_verified | pass | `gh release view v0.1.0 --json url,name,body,publishedAt,tagName,targetCommitish` matches the published body and URL |
 | validation_commands_recorded | pass | The Release Context records every validation command run for this draft |
-| publish_date_verified | not_applicable | No release tag or GitHub Release exists yet, so no publish date is recorded in the notes |
+| publish_date_verified | pass | `gh release view v0.1.0 --json publishedAt` returned `2026-03-28T05:12:18Z` |
 
 ## Notes
 
 - blockers: none
-- waivers: tag creation, GitHub release publication
+- waivers: none
 - verification provenance: the fresh-port smoke rerun came from the docs/tooling audit seat because detached dev-server launch from the main shell was blocked by command policy
 - follow-up docs tasks: replace draft doc paths in `tmp/release-notes-v0.1.0.md` with live Pages URLs after the tag is created and docs are deployed

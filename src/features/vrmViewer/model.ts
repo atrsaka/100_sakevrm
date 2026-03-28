@@ -131,6 +131,10 @@ export class Model {
     this._lipSync?.stop();
   }
 
+  public isSpeaking(): boolean {
+    return this._lipSync?.isPlaying() ?? false;
+  }
+
   public update(delta: number): void {
     if (this._lipSync) {
       const { volume } = this._lipSync.update();

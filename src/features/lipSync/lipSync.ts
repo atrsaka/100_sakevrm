@@ -47,6 +47,10 @@ export class LipSync {
     };
   }
 
+  public isPlaying(): boolean {
+    return this._activeSources.size > 0 || this._hasQueuedStreamingAudio;
+  }
+
   public async playFromArrayBuffer(buffer: ArrayBuffer, onEnded?: () => void) {
     this.stop();
     await this.ensureAudioReady();

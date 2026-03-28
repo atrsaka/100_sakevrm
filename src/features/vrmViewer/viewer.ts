@@ -7,7 +7,9 @@ import { Model, type AnimationPlaybackOptions } from "./model";
 import {
   BUILT_IN_MOTIONS,
   type BuiltInMotionDefinition,
+  type MotionDefinition,
   DEFAULT_BUILT_IN_MOTION_ID,
+  TALKING_MOTION,
 } from "./builtInMotions";
 
 /**
@@ -24,17 +26,22 @@ export class Viewer {
   private _scene: THREE.Scene;
   private _camera?: THREE.PerspectiveCamera;
   private _cameraControls?: OrbitControls;
-  private _motion: BuiltInMotionDefinition;
+  private _idleMotion: BuiltInMotionDefinition;
+  private _activeMotion: MotionDefinition;
   private _motionLoadToken: number;
   private _initialHipsHeight: number;
-  private _lastRandomMotionPath?: string;
+  private _isTalkingMotionActive: boolean;
+  private _lastRandomMotionPaths: Map<string, string>;
   private _cachedMixamoClips: Map<string, THREE.AnimationClip>;
 
   constructor() {
     this.isReady = false;
-    this._motion = BUILT_IN_MOTIONS[DEFAULT_BUILT_IN_MOTION_ID];
+    this._idleMotion = BUILT_IN_MOTIONS[DEFAULT_BUILT_IN_MOTION_ID];
+    this._activeMotion = this._idleMotion;
     this._motionLoadToken = 0;
     this._initialHipsHeight = 1;
+    this._isTalkingMotionActive = false;
+    this._lastRandomMotionPaths = new Map();
     this._cachedMixamoClips = new Map();
 
     const scene = new THREE.Scene();
@@ -72,7 +79,10 @@ export class Viewer {
 
         this.captureInitialHipsHeight(nextModel.vrm);
         this._scene.add(nextModel.vrm.scene);
-        await this.loadCurrentMotion(nextModel);
+        this._isTalkingMotionActive = false;
+        this._activeMotion = this._idleMotion;
+        await this.loadCurrentMotion(nextModel, this._activeMotion);
+        void this.prefetchMotionPaths(TALKING_MOTION, nextModel, this._motionLoadToken);
 
         requestAnimationFrame(() => {
           this.resetCamera();
@@ -84,14 +94,20 @@ export class Viewer {
   }
 
   public async setMotion(motion: BuiltInMotionDefinition): Promise<void> {
-    this._motion = motion;
-    this._lastRandomMotionPath = undefined;
+    this._idleMotion = motion;
+    if (this._isTalkingMotionActive) {
+      return;
+    }
+
+    this._activeMotion = motion;
     await this.loadCurrentMotion();
   }
 
   public unloadVRM(): void {
     this._motionLoadToken++;
-    this._lastRandomMotionPath = undefined;
+    this._isTalkingMotionActive = false;
+    this._activeMotion = this._idleMotion;
+    this._lastRandomMotionPaths.clear();
     this._cachedMixamoClips.clear();
     if (this.model?.vrm) {
       this._scene.remove(this.model.vrm.scene);
@@ -179,6 +195,7 @@ export class Viewer {
     const delta = this._clock.getDelta();
     if (this.model) {
       this.model.update(delta);
+      this.syncMotionState(this.model);
     }
 
     if (this._renderer && this._camera) {
@@ -186,39 +203,42 @@ export class Viewer {
     }
   };
 
-  private async loadCurrentMotion(targetModel = this.model): Promise<void> {
+  private async loadCurrentMotion(
+    targetModel = this.model,
+    motion = this._activeMotion
+  ): Promise<void> {
     if (targetModel == null || targetModel.vrm == null) {
       return;
     }
 
     const token = ++this._motionLoadToken;
-    this._lastRandomMotionPath = undefined;
 
-    if (this._motion.playback === "random") {
-      await this.playRandomMotion(targetModel, token);
+    if (motion.playback === "random") {
+      await this.playRandomMotion(motion, targetModel, token);
       return;
     }
 
-    const motionPath = this._motion.paths[0];
+    const motionPath = motion.paths[0];
     if (motionPath == null) {
       return;
     }
 
-    await this.playMotionPath(this._motion, motionPath, targetModel, token);
+    await this.playMotionPath(motion, motionPath, targetModel, token);
   }
 
   private async playRandomMotion(
+    motion: MotionDefinition,
     targetModel: Model,
     token: number
   ): Promise<void> {
-    const motionPath = this.pickRandomMotionPath(this._motion.paths);
+    const motionPath = this.pickRandomMotionPath(motion);
     if (motionPath == null) {
       return;
     }
 
-    this._lastRandomMotionPath = motionPath;
-    void this.prefetchRandomMotionPaths(targetModel, motionPath, token);
-    await this.playMotionPath(this._motion, motionPath, targetModel, token, {
+    this._lastRandomMotionPaths.set(motion.id, motionPath);
+    void this.prefetchMotionPaths(motion, targetModel, token, motionPath);
+    await this.playMotionPath(motion, motionPath, targetModel, token, {
       loop: THREE.LoopOnce,
       repetitions: 1,
       clampWhenFinished: true,
@@ -227,18 +247,19 @@ export class Viewer {
         if (
           this.model !== targetModel ||
           token !== this._motionLoadToken ||
-          this._motion.playback !== "random"
+          this._activeMotion.id !== motion.id ||
+          motion.playback !== "random"
         ) {
           return;
         }
 
-        void this.playRandomMotion(targetModel, token);
+        void this.playRandomMotion(motion, targetModel, token);
       },
     });
   }
 
   private async playMotionPath(
-    motion: BuiltInMotionDefinition,
+    motion: MotionDefinition,
     motionPath: string,
     targetModel: Model,
     token: number,
@@ -270,7 +291,11 @@ export class Viewer {
         clip = await loadMixamoAnimation(
           this.buildMotionUrl(motionPath),
           targetModel.vrm,
-          this._initialHipsHeight
+          this._initialHipsHeight,
+          {
+            stabilizeFacingDirection:
+              motion.facingCorrection === "stabilize",
+          }
         );
         this._cachedMixamoClips.set(motionPath, clip);
       }
@@ -302,6 +327,21 @@ export class Viewer {
     await targetModel.loadAnimation(fallback);
   }
 
+  private syncMotionState(targetModel: Model): void {
+    if (targetModel.vrm == null) {
+      return;
+    }
+
+    const shouldUseTalkingMotion = targetModel.isSpeaking();
+    if (shouldUseTalkingMotion === this._isTalkingMotionActive) {
+      return;
+    }
+
+    this._isTalkingMotionActive = shouldUseTalkingMotion;
+    this._activeMotion = shouldUseTalkingMotion ? TALKING_MOTION : this._idleMotion;
+    void this.loadCurrentMotion(targetModel, this._activeMotion);
+  }
+
   private captureInitialHipsHeight(vrm: NonNullable<Model["vrm"]>): void {
     vrm.scene.updateMatrixWorld(true);
 
@@ -317,7 +357,8 @@ export class Viewer {
     this._initialHipsHeight = height > 0 ? height : 1;
   }
 
-  private pickRandomMotionPath(paths: readonly string[]): string | undefined {
+  private pickRandomMotionPath(motion: MotionDefinition): string | undefined {
+    const { paths } = motion;
     if (paths.length === 0) {
       return undefined;
     }
@@ -326,7 +367,8 @@ export class Viewer {
       return paths[0];
     }
 
-    const candidates = paths.filter((path) => path !== this._lastRandomMotionPath);
+    const lastRandomMotionPath = this._lastRandomMotionPaths.get(motion.id);
+    const candidates = paths.filter((path) => path !== lastRandomMotionPath);
     return candidates[Math.floor(Math.random() * candidates.length)] ?? paths[0];
   }
 
@@ -334,16 +376,17 @@ export class Viewer {
     return encodeURI(buildUrl(path));
   }
 
-  private async prefetchRandomMotionPaths(
+  private async prefetchMotionPaths(
+    motion: MotionDefinition,
     targetModel: Model,
-    activeMotionPath: string,
-    token: number
+    token: number,
+    activeMotionPath?: string
   ): Promise<void> {
-    if (this._motion.format !== "fbx" || targetModel.vrm == null) {
+    if (motion.format !== "fbx" || targetModel.vrm == null) {
       return;
     }
 
-    const pendingPaths = Array.from(this._motion.paths).filter(
+    const pendingPaths = Array.from(motion.paths).filter(
       (path) =>
         path !== activeMotionPath && !this._cachedMixamoClips.has(path)
     );
@@ -353,7 +396,11 @@ export class Viewer {
         const clip = await loadMixamoAnimation(
           this.buildMotionUrl(path),
           targetModel.vrm!,
-          this._initialHipsHeight
+          this._initialHipsHeight,
+          {
+            stabilizeFacingDirection:
+              motion.facingCorrection === "stabilize",
+          }
         );
         if (this.model !== targetModel || token !== this._motionLoadToken) {
           return;

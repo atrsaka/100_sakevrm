@@ -30,6 +30,7 @@ title: GeminiVRM ドキュメント
 
 - [リリースノート](./releases.md)
 - [Repository QA Inventory](./repository-qa-inventory.md)
+- [記事一覧](./articles.md)
 
 ## Languages
 

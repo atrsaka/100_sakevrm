@@ -217,10 +217,12 @@ export class Viewer {
     }
 
     this._lastRandomMotionPath = motionPath;
+    void this.prefetchRandomMotionPaths(targetModel, motionPath, token);
     await this.playMotionPath(this._motion, motionPath, targetModel, token, {
       loop: THREE.LoopOnce,
       repetitions: 1,
       clampWhenFinished: true,
+      fadeDuration: 0.35,
       onFinished: () => {
         if (
           this.model !== targetModel ||
@@ -330,5 +332,35 @@ export class Viewer {
 
   private buildMotionUrl(path: string): string {
     return encodeURI(buildUrl(path));
+  }
+
+  private async prefetchRandomMotionPaths(
+    targetModel: Model,
+    activeMotionPath: string,
+    token: number
+  ): Promise<void> {
+    if (this._motion.format !== "fbx" || targetModel.vrm == null) {
+      return;
+    }
+
+    const pendingPaths = Array.from(this._motion.paths).filter(
+      (path) =>
+        path !== activeMotionPath && !this._cachedMixamoClips.has(path)
+    );
+
+    await Promise.allSettled(
+      pendingPaths.map(async (path) => {
+        const clip = await loadMixamoAnimation(
+          this.buildMotionUrl(path),
+          targetModel.vrm!,
+          this._initialHipsHeight
+        );
+        if (this.model !== targetModel || token !== this._motionLoadToken) {
+          return;
+        }
+
+        this._cachedMixamoClips.set(path, clip);
+      })
+    );
   }
 }

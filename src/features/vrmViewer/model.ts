@@ -11,6 +11,7 @@ export type AnimationPlaybackOptions = {
   loop?: THREE.AnimationActionLoopStyles;
   repetitions?: number;
   clampWhenFinished?: boolean;
+  fadeDuration?: number;
   onFinished?: () => void;
 };
 
@@ -153,20 +154,40 @@ export class Model {
     this.clearAnimationFinishedHandler();
     const previousAction = this._currentAnimationAction;
     const previousClip = previousAction?.getClip();
-    previousAction?.stop();
-    if (previousClip != null) {
-      mixer.uncacheAction(previousClip);
-      mixer.uncacheClip(previousClip);
-    }
 
     const action = mixer.clipAction(clip);
+    const fadeDuration = options?.fadeDuration ?? 0.25;
     action.reset();
     action.clampWhenFinished = options?.clampWhenFinished ?? false;
     action.setLoop(
       options?.loop ?? THREE.LoopRepeat,
       options?.repetitions ?? Infinity
     );
-    action.play();
+    action.enabled = true;
+
+    if (previousAction != null && previousAction !== action && fadeDuration > 0) {
+      action.setEffectiveTimeScale(1);
+      action.setEffectiveWeight(1);
+      action.play();
+      action.crossFadeFrom(previousAction, fadeDuration, true);
+
+      const retiringClip =
+        previousClip != null && previousClip !== clip ? previousClip : undefined;
+      globalThis.setTimeout(() => {
+        previousAction.stop();
+        if (retiringClip != null) {
+          mixer.uncacheAction(retiringClip);
+          mixer.uncacheClip(retiringClip);
+        }
+      }, Math.max(fadeDuration * 1000, 0) + 50);
+    } else {
+      previousAction?.stop();
+      if (previousClip != null && previousClip !== clip) {
+        mixer.uncacheAction(previousClip);
+        mixer.uncacheClip(previousClip);
+      }
+      action.play();
+    }
 
     if (options?.onFinished) {
       const finishedHandler: THREE.EventListener<

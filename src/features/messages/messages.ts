@@ -7,7 +7,7 @@ export type Message = {
   content: string;
   displayContent?: string;
   name?: string;
-  source?: "manual" | "youtube" | "system" | "assistant";
+  source?: "manual" | "podcast" | "youtube" | "system" | "assistant";
   externalId?: string;
   receivedAt?: string;
 };

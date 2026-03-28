@@ -1,4 +1,5 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { PodcastStage, type PodcastViewerRegistry } from "@/components/podcastStage";
 import VrmViewer from "@/components/vrmViewer";
 import { ViewerContext } from "@/features/vrmViewer/viewerContext";
 import { Message, Screenplay } from "@/features/messages/messages";
@@ -23,6 +24,19 @@ import {
   DEFAULT_GEMINI_VOICE_NAME,
 } from "@/features/chat/geminiLiveConfig";
 import { getGeminiLiveChatResponse } from "@/features/chat/geminiLiveChat";
+import { getGeminiLiveAudioRelayResponse } from "@/features/podcast/geminiLivePodcast";
+import {
+  buildPodcastDisplayLog,
+  buildPodcastOpeningPrompt,
+  buildPodcastRelaySystemPrompt,
+  podcastTurnsToGeminiMessages,
+  DEFAULT_PODCAST_PARTICIPANTS,
+  DEFAULT_PODCAST_TURN_COUNT,
+  type InteractionMode,
+  type PodcastParticipant,
+  type PodcastSpeakerId,
+  type PodcastTurn,
+} from "@/features/podcast/podcastConfig";
 import {
   listLiveBroadcasts,
   listLiveChatMessages,
@@ -39,6 +53,7 @@ import {
   DEFAULT_BUILT_IN_MOTION_ID,
   isBuiltInMotionId,
 } from "@/features/vrmViewer/builtInMotions";
+import { wait } from "@/utils/wait";
 
 const MAX_YOUTUBE_PREVIEW_COMMENTS = 12;
 const MAX_YOUTUBE_PENDING_COMMENTS = 20;
@@ -48,6 +63,8 @@ const FALLBACK_YOUTUBE_POLL_INTERVAL_MS = 5000;
 const ERROR_YOUTUBE_POLL_INTERVAL_MS = 10000;
 const YOUTUBE_COMMENT_FRESHNESS_MS = 10 * 60 * 1000;
 const YOUTUBE_RELAY_PRIME_GRACE_MS = 5000;
+const PODCAST_INTER_TURN_DELAY_MS = 320;
+const PODCAST_SPEAKER_IDS: PodcastSpeakerId[] = ["yukito", "kiyoka"];
 const CHAT_VRM_PARAMS_STORAGE_KEY = "chatVRMParams";
 const YOUTUBE_AUTH_SESSION_STORAGE_KEY = "youtubeAuthSessionV1";
 const YOUTUBE_AUTH_SESSION_LEEWAY_MS = 30000;
@@ -63,13 +80,28 @@ export default function Home() {
   const [geminiVoiceName, setGeminiVoiceName] = useState(
     DEFAULT_GEMINI_VOICE_NAME,
   );
+  const [interactionMode, setInteractionMode] =
+    useState<InteractionMode>("chat");
+  const [podcastTurnCount, setPodcastTurnCount] = useState(
+    DEFAULT_PODCAST_TURN_COUNT,
+  );
+  const [podcastYukitoVoiceName, setPodcastYukitoVoiceName] = useState(
+    DEFAULT_PODCAST_PARTICIPANTS.yukito.voiceName,
+  );
+  const [podcastKiyokaVoiceName, setPodcastKiyokaVoiceName] = useState(
+    DEFAULT_PODCAST_PARTICIPANTS.kiyoka.voiceName,
+  );
   const [selectedMotionId, setSelectedMotionId] = useState<BuiltInMotionId>(
     DEFAULT_BUILT_IN_MOTION_ID,
   );
   const [chatProcessing, setChatProcessing] = useState(false);
   const [chatLog, setChatLog] = useState<Message[]>([]);
+  const [podcastLog, setPodcastLog] = useState<Message[]>([]);
   const [assistantMessage, setAssistantMessage] = useState("");
   const [assistantStatus, setAssistantStatus] = useState("");
+  const [assistantSpeakerName, setAssistantSpeakerName] = useState("");
+  const [activePodcastSpeakerId, setActivePodcastSpeakerId] =
+    useState<PodcastSpeakerId | null>(null);
 
   const [youtubeClientId, setYoutubeClientId] = useState(
     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "",
@@ -101,6 +133,9 @@ export default function Home() {
   >([]);
 
   const chatLogRef = useRef<Message[]>([]);
+  const podcastTurnsRef = useRef<PodcastTurn[]>([]);
+  const podcastViewerRegistryRef = useRef<Partial<PodcastViewerRegistry>>({});
+  const podcastRunTokenRef = useRef(0);
   const youtubeSeenCommentIdsRef = useRef<Set<string>>(new Set());
   const youtubePollPageTokenRef = useRef<string | null>(null);
   const youtubeRelayPrimedRef = useRef(false);
@@ -131,8 +166,23 @@ export default function Home() {
         const params = JSON.parse(rawChatParams);
         setSystemPrompt(params.systemPrompt ?? SYSTEM_PROMPT);
         setChatLog(params.chatLog ?? []);
+        setPodcastLog(params.podcastLog ?? []);
         setGeminiModel(params.geminiModel ?? DEFAULT_GEMINI_LIVE_MODEL);
         setGeminiVoiceName(params.geminiVoiceName ?? DEFAULT_GEMINI_VOICE_NAME);
+        setInteractionMode(
+          params.interactionMode === "podcast" ? "podcast" : "chat",
+        );
+        setPodcastTurnCount(clampPodcastTurnCount(params.podcastTurnCount));
+        setPodcastYukitoVoiceName(
+          typeof params.podcastYukitoVoiceName === "string"
+            ? params.podcastYukitoVoiceName
+            : DEFAULT_PODCAST_PARTICIPANTS.yukito.voiceName,
+        );
+        setPodcastKiyokaVoiceName(
+          typeof params.podcastKiyokaVoiceName === "string"
+            ? params.podcastKiyokaVoiceName
+            : DEFAULT_PODCAST_PARTICIPANTS.kiyoka.voiceName,
+        );
         if (
           typeof params.selectedMotionId === "string" &&
           isBuiltInMotionId(params.selectedMotionId)
@@ -205,6 +255,9 @@ export default function Home() {
   useEffect(() => {
     const motion = BUILT_IN_MOTIONS[selectedMotionId];
     void viewer.setMotion(motion);
+    Object.values(podcastViewerRegistryRef.current).forEach((podcastViewer) => {
+      void podcastViewer.setMotion(motion);
+    });
   }, [selectedMotionId, viewer]);
 
   useEffect(() => {
@@ -213,8 +266,13 @@ export default function Home() {
       JSON.stringify({
         systemPrompt,
         chatLog,
+        podcastLog,
         geminiModel,
         geminiVoiceName,
+        interactionMode,
+        podcastTurnCount,
+        podcastYukitoVoiceName,
+        podcastKiyokaVoiceName,
         selectedMotionId,
         youtubeClientId,
         selectedYoutubeBroadcastId,
@@ -225,8 +283,13 @@ export default function Home() {
   }, [
     systemPrompt,
     chatLog,
+    podcastLog,
     geminiModel,
     geminiVoiceName,
+    interactionMode,
+    podcastTurnCount,
+    podcastYukitoVoiceName,
+    podcastKiyokaVoiceName,
     selectedMotionId,
     youtubeClientId,
     selectedYoutubeBroadcastId,
@@ -264,13 +327,34 @@ export default function Home() {
 
   const handleChangeChatLog = useCallback(
     (targetIndex: number, text: string) => {
-      setChatLog((currentChatLog) =>
-        currentChatLog.map((value: Message, index) =>
+      const updateMessageList = (currentMessageList: Message[]) =>
+        currentMessageList.map((value: Message, index) =>
           index === targetIndex ? updateEditableMessage(value, text) : value,
-        ),
-      );
+        );
+
+      if (interactionMode === "podcast") {
+        setPodcastLog(updateMessageList);
+        return;
+      }
+
+      setChatLog(updateMessageList);
     },
-    [],
+    [interactionMode],
+  );
+  const podcastParticipants = buildRuntimePodcastParticipants({
+    yukitoVoiceName: podcastYukitoVoiceName,
+    kiyokaVoiceName: podcastKiyokaVoiceName,
+  });
+
+  const handlePodcastViewersReady = useCallback(
+    (viewers: PodcastViewerRegistry) => {
+      podcastViewerRegistryRef.current = viewers;
+      const motion = BUILT_IN_MOTIONS[selectedMotionId];
+      Object.values(viewers).forEach((podcastViewer) => {
+        void podcastViewer.setMotion(motion);
+      });
+    },
+    [selectedMotionId],
   );
 
   const startChatTurn = useCallback(
@@ -281,6 +365,7 @@ export default function Home() {
       }
 
       if (!geminiApiKey) {
+        setAssistantSpeakerName("");
         setAssistantMessage("Enter your Gemini API key first.");
         return false;
       }
@@ -291,6 +376,7 @@ export default function Home() {
       };
 
       setChatProcessing(true);
+      setAssistantSpeakerName("CHARACTER");
       setAssistantMessage("");
       setAssistantStatus("Connecting to Gemini Live...");
 
@@ -364,9 +450,202 @@ export default function Home() {
     [geminiApiKey, geminiModel, geminiVoiceName, systemPrompt, viewer.model],
   );
 
+  const startPodcastConversation = useCallback(
+    async (topic: string) => {
+      const trimmedTopic = topic.trim();
+      if (!trimmedTopic) {
+        return false;
+      }
+
+      if (!geminiApiKey) {
+        setAssistantSpeakerName("");
+        setAssistantMessage("Enter your Gemini API key first.");
+        return false;
+      }
+
+      const podcastViewers = podcastViewerRegistryRef.current;
+      const missingSpeaker = PODCAST_SPEAKER_IDS.find(
+        (speakerId) => !podcastViewers[speakerId]?.model,
+      );
+
+      if (missingSpeaker) {
+        setAssistantSpeakerName("");
+        setAssistantStatus("Podcast stage is still loading...");
+        setAssistantMessage(
+          `${podcastParticipants[missingSpeaker].displayName} is not ready yet.`,
+        );
+        return false;
+      }
+
+      const runToken = ++podcastRunTokenRef.current;
+      podcastTurnsRef.current = [];
+      setPodcastLog([]);
+      setChatProcessing(true);
+      setAssistantSpeakerName("");
+      setAssistantMessage("");
+      setAssistantStatus("Preparing podcast mode...");
+
+      try {
+        for (let turnIndex = 0; turnIndex < podcastTurnCount; turnIndex += 1) {
+          if (runToken !== podcastRunTokenRef.current) {
+            return false;
+          }
+
+          const speakerId: PodcastSpeakerId =
+            turnIndex % 2 === 0 ? "yukito" : "kiyoka";
+          const partnerId = speakerId === "yukito" ? "kiyoka" : "yukito";
+          const speaker = podcastParticipants[speakerId];
+          const partner = podcastParticipants[partnerId];
+          const speakerModel = podcastViewers[speakerId]?.model;
+
+          if (!speakerModel) {
+            throw new Error(`${speaker.displayName} is not ready for audio playback.`);
+          }
+
+          const priorTurns = podcastTurnsRef.current;
+          const priorMessages = podcastTurnsToGeminiMessages(priorTurns, speakerId);
+          const latestPartnerTurn = priorTurns[priorTurns.length - 1];
+          let hasStartedAudio = false;
+
+          setActivePodcastSpeakerId(speakerId);
+          setAssistantSpeakerName(speaker.displayName);
+          setAssistantMessage("");
+          setAssistantStatus(
+            `Podcast ${turnIndex + 1}/${podcastTurnCount} - ${speaker.displayName} speaking...`,
+          );
+
+          await speakerModel.beginStreamingSpeak(createNeutralScreenplay(""));
+
+          const response =
+            latestPartnerTurn == null
+              ? await getGeminiLiveChatResponse({
+                  apiKey: geminiApiKey,
+                  messages: [
+                    ...priorMessages,
+                    {
+                      role: "user",
+                      content: buildPodcastOpeningPrompt(
+                        trimmedTopic,
+                        speaker,
+                        partner,
+                        podcastTurnCount,
+                      ),
+                      name: "PODCAST",
+                      source: "podcast",
+                    },
+                  ],
+                  systemPrompt: speaker.systemPrompt,
+                  model: geminiModel,
+                  voiceName: speaker.voiceName,
+                  onAudioChunk: (chunk) => {
+                    if (!hasStartedAudio) {
+                      hasStartedAudio = true;
+                      setAssistantStatus(
+                        `Podcast ${turnIndex + 1}/${podcastTurnCount} - ${speaker.displayName} on mic...`,
+                      );
+                    }
+                    speakerModel.appendPCMChunk(chunk.data, chunk.mimeType);
+                  },
+                  onPartialTranscript: (partialTranscript) => {
+                    if (!hasStartedAudio) {
+                      setAssistantStatus(
+                        `Podcast ${turnIndex + 1}/${podcastTurnCount} - ${speaker.displayName} drafting...`,
+                      );
+                    }
+                    setAssistantMessage(partialTranscript);
+                  },
+                })
+              : await getGeminiLiveAudioRelayResponse({
+                  apiKey: geminiApiKey,
+                  historyMessages: priorMessages,
+                  systemPrompt: buildPodcastRelaySystemPrompt(
+                    speaker,
+                    partner,
+                    priorTurns,
+                    latestPartnerTurn.transcript,
+                  ),
+                  relayAudioBytes: latestPartnerTurn.audioBytes,
+                  relayAudioMimeType: latestPartnerTurn.audioMimeType,
+                  relayTranscript: latestPartnerTurn.transcript,
+                  model: geminiModel,
+                  voiceName: speaker.voiceName,
+                  onAudioChunk: (chunk) => {
+                    if (!hasStartedAudio) {
+                      hasStartedAudio = true;
+                      setAssistantStatus(
+                        `Podcast ${turnIndex + 1}/${podcastTurnCount} - ${speaker.displayName} replying...`,
+                      );
+                    }
+                    speakerModel.appendPCMChunk(chunk.data, chunk.mimeType);
+                  },
+                  onPartialTranscript: (partialTranscript) => {
+                    if (!hasStartedAudio) {
+                      setAssistantStatus(
+                        `Podcast ${turnIndex + 1}/${podcastTurnCount} - ${speaker.displayName} thinking...`,
+                      );
+                    }
+                    setAssistantMessage(partialTranscript);
+                  },
+                });
+
+          const transcript =
+            response.transcript.trim() ||
+            `${speaker.displayName} responded with audio.`;
+          const nextTurn: PodcastTurn = {
+            speakerId,
+            speakerName: speaker.displayName,
+            transcript,
+            audioMimeType: response.audioMimeType,
+            audioBytes: response.audioBytes,
+          };
+
+          podcastTurnsRef.current = [...podcastTurnsRef.current, nextTurn];
+          setPodcastLog(buildPodcastDisplayLog(podcastTurnsRef.current));
+          setAssistantMessage(transcript);
+
+          await speakerModel.finishStreamingSpeak();
+
+          if (turnIndex < podcastTurnCount - 1) {
+            setAssistantStatus(
+              `${speaker.displayName} finished. Handing the mic to ${partner.displayName}...`,
+            );
+            await wait(PODCAST_INTER_TURN_DELAY_MS);
+          }
+        }
+
+        setAssistantStatus("Podcast finished.");
+        return true;
+      } catch (error) {
+        Object.values(podcastViewers).forEach((podcastViewer) =>
+          podcastViewer.model?.stopSpeaking(),
+        );
+        console.error(error);
+        setAssistantStatus("Error");
+        setAssistantMessage(
+          error instanceof Error ? error.message : "Podcast mode failed.",
+        );
+        return false;
+      } finally {
+        setActivePodcastSpeakerId(null);
+        setChatProcessing(false);
+      }
+    },
+    [
+      geminiApiKey,
+      geminiModel,
+      podcastParticipants,
+      podcastTurnCount,
+    ],
+  );
+
   const handleSendChat = useCallback(
     async (text: string) => {
       if (text == null || !text.trim()) {
+        return;
+      }
+
+      if (interactionMode === "podcast") {
+        await startPodcastConversation(text);
         return;
       }
 
@@ -377,7 +656,7 @@ export default function Home() {
         name: "YOU",
       });
     },
-    [startChatTurn],
+    [interactionMode, startChatTurn, startPodcastConversation],
   );
 
   const resetYoutubeSession = useCallback((message: string) => {
@@ -738,6 +1017,15 @@ export default function Home() {
     youtubePendingComments,
   ]);
 
+  const activeConversationLog =
+    interactionMode === "podcast" ? podcastLog : chatLog;
+  const inputPlaceholder =
+    interactionMode === "podcast"
+      ? "Type a podcast topic"
+      : "Type a message";
+  const inputModeLabel =
+    interactionMode === "podcast" ? "Podcast Mode" : undefined;
+
   return (
     <div className="relative min-h-[100svh] font-M_PLUS_2">
       <Meta />
@@ -764,27 +1052,56 @@ export default function Home() {
         geminiApiKey={geminiApiKey}
         onChangeGeminiApiKey={setGeminiApiKey}
       />
-      <VrmViewer />
+      {interactionMode === "podcast" ? (
+        <PodcastStage
+          participants={[podcastParticipants.yukito, podcastParticipants.kiyoka]}
+          activeSpeakerId={activePodcastSpeakerId}
+          onViewersReady={handlePodcastViewersReady}
+        />
+      ) : (
+        <VrmViewer />
+      )}
       <MessageInputContainer
         isChatProcessing={chatProcessing}
+        placeholder={inputPlaceholder}
+        modeLabel={inputModeLabel}
         onChatProcessStart={handleSendChat}
       />
       <Menu
         geminiApiKey={geminiApiKey}
         geminiModel={geminiModel}
         geminiVoiceName={geminiVoiceName}
+        interactionMode={interactionMode}
+        podcastTurnCount={podcastTurnCount}
+        podcastYukitoVoiceName={podcastYukitoVoiceName}
+        podcastKiyokaVoiceName={podcastKiyokaVoiceName}
         selectedMotionId={selectedMotionId}
         systemPrompt={systemPrompt}
-        chatLog={chatLog}
+        chatLog={activeConversationLog}
         assistantMessage={assistantMessage}
         assistantStatus={assistantStatus}
+        assistantSpeakerName={assistantSpeakerName}
         onChangeGeminiApiKey={setGeminiApiKey}
         onChangeGeminiModel={setGeminiModel}
         onChangeGeminiVoiceName={setGeminiVoiceName}
+        onChangeInteractionMode={setInteractionMode}
+        onChangePodcastTurnCount={(nextTurnCount) =>
+          setPodcastTurnCount(clampPodcastTurnCount(nextTurnCount))
+        }
+        onChangePodcastYukitoVoiceName={setPodcastYukitoVoiceName}
+        onChangePodcastKiyokaVoiceName={setPodcastKiyokaVoiceName}
         onChangeMotion={setSelectedMotionId}
         onChangeSystemPrompt={setSystemPrompt}
         onChangeChatLog={handleChangeChatLog}
-        handleClickResetChatLog={() => setChatLog([])}
+        handleClickResetChatLog={() => {
+          if (interactionMode === "podcast") {
+            podcastTurnsRef.current = [];
+            setPodcastLog([]);
+            return;
+          }
+
+          setChatLog([]);
+        }}
         handleClickResetSystemPrompt={() => setSystemPrompt(SYSTEM_PROMPT)}
         youtubeSection={
           <YoutubeLiveControlDeck
@@ -912,6 +1229,37 @@ function createNeutralScreenplay(message: string): Screenplay {
       speakerX: DEFAULT_PARAM.speakerX,
       speakerY: DEFAULT_PARAM.speakerY,
       message,
+    },
+  };
+}
+
+function clampPodcastTurnCount(value: unknown): number {
+  const parsed = Number.parseInt(String(value ?? DEFAULT_PODCAST_TURN_COUNT), 10);
+
+  if (Number.isNaN(parsed)) {
+    return DEFAULT_PODCAST_TURN_COUNT;
+  }
+
+  return Math.min(Math.max(parsed, 2), 12);
+}
+
+function buildRuntimePodcastParticipants({
+  yukitoVoiceName,
+  kiyokaVoiceName,
+}: {
+  yukitoVoiceName: string;
+  kiyokaVoiceName: string;
+}): Record<PodcastSpeakerId, PodcastParticipant> {
+  return {
+    yukito: {
+      ...DEFAULT_PODCAST_PARTICIPANTS.yukito,
+      voiceName:
+        yukitoVoiceName.trim() || DEFAULT_PODCAST_PARTICIPANTS.yukito.voiceName,
+    },
+    kiyoka: {
+      ...DEFAULT_PODCAST_PARTICIPANTS.kiyoka,
+      voiceName:
+        kiyokaVoiceName.trim() || DEFAULT_PODCAST_PARTICIPANTS.kiyoka.voiceName,
     },
   };
 }

@@ -1,9 +1,10 @@
 type Props = {
   message: string;
   status?: string;
+  speakerName?: string;
 };
 
-export const AssistantText = ({ message, status }: Props) => {
+export const AssistantText = ({ message, status, speakerName }: Props) => {
   const normalizedMessage = message.replace(/\[([a-zA-Z]*?)\]/g, "");
   const shouldShowMessage = normalizedMessage !== "" && normalizedMessage !== status;
 
@@ -17,7 +18,7 @@ export const AssistantText = ({ message, status }: Props) => {
           aria-atomic="true"
         >
           <div className="px-24 py-8 bg-secondary rounded-t-8 text-white font-bold tracking-wider">
-            CHARACTER
+            {speakerName || "CHARACTER"}
           </div>
           <div className="px-24 py-16">
             {status ? (

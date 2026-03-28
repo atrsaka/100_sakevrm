@@ -6,20 +6,30 @@ import { Settings } from "./settings";
 import { ViewerContext } from "@/features/vrmViewer/viewerContext";
 import { AssistantText } from "./assistantText";
 import { BuiltInMotionId } from "@/features/vrmViewer/builtInMotions";
+import { InteractionMode } from "@/features/podcast/podcastConfig";
 
 type Props = {
   geminiApiKey: string;
   geminiModel: string;
   geminiVoiceName: string;
+  interactionMode: InteractionMode;
+  podcastTurnCount: number;
+  podcastYukitoVoiceName: string;
+  podcastKiyokaVoiceName: string;
   selectedMotionId: BuiltInMotionId;
   systemPrompt: string;
   chatLog: Message[];
   assistantMessage: string;
   assistantStatus: string;
+  assistantSpeakerName?: string;
   onChangeSystemPrompt: (systemPrompt: string) => void;
   onChangeGeminiApiKey: (key: string) => void;
   onChangeGeminiModel: (model: string) => void;
   onChangeGeminiVoiceName: (voiceName: string) => void;
+  onChangeInteractionMode: (mode: InteractionMode) => void;
+  onChangePodcastTurnCount: (turnCount: number) => void;
+  onChangePodcastYukitoVoiceName: (voiceName: string) => void;
+  onChangePodcastKiyokaVoiceName: (voiceName: string) => void;
   onChangeMotion: (motionId: BuiltInMotionId) => void;
   onChangeChatLog: (index: number, text: string) => void;
   handleClickResetChatLog: () => void;
@@ -31,15 +41,24 @@ export const Menu = ({
   geminiApiKey,
   geminiModel,
   geminiVoiceName,
+  interactionMode,
+  podcastTurnCount,
+  podcastYukitoVoiceName,
+  podcastKiyokaVoiceName,
   selectedMotionId,
   systemPrompt,
   chatLog,
   assistantMessage,
   assistantStatus,
+  assistantSpeakerName,
   onChangeSystemPrompt,
   onChangeGeminiApiKey,
   onChangeGeminiModel,
   onChangeGeminiVoiceName,
+  onChangeInteractionMode,
+  onChangePodcastTurnCount,
+  onChangePodcastYukitoVoiceName,
+  onChangePodcastKiyokaVoiceName,
   onChangeMotion,
   onChangeChatLog,
   handleClickResetChatLog,
@@ -138,6 +157,10 @@ export const Menu = ({
           geminiApiKey={geminiApiKey}
           geminiModel={geminiModel}
           geminiVoiceName={geminiVoiceName}
+          interactionMode={interactionMode}
+          podcastTurnCount={podcastTurnCount}
+          podcastYukitoVoiceName={podcastYukitoVoiceName}
+          podcastKiyokaVoiceName={podcastKiyokaVoiceName}
           selectedMotionId={selectedMotionId}
           chatLog={chatLog}
           systemPrompt={systemPrompt}
@@ -145,6 +168,10 @@ export const Menu = ({
           onChangeGeminiApiKey={handleGeminiApiKeyChange}
           onChangeGeminiModel={handleGeminiModelChange}
           onChangeGeminiVoiceName={handleGeminiVoiceNameChange}
+          onChangeInteractionMode={onChangeInteractionMode}
+          onChangePodcastTurnCount={onChangePodcastTurnCount}
+          onChangePodcastYukitoVoiceName={onChangePodcastYukitoVoiceName}
+          onChangePodcastKiyokaVoiceName={onChangePodcastKiyokaVoiceName}
           onChangeMotion={onChangeMotion}
           onChangeSystemPrompt={handleChangeSystemPrompt}
           onChangeChatLog={onChangeChatLog}
@@ -158,6 +185,7 @@ export const Menu = ({
         <AssistantText
           message={assistantMessage || assistantStatus}
           status={assistantStatus || undefined}
+          speakerName={assistantSpeakerName}
         />
       )}
       <input

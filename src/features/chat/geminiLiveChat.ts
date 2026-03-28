@@ -13,10 +13,13 @@ import {
   resolveGeminiVoiceName,
 } from "./geminiLiveConfig";
 
-export type GeminiLiveChatResponse = {
+export type GeminiLiveTurnResult = {
   transcript: string;
   audioMimeType: string;
+  audioBytes: Uint8Array;
 };
+
+export type GeminiLiveChatResponse = GeminiLiveTurnResult;
 
 export type GeminiLiveAudioChunk = {
   data: Uint8Array;
@@ -114,6 +117,7 @@ async function runGeminiLiveChat({
   let transcript = "";
   let turnSettled = false;
   let hasReceivedAudio = false;
+  const audioChunks: Uint8Array[] = [];
   const resolvedVoiceName = resolveGeminiVoiceName(voiceName);
   let session: Awaited<ReturnType<typeof ai.live.connect>> | undefined;
 
@@ -152,6 +156,7 @@ async function runGeminiLiveChat({
             const resolvedMimeType = mimeType || audioMimeType;
 
             hasReceivedAudio = true;
+            audioChunks.push(data);
             if (!audioMimeType && resolvedMimeType) {
               audioMimeType = resolvedMimeType;
             }
@@ -219,6 +224,7 @@ async function runGeminiLiveChat({
   return {
     transcript: transcript.trim(),
     audioMimeType,
+    audioBytes: concatenateAudioChunks(audioChunks),
   };
 }
 
@@ -238,7 +244,7 @@ function buildFallbackError(primaryError: unknown, fallbackError: unknown) {
   );
 }
 
-function messagesToGeminiTurns(messages: Message[]): Content[] {
+export function messagesToGeminiTurns(messages: Message[]): Content[] {
   return messages
     .filter((message) => message.role !== "system")
     .map((message) => ({
@@ -281,4 +287,17 @@ function decodeBase64(data: string): Uint8Array {
   }
 
   return bytes;
+}
+
+function concatenateAudioChunks(chunks: Uint8Array[]): Uint8Array {
+  const totalLength = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
+  const merged = new Uint8Array(totalLength);
+  let offset = 0;
+
+  for (const chunk of chunks) {
+    merged.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  return merged;
 }

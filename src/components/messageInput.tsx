@@ -4,6 +4,8 @@ type Props = {
   userMessage: string;
   isMicRecording: boolean;
   isChatProcessing: boolean;
+  placeholder?: string;
+  modeLabel?: string;
   onChangeUserMessage: (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => void;
@@ -15,6 +17,8 @@ export const MessageInput = ({
   userMessage,
   isMicRecording,
   isChatProcessing,
+  placeholder = "Type a message",
+  modeLabel,
   onChangeUserMessage,
   onClickMicButton,
   onClickSendButton,
@@ -23,6 +27,11 @@ export const MessageInput = ({
     <div className="absolute bottom-0 z-20 w-screen">
       <div className="bg-base text-black">
         <div className="mx-auto max-w-4xl p-16">
+          {modeLabel ? (
+            <div className="mb-8 inline-flex rounded-full bg-white/80 px-12 py-6 text-xs font-bold uppercase tracking-[0.18em] text-secondary shadow-sm">
+              {modeLabel}
+            </div>
+          ) : null}
           <div className="grid grid-flow-col grid-cols-[min-content_1fr_min-content] gap-[8px]">
             <IconButton
               iconName="24/Microphone"
@@ -33,7 +42,7 @@ export const MessageInput = ({
             />
             <input
               type="text"
-              placeholder="Type a message"
+              placeholder={placeholder}
               onChange={onChangeUserMessage}
               disabled={isChatProcessing}
               className="disabled bg-surface1 hover:bg-surface1-hover focus:bg-surface1 disabled:bg-surface1-disabled disabled:text-primary-disabled w-full rounded-16 px-16 text-text-primary typography-16 font-bold"

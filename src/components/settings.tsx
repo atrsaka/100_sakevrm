@@ -11,11 +11,16 @@ import {
   BUILT_IN_MOTION_LIST,
   BuiltInMotionId,
 } from "@/features/vrmViewer/builtInMotions";
+import { InteractionMode } from "@/features/podcast/podcastConfig";
 
 type Props = {
   geminiApiKey: string;
   geminiModel: string;
   geminiVoiceName: string;
+  interactionMode: InteractionMode;
+  podcastTurnCount: number;
+  podcastYukitoVoiceName: string;
+  podcastKiyokaVoiceName: string;
   selectedMotionId: BuiltInMotionId;
   systemPrompt: string;
   chatLog: Message[];
@@ -23,6 +28,10 @@ type Props = {
   onChangeGeminiApiKey: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onChangeGeminiModel: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onChangeGeminiVoiceName: (voiceName: string) => void;
+  onChangeInteractionMode: (mode: InteractionMode) => void;
+  onChangePodcastTurnCount: (turnCount: number) => void;
+  onChangePodcastYukitoVoiceName: (voiceName: string) => void;
+  onChangePodcastKiyokaVoiceName: (voiceName: string) => void;
   onChangeMotion: (motionId: BuiltInMotionId) => void;
   onChangeSystemPrompt: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onChangeChatLog: (index: number, text: string) => void;
@@ -36,6 +45,10 @@ export const Settings = ({
   geminiApiKey,
   geminiModel,
   geminiVoiceName,
+  interactionMode,
+  podcastTurnCount,
+  podcastYukitoVoiceName,
+  podcastKiyokaVoiceName,
   selectedMotionId,
   systemPrompt,
   chatLog,
@@ -43,6 +56,10 @@ export const Settings = ({
   onChangeGeminiApiKey,
   onChangeGeminiModel,
   onChangeGeminiVoiceName,
+  onChangeInteractionMode,
+  onChangePodcastTurnCount,
+  onChangePodcastYukitoVoiceName,
+  onChangePodcastKiyokaVoiceName,
   onChangeMotion,
   onChangeSystemPrompt,
   onChangeChatLog,
@@ -51,8 +68,12 @@ export const Settings = ({
   onClickResetSystemPrompt,
   youtubeSection,
 }: Props) => {
-  const [activePage, setActivePage] = useState<"main" | "youtube">("main");
-  const previousPageRef = useRef<"main" | "youtube">("main");
+  const [activePage, setActivePage] = useState<"main" | "podcast" | "youtube">(
+    "main",
+  );
+  const previousPageRef = useRef<"main" | "podcast" | "youtube">("main");
+  const podcastEntryButtonRef = useRef<HTMLButtonElement | null>(null);
+  const podcastTitleRef = useRef<HTMLDivElement | null>(null);
   const streamingEntryButtonRef = useRef<HTMLButtonElement | null>(null);
   const youtubeTitleRef = useRef<HTMLDivElement | null>(null);
   const isPresetVoice = (GEMINI_VOICE_PRESETS as readonly string[]).includes(
@@ -68,8 +89,12 @@ export const Settings = ({
   useEffect(() => {
     const previousPage = previousPageRef.current;
 
-    if (activePage === "youtube") {
+    if (activePage === "podcast") {
+      podcastTitleRef.current?.focus();
+    } else if (activePage === "youtube") {
       youtubeTitleRef.current?.focus();
+    } else if (previousPage === "podcast") {
+      podcastEntryButtonRef.current?.focus();
     } else if (previousPage === "youtube") {
       streamingEntryButtonRef.current?.focus();
     }
@@ -94,7 +119,120 @@ export const Settings = ({
           aria-labelledby="settings-title"
           className="mx-auto max-w-3xl px-24 py-64 text-text1"
         >
-          {activePage === "youtube" ? (
+          {activePage === "podcast" ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setActivePage("main")}
+                aria-label="Back to main settings"
+                className="my-16 text-sm font-bold text-primary hover:text-primary-hover"
+              >
+                Back to settings
+              </button>
+              <div
+                ref={podcastTitleRef}
+                id="settings-title"
+                tabIndex={-1}
+                className="my-12 typography-32 font-bold"
+              >
+                Podcast settings
+              </div>
+              <div className="mb-16 text-sm text-text2">
+                Optional controls for Yukito and Kiyoka&apos;s looped
+                conversation flow.
+              </div>
+              <div className="rounded-16 border border-black/10 bg-white/70 px-16 py-16">
+                <div className="typography-20 font-bold">Playback scope</div>
+                <div className="mt-16">
+                  <label
+                    htmlFor="settings-podcast-turn-count"
+                    className="my-12 block font-bold"
+                  >
+                    Maximum loop count
+                  </label>
+                  <input
+                    id="settings-podcast-turn-count"
+                    className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
+                    type="number"
+                    min={2}
+                    max={12}
+                    step={1}
+                    value={podcastTurnCount}
+                    onChange={(event) =>
+                      onChangePodcastTurnCount(
+                        Number.parseInt(event.target.value, 10),
+                      )
+                    }
+                  />
+                  <div className="mt-8 text-sm text-text2">
+                    Podcast mode stops automatically when this cap is reached.
+                    A value of <code>2</code> means one short back-and-forth:
+                    Yukito once and Kiyoka once.
+                  </div>
+                </div>
+                <div className="mt-16 flex flex-wrap gap-8">
+                  {[2, 4, 6, 8, 12].map((presetCount) => {
+                    const isSelected = presetCount === podcastTurnCount;
+                    return (
+                      <button
+                        key={presetCount}
+                        type="button"
+                        onClick={() => onChangePodcastTurnCount(presetCount)}
+                        className={`rounded-full px-12 py-6 text-sm font-bold transition ${
+                          isSelected
+                            ? "bg-primary text-white"
+                            : "bg-surface1 text-text1 hover:bg-surface1-hover"
+                        }`}
+                      >
+                        {presetCount} turns
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="mt-24 rounded-16 border border-black/10 bg-white/70 px-16 py-16">
+                <div className="typography-20 font-bold">Voice routing</div>
+                <div className="mt-16">
+                  <label
+                    htmlFor="settings-podcast-yukito-voice"
+                    className="my-12 block font-bold"
+                  >
+                    Yukito voice
+                  </label>
+                  <input
+                    id="settings-podcast-yukito-voice"
+                    className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
+                    type="text"
+                    value={podcastYukitoVoiceName}
+                    onChange={(event) =>
+                      onChangePodcastYukitoVoiceName(event.target.value)
+                    }
+                  />
+                </div>
+                <div className="mt-16">
+                  <label
+                    htmlFor="settings-podcast-kiyoka-voice"
+                    className="my-12 block font-bold"
+                  >
+                    Kiyoka voice
+                  </label>
+                  <input
+                    id="settings-podcast-kiyoka-voice"
+                    className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
+                    type="text"
+                    value={podcastKiyokaVoiceName}
+                    onChange={(event) =>
+                      onChangePodcastKiyokaVoiceName(event.target.value)
+                    }
+                  />
+                </div>
+                <div className="mt-8 text-sm text-text2">
+                  These only affect podcast mode. The regular single-character
+                  chat voice stays independent.
+                </div>
+              </div>
+            </>
+          ) : activePage === "youtube" ? (
             <>
               <button
                 type="button"
@@ -125,6 +263,87 @@ export const Settings = ({
                 className="my-24 typography-32 font-bold"
               >
                 Settings
+              </div>
+
+              <div className="my-24">
+                <div className="my-16 typography-20 font-bold">
+                  Conversation mode
+                </div>
+                <div className="grid gap-12 md:grid-cols-2">
+                  {(["chat", "podcast"] as const).map((mode) => {
+                    const isSelected = interactionMode === mode;
+
+                    return (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => onChangeInteractionMode(mode)}
+                        className={`rounded-16 border px-16 py-16 text-left transition ${
+                          isSelected
+                            ? "border-primary bg-primary text-white shadow-lg"
+                            : "border-black/10 bg-white/70 text-text1 hover:border-primary/40 hover:bg-surface1"
+                        }`}
+                      >
+                        <div className="typography-20 font-bold">
+                          {mode === "chat" ? "Character chat" : "Podcast mode"}
+                        </div>
+                        <p
+                          className={`mt-10 text-sm leading-relaxed ${
+                            isSelected ? "text-white/90" : "text-text2"
+                          }`}
+                        >
+                          {mode === "chat"
+                            ? "Talk with a single avatar like the current app."
+                            : "Let Yukito and Kiyoka alternate short audio turns from one topic."}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-8 text-sm">
+                  Podcast mode relays the previous speaker&apos;s audio into the
+                  next
+                  Gemini Live turn, with transcript fallback if the relay cannot
+                  be used.
+                </div>
+              </div>
+
+              <div className="my-40">
+                <div className="my-16 typography-20 font-bold">
+                  Podcast mode
+                </div>
+                <button
+                  ref={podcastEntryButtonRef}
+                  type="button"
+                  onClick={() => setActivePage("podcast")}
+                  aria-label="Open podcast settings"
+                  className="w-full rounded-16 border border-black/10 bg-white/70 px-16 py-16 text-left transition hover:border-primary/30 hover:bg-surface1"
+                >
+                  <div className="flex items-start justify-between gap-12">
+                    <div>
+                      <div className="typography-20 font-bold">
+                        Podcast settings
+                      </div>
+                      <div className="mt-6 text-sm leading-relaxed text-text2">
+                        Tune Yukito and Kiyoka&apos;s maximum loop count and
+                        podcast-only voice routing.
+                      </div>
+                    </div>
+                    <div className="rounded-full bg-secondary/10 px-10 py-4 text-xs font-bold text-secondary">
+                      Optional
+                    </div>
+                  </div>
+                  <div className="mt-10 text-sm text-text2">
+                    Max loop count: <strong>{podcastTurnCount}</strong>
+                    {" · "}
+                    Yukito: <strong>{podcastYukitoVoiceName || "Default"}</strong>
+                    {" · "}
+                    Kiyoka: <strong>{podcastKiyokaVoiceName || "Default"}</strong>
+                  </div>
+                  <div className="mt-10 text-sm font-bold text-primary">
+                    Open podcast settings
+                  </div>
+                </button>
               </div>
 
               <div className="my-24">

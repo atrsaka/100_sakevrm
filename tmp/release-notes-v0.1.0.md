@@ -1,13 +1,14 @@
-# v0.1.0 draft release notes
+# v0.1.0
 
-この草案は、まだ `v0.1.0` タグを切る前の初回リリースノートです。  
-比較範囲は `991bff6db1f30c8e59d65407f2f14e9f37aebb10..62b77f012f557803c7bb76de787e6ee12d51009f` です。
+[![Release Notes EN](https://img.shields.io/badge/docs-release%20notes%20en-2F7CF6)](https://sunwood-ai-labs.github.io/GeminiVRM/docs/releases/v0.1.0)
+[![Release Notes JA](https://img.shields.io/badge/docs-release%20notes%20ja-ff5d72)](https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/releases/v0.1.0)
+[![Launch Guide EN](https://img.shields.io/badge/docs-launch%20guide%20en-00B894)](https://sunwood-ai-labs.github.io/GeminiVRM/docs/articles/v0.1.0-launch)
+[![Launch Guide JA](https://img.shields.io/badge/docs-launch%20guide%20ja-f4a261)](https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/articles/v0.1.0-launch)
 
-公開前メモ:
+![GeminiVRM v0.1.0 release header](https://sunwood-ai-labs.github.io/GeminiVRM/docs/releases/release-header-v0.1.0.svg)
 
-- release header asset: `docs/public/releases/release-header-v0.1.0.svg`
-- docs drafts: `docs/releases/v0.1.0.md`, `docs/ja/releases/v0.1.0.md`
-- GitHub Release を実際に公開する直前に、live docs URL と最終 tag hash を反映してください
+GeminiVRM の初回公開版です。  
+比較対象は、ルートコミットから `v0.1.0` までの全履歴です。
 
 ## Highlights
 
@@ -16,13 +17,15 @@
 - `public/Kiyoka.vrm` を同梱し、ローカル VRM 差し替え、live model / voice / system prompt の調整、idle motion 切り替えをアプリ内で操作できます。
 - `Settings` -> `Streaming` -> `YouTube relay` から、配信コメントの受信、broadcast 選択、incoming preview、Gemini への自動応答を任意で有効化できます。
 - VitePress docs、GitHub Pages 出力、CI、smoke E2E まで含めて、公開向けの配布面をそろえました。
+- companion walkthrough も英語版・日本語版で公開し、構造化された release notes と運用ガイドを分けて読めるようにしました。
 
 ## Known Constraints
 
 - Gemini API key は local-first 方針のままブラウザ側で入力します。
 - マイク入力は Web Speech API 依存で、現状は `ja-JP` 固定です。
 - YouTube relay は受信した新着コメントをアプリ内の Gemini チャットへ流す機能で、Gemini の返答を YouTube コメントへ投稿したり、映像配信自体を送出したりはしません。
-- この草案作成時点では `v0.1.0` タグと GitHub Release をまだ作成していないため、公開日と release URL は未記載です。
+- docs release notes: `https://sunwood-ai-labs.github.io/GeminiVRM/docs/releases/v0.1.0`
+- docs launch guides: `https://sunwood-ai-labs.github.io/GeminiVRM/docs/articles/v0.1.0-launch`, `https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/articles/v0.1.0-launch`
 
 ## Validation
 

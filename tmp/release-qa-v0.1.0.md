@@ -4,10 +4,10 @@
 
 - repository: `GeminiVRM`
 - release tag: `v0.1.0`
-- compare range: `991bff6db1f30c8e59d65407f2f14e9f37aebb10..62b77f012f557803c7bb76de787e6ee12d51009f` (initial release draft; no previous tag exists yet)
-- requested outputs: draft GitHub release body, docs-backed release notes
+- compare range: full shipped history from the root commit for the initial release candidate (no previous tag exists yet)
+- requested outputs: GitHub release body, docs-backed release notes, companion walkthrough article
 - validation commands run: `npm run lint`, `npm run build`, `npm run docs:build`, `$env:BASE_PATH='/GeminiVRM'; npm run build:pages`, `npm run e2e:smoke`, `powershell -ExecutionPolicy Bypass -File D:\Prj\gh-release-notes-skill\scripts\verify-svg-assets.ps1 -RepoPath . -Path public/repo-hero.svg,docs/public/releases/release-header-v0.1.0.svg`, `powershell -ExecutionPolicy Bypass -File D:\Prj\gh-release-notes-skill\scripts\verify-release-qa-inventory.ps1 -RepoPath . -Tag v0.1.0`
-- release URLs: not published; docs were validated locally and committed as draft release collateral
+- release URLs: docs URLs will be verified live before the GitHub release is published
 
 ## Claim Matrix
 
@@ -33,10 +33,10 @@
 
 | criterion_id | status | evidence |
 | --- | --- | --- |
-| compare_range | pass | `991bff6db1f30c8e59d65407f2f14e9f37aebb10..62b77f012f557803c7bb76de787e6ee12d51009f` for an explicit initial-release draft because no previous tag exists |
+| compare_range | pass | Full shipped history from the root commit for the initial release, with no previous tag available |
 | release_claims_backed | pass | Release collector output, inspected implementation files, and the claim matrix rows above back every shipped claim in the draft notes |
 | docs_release_notes | pass | `docs/releases.md`, `docs/releases/v0.1.0.md`, `docs/ja/releases.md`, `docs/ja/releases/v0.1.0.md` |
-| companion_walkthrough | user_waived | The user asked for release notes for `v0.1.0`, not a separate companion walkthrough article |
+| companion_walkthrough | pass | `docs/articles/v0.1.0-launch.md`, `docs/ja/articles/v0.1.0-launch.md` |
 | operator_claims_extracted | pass | The claim matrix above records the operator-facing release claims and their evidence |
 | impl_sensitive_claims_verified | pass | Verified Gemini Live, lip sync, microphone, YouTube relay, Pages export, and smoke E2E behavior against the implementing code paths |
 | steady_state_docs_reviewed | pass | README and steady-state docs review table completed above |
@@ -53,6 +53,6 @@
 ## Notes
 
 - blockers: none
-- waivers: companion walkthrough article, tag creation, GitHub release publication
+- waivers: tag creation, GitHub release publication
 - verification provenance: the fresh-port smoke rerun came from the docs/tooling audit seat because detached dev-server launch from the main shell was blocked by command policy
 - follow-up docs tasks: replace draft doc paths in `tmp/release-notes-v0.1.0.md` with live Pages URLs after the tag is created and docs are deployed

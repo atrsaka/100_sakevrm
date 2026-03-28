@@ -25,6 +25,7 @@ type PodcastStageCardProps = {
   align: "left" | "right";
   participant: PodcastParticipant;
   isActive: boolean;
+  isIdle: boolean;
   viewer: Viewer;
 };
 
@@ -88,12 +89,14 @@ export function PodcastStage({
           participant={leftParticipant}
           viewer={leftViewer}
           isActive={activeSpeakerId === leftParticipant.id}
+          isIdle={activeSpeakerId == null}
         />
         <PodcastStageCard
           align="right"
           participant={rightParticipant}
           viewer={rightViewer}
           isActive={activeSpeakerId === rightParticipant.id}
+          isIdle={activeSpeakerId == null}
         />
       </div>
     </section>
@@ -104,6 +107,7 @@ function PodcastStageCard({
   align,
   participant,
   isActive,
+  isIdle,
   viewer,
 }: PodcastStageCardProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -130,12 +134,14 @@ function PodcastStageCard({
           ? "-mr-16 sm:-mr-20 md:-mr-24"
           : "-ml-16 sm:-ml-20 md:-ml-24"
       } ${
-        isActive
+        isIdle
+          ? "z-[1]"
+          : isActive
           ? "z-[2] brightness-105"
-          : "z-[1] opacity-90"
+          : "z-[1] brightness-[0.96] saturate-90"
       }`}
       aria-label={`${participant.displayName} stage, ${
-        isActive ? "speaking" : "listening"
+        isIdle ? "ready" : isActive ? "speaking" : "listening"
       }`}
     >
       <div
@@ -151,7 +157,11 @@ function PodcastStageCard({
         }`}
       >
         <span>{participant.displayName}</span>
-        {isActive ? (
+        {isIdle ? (
+          <span className="rounded-full bg-white/20 px-8 py-2 text-[10px] text-white/90">
+            Ready
+          </span>
+        ) : isActive ? (
           <span className="rounded-full bg-amber-300 px-8 py-2 text-[10px] text-black">
             Speaking
           </span>
@@ -168,8 +178,8 @@ function PodcastStageCard({
           isActive ? "scale-[1.03]" : "scale-100"
         } ${
           align === "left"
-            ? "-translate-x-[4%] sm:-translate-x-[3%] [mask-image:linear-gradient(to_right,black_0%,black_76%,transparent_100%)]"
-            : "translate-x-[4%] sm:translate-x-[3%] [mask-image:linear-gradient(to_left,black_0%,black_76%,transparent_100%)]"
+            ? "-translate-x-[4%] sm:-translate-x-[3%] [mask-image:linear-gradient(to_right,black_0%,black_92%,transparent_100%)]"
+            : "translate-x-[4%] sm:translate-x-[3%] [mask-image:linear-gradient(to_left,black_0%,black_92%,transparent_100%)]"
         }`}
         aria-label={`${participant.displayName} avatar canvas`}
       />

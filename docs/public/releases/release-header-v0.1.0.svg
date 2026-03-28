@@ -893,27 +893,26 @@
       RELEASE NOTES
     </text>
 
-    <text x="0" y="112" fill="#1f2b3d" font-family="Montserrat, Arial, sans-serif" font-size="60" font-weight="700">
+    <text x="0" y="112" fill="#1f2b3d" font-family="Montserrat, Arial, sans-serif" font-size="58" font-weight="700">
         <tspan x="0" dy="0">GeminiVRM v0.1.0</tspan>
     </text>
-    <text x="0" y="150" fill="#475569" font-family="M PLUS 2, Arial, sans-serif" font-size="22">
+    <text x="0" y="146" fill="#475569" font-family="M PLUS 2, Arial, sans-serif" font-size="20">
         <tspan x="0" dy="0">Generated from public/favicon.svg for the</tspan>
-        <tspan x="0" dy="26">published v0.1.0 release</tspan>
+        <tspan x="0" dy="24">published v0.1.0 release</tspan>
     </text>
 
-    <g transform="translate(0 200)">
-      <rect width="456" height="98" rx="24" fill="#ffffff" stroke="#dbe8f7" stroke-width="3" />
-      <path d="M28 28h118" stroke="#2F7CF6" stroke-width="12" stroke-linecap="round" />
-      <path d="M172 28h34" stroke="#00B894" stroke-width="12" stroke-linecap="round" />
-      <path d="M236 28h88" stroke="#dbe8f7" stroke-width="12" stroke-linecap="round" />
-      <circle cx="348" cy="28" r="12" fill="#00B894" />
-      <text x="28" y="58" fill="#1f2b3d" font-family="Montserrat, Arial, sans-serif" font-size="18" font-weight="700">
-        <tspan x="28" dy="0">Browser-first VRM chat powered by Gemini</tspan>
-        <tspan x="28" dy="20">Live</tspan>
+    <g transform="translate(0 196)">
+      <rect width="480" height="74" rx="24" fill="#ffffff" stroke="#dbe8f7" stroke-width="3" />
+      <path d="M28 24h108" stroke="#2F7CF6" stroke-width="12" stroke-linecap="round" />
+      <path d="M160 24h32" stroke="#00B894" stroke-width="12" stroke-linecap="round" />
+      <path d="M214 24h72" stroke="#dbe8f7" stroke-width="12" stroke-linecap="round" />
+      <circle cx="314" cy="24" r="12" fill="#00B894" />
+      <text x="28" y="54" fill="#1f2b3d" font-family="M PLUS 2, Arial, sans-serif" font-size="16" font-weight="700">
+        <tspan x="28" dy="0">Browser-first VRM chat powered by Gemini Live</tspan>
       </text>
     </g>
 
-    <g transform="translate(0 318)">
+    <g transform="translate(0 296)">
       <rect width="534" height="172" rx="30" fill="#1f2b3d" />
       <text x="38" y="50" fill="#eef4ff" font-family="Montserrat, Arial, sans-serif" font-size="24" font-weight="700">
         Highlights

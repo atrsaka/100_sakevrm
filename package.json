@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:all": "node scripts/dev-all.mjs",
+    "generate:release-header": "node scripts/generate-release-header.mjs",
     "build": "next build",
     "build:pages": "node scripts/build-pages.mjs",
     "docs:dev": "vitepress dev docs --host 127.0.0.1 --port 4173",

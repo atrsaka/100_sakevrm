@@ -204,7 +204,7 @@ export default function Home() {
 
   useEffect(() => {
     const motion = BUILT_IN_MOTIONS[selectedMotionId];
-    void viewer.setMotion(motion.path, motion.smoothingWindowSize);
+    void viewer.setMotion(motion);
   }, [selectedMotionId, viewer]);
 
   useEffect(() => {

@@ -269,7 +269,11 @@ export const Settings = ({
 
               <div className="my-40">
                 <div className="my-16 typography-20 font-bold">Idle motion</div>
-                <div className="grid gap-12 md:grid-cols-3">
+                <div
+                  role="radiogroup"
+                  aria-describedby="idle-motion-help"
+                  className="grid gap-12 md:grid-cols-3"
+                >
                   {BUILT_IN_MOTION_LIST.map((motion) => {
                     const isSelected = motion.id === selectedMotionId;
 
@@ -277,7 +281,9 @@ export const Settings = ({
                       <button
                         key={motion.id}
                         type="button"
-                        aria-pressed={isSelected}
+                        role="radio"
+                        aria-checked={isSelected}
+                        aria-describedby="idle-motion-help"
                         onClick={() => onChangeMotion(motion.id)}
                         className={`rounded-16 border px-16 py-16 text-left transition ${
                           isSelected
@@ -292,7 +298,7 @@ export const Settings = ({
                           <div
                             className={`rounded-full px-10 py-4 text-xs font-bold ${
                               isSelected
-                                ? "bg-white/20 text-white"
+                                ? "bg-white text-primary"
                                 : "bg-black/5 text-text2"
                             }`}
                           >
@@ -310,9 +316,9 @@ export const Settings = ({
                     );
                   })}
                 </div>
-                <div className="mt-8 text-sm">
-                  Switches the built-in idle motion immediately for the active
-                  VRM.
+                <div id="idle-motion-help" className="mt-8 text-sm">
+                  Random Idle swaps between the bundled Mixamo motions. The
+                  other presets keep one motion looping.
                 </div>
               </div>
 

@@ -7,6 +7,13 @@ import { LipSync } from "../lipSync/lipSync";
 import { EmoteController } from "../emoteController/emoteController";
 import { Screenplay } from "../messages/messages";
 
+export type AnimationPlaybackOptions = {
+  loop?: THREE.AnimationActionLoopStyles;
+  repetitions?: number;
+  clampWhenFinished?: boolean;
+  onFinished?: () => void;
+};
+
 /**
  * 3Dキャラクターを管理するクラス
  */
@@ -17,6 +24,11 @@ export class Model {
 
   private _lookAtTargetParent: THREE.Object3D;
   private _currentAnimationAction?: THREE.AnimationAction;
+  private _currentAnimationFinishedHandler?: THREE.EventListener<
+    THREE.Event,
+    "finished",
+    THREE.AnimationMixer
+  >;
   private _lipSync?: LipSync;
 
   constructor(lookAtTargetParent: THREE.Object3D) {
@@ -45,6 +57,11 @@ export class Model {
   }
 
   public unLoadVrm() {
+    this.clearAnimationFinishedHandler();
+    this._lipSync?.dispose().catch(() => {
+      // Ignore AudioContext disposal failures during unload.
+    });
+    this._lipSync = undefined;
     this._currentAnimationAction?.stop();
     this._currentAnimationAction = undefined;
     this.mixer?.stopAllAction();
@@ -60,24 +77,32 @@ export class Model {
    *
    * https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm_animation-1.0/README.ja.md
    */
-  public async loadAnimation(vrmAnimation: VRMAnimation): Promise<void> {
+  public async loadAnimation(
+    vrmAnimation: VRMAnimation,
+    options?: AnimationPlaybackOptions
+  ): Promise<void> {
     const { vrm, mixer } = this;
     if (vrm == null || mixer == null) {
       throw new Error("You have to load VRM first");
     }
 
-    this._currentAnimationAction?.stop();
-
     const clip = vrmAnimation.createAnimationClip(vrm);
-    const action = mixer.clipAction(clip);
-    action.reset();
-    action.setLoop(THREE.LoopRepeat, Infinity);
-    action.play();
-    this._currentAnimationAction = action;
+    this.playAnimationClip(clip, options);
+  }
+
+  public async loadAnimationClip(
+    clip: THREE.AnimationClip,
+    options?: AnimationPlaybackOptions
+  ): Promise<void> {
+    if (this.mixer == null) {
+      throw new Error("You have to load VRM first");
+    }
+
+    this.playAnimationClip(clip, options);
   }
 
   /**
-   * 音声を再生し、リップシンクを行う
+   * 音声を再生し、リップシンクする
    */
   public async speak(buffer: ArrayBuffer, screenplay: Screenplay) {
     this.emoteController?.playEmotion(screenplay.expression);
@@ -114,5 +139,67 @@ export class Model {
     this.emoteController?.update(delta);
     this.mixer?.update(delta);
     this.vrm?.update(delta);
+  }
+
+  private playAnimationClip(
+    clip: THREE.AnimationClip,
+    options?: AnimationPlaybackOptions
+  ): void {
+    const { mixer } = this;
+    if (mixer == null) {
+      throw new Error("You have to load VRM first");
+    }
+
+    this.clearAnimationFinishedHandler();
+    const previousAction = this._currentAnimationAction;
+    const previousClip = previousAction?.getClip();
+    previousAction?.stop();
+    if (previousClip != null) {
+      mixer.uncacheAction(previousClip);
+      mixer.uncacheClip(previousClip);
+    }
+
+    const action = mixer.clipAction(clip);
+    action.reset();
+    action.clampWhenFinished = options?.clampWhenFinished ?? false;
+    action.setLoop(
+      options?.loop ?? THREE.LoopRepeat,
+      options?.repetitions ?? Infinity
+    );
+    action.play();
+
+    if (options?.onFinished) {
+      const finishedHandler: THREE.EventListener<
+        THREE.Event,
+        "finished",
+        THREE.AnimationMixer
+      > = (event) => {
+        const animationEvent = event as THREE.Event & {
+          action?: THREE.AnimationAction;
+        };
+        if (animationEvent.action !== action) {
+          return;
+        }
+
+        options.onFinished?.();
+      };
+
+      mixer.addEventListener("finished", finishedHandler);
+      this._currentAnimationFinishedHandler = finishedHandler;
+    }
+
+    this._currentAnimationAction = action;
+  }
+
+  private clearAnimationFinishedHandler(): void {
+    if (this.mixer == null || this._currentAnimationFinishedHandler == null) {
+      return;
+    }
+
+    this.mixer.removeEventListener(
+      "finished",
+      this._currentAnimationFinishedHandler
+    );
+    this._currentAnimationFinishedHandler = undefined;
   }
 }

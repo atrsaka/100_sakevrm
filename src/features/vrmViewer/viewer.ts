@@ -1,17 +1,19 @@
 import * as THREE from "three";
-import { Model } from "./model";
-import { loadVRMAnimation } from "@/lib/VRMAnimation/loadVRMAnimation";
-import { buildUrl } from "@/utils/buildUrl";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { loadVRMAnimation } from "@/lib/VRMAnimation/loadVRMAnimation";
+import { loadMixamoAnimation } from "@/lib/fbxAnimation/loadMixamoAnimation";
+import { buildUrl } from "@/utils/buildUrl";
+import { Model, type AnimationPlaybackOptions } from "./model";
 import {
   BUILT_IN_MOTIONS,
+  type BuiltInMotionDefinition,
   DEFAULT_BUILT_IN_MOTION_ID,
 } from "./builtInMotions";
 
 /**
  * three.jsを使った3Dビューアー
  *
- * setup()でcanvasを指定してから使う
+ * setup()でcanvasを渡してから使う
  */
 export class Viewer {
   public isReady: boolean;
@@ -22,16 +24,18 @@ export class Viewer {
   private _scene: THREE.Scene;
   private _camera?: THREE.PerspectiveCamera;
   private _cameraControls?: OrbitControls;
-  private _motionUrl: string;
-  private _motionSmoothingWindowSize: number;
+  private _motion: BuiltInMotionDefinition;
   private _motionLoadToken: number;
+  private _initialHipsHeight: number;
+  private _lastRandomMotionPath?: string;
+  private _cachedMixamoClips: Map<string, THREE.AnimationClip>;
 
   constructor() {
     this.isReady = false;
-    const defaultMotion = BUILT_IN_MOTIONS[DEFAULT_BUILT_IN_MOTION_ID];
-    this._motionUrl = buildUrl(defaultMotion.path);
-    this._motionSmoothingWindowSize = defaultMotion.smoothingWindowSize;
+    this._motion = BUILT_IN_MOTIONS[DEFAULT_BUILT_IN_MOTION_ID];
     this._motionLoadToken = 0;
+    this._initialHipsHeight = 1;
+    this._cachedMixamoClips = new Map();
 
     const scene = new THREE.Scene();
     this._scene = scene;
@@ -52,6 +56,8 @@ export class Viewer {
       this.unloadVRM();
     }
 
+    this._cachedMixamoClips.clear();
+
     const nextModel = new Model(this._camera || new THREE.Object3D());
     this.model = nextModel;
 
@@ -64,6 +70,7 @@ export class Viewer {
           obj.frustumCulled = false;
         });
 
+        this.captureInitialHipsHeight(nextModel.vrm);
         this._scene.add(nextModel.vrm.scene);
         await this.loadCurrentMotion(nextModel);
 
@@ -76,17 +83,16 @@ export class Viewer {
       });
   }
 
-  public async setMotion(
-    motionPath: string,
-    smoothingWindowSize = 0
-  ): Promise<void> {
-    this._motionUrl = buildUrl(motionPath);
-    this._motionSmoothingWindowSize = smoothingWindowSize;
+  public async setMotion(motion: BuiltInMotionDefinition): Promise<void> {
+    this._motion = motion;
+    this._lastRandomMotionPath = undefined;
     await this.loadCurrentMotion();
   }
 
   public unloadVRM(): void {
     this._motionLoadToken++;
+    this._lastRandomMotionPath = undefined;
+    this._cachedMixamoClips.clear();
     if (this.model?.vrm) {
       this._scene.remove(this.model.vrm.scene);
       this.model.unLoadVrm();
@@ -130,7 +136,7 @@ export class Viewer {
   }
 
   /**
-   * canvasの親要素を見てサイズを調整する
+   * canvasの縦横幅を見てサイズを調整する
    */
   public resize() {
     if (!this._renderer) return;
@@ -186,21 +192,143 @@ export class Viewer {
     }
 
     const token = ++this._motionLoadToken;
+    this._lastRandomMotionPath = undefined;
+
+    if (this._motion.playback === "random") {
+      await this.playRandomMotion(targetModel, token);
+      return;
+    }
+
+    const motionPath = this._motion.paths[0];
+    if (motionPath == null) {
+      return;
+    }
+
+    await this.playMotionPath(this._motion, motionPath, targetModel, token);
+  }
+
+  private async playRandomMotion(
+    targetModel: Model,
+    token: number
+  ): Promise<void> {
+    const motionPath = this.pickRandomMotionPath(this._motion.paths);
+    if (motionPath == null) {
+      return;
+    }
+
+    this._lastRandomMotionPath = motionPath;
+    await this.playMotionPath(this._motion, motionPath, targetModel, token, {
+      loop: THREE.LoopOnce,
+      repetitions: 1,
+      clampWhenFinished: true,
+      onFinished: () => {
+        if (
+          this.model !== targetModel ||
+          token !== this._motionLoadToken ||
+          this._motion.playback !== "random"
+        ) {
+          return;
+        }
+
+        void this.playRandomMotion(targetModel, token);
+      },
+    });
+  }
+
+  private async playMotionPath(
+    motion: BuiltInMotionDefinition,
+    motionPath: string,
+    targetModel: Model,
+    token: number,
+    playbackOptions?: AnimationPlaybackOptions
+  ): Promise<void> {
     try {
-      const vrma = await loadVRMAnimation(this._motionUrl, {
-        smoothingWindowSize: this._motionSmoothingWindowSize,
-      });
-      if (vrma == null) {
+      if (motion.format === "vrma") {
+        const vrma = await loadVRMAnimation(this.buildMotionUrl(motionPath), {
+          smoothingWindowSize: motion.smoothingWindowSize,
+        });
+        if (vrma == null) {
+          return;
+        }
+
+        if (this.model !== targetModel || token !== this._motionLoadToken) {
+          return;
+        }
+
+        await targetModel.loadAnimation(vrma, playbackOptions);
         return;
+      }
+
+      if (targetModel.vrm == null) {
+        return;
+      }
+
+      let clip = this._cachedMixamoClips.get(motionPath);
+      if (clip == null) {
+        clip = await loadMixamoAnimation(
+          this.buildMotionUrl(motionPath),
+          targetModel.vrm,
+          this._initialHipsHeight
+        );
+        this._cachedMixamoClips.set(motionPath, clip);
       }
 
       if (this.model !== targetModel || token !== this._motionLoadToken) {
         return;
       }
 
-      await targetModel.loadAnimation(vrma);
+      await targetModel.loadAnimationClip(clip, playbackOptions);
     } catch (error) {
       console.error("Failed to load motion", error);
+      await this.playFallbackMotion(targetModel, token);
     }
+  }
+
+  private async playFallbackMotion(
+    targetModel: Model,
+    token: number
+  ): Promise<void> {
+    const fallback = await loadVRMAnimation(this.buildMotionUrl("/idle_loop.vrma"));
+    if (fallback == null) {
+      return;
+    }
+
+    if (this.model !== targetModel || token !== this._motionLoadToken) {
+      return;
+    }
+
+    await targetModel.loadAnimation(fallback);
+  }
+
+  private captureInitialHipsHeight(vrm: NonNullable<Model["vrm"]>): void {
+    vrm.scene.updateMatrixWorld(true);
+
+    const hipsNode = vrm.humanoid.getNormalizedBoneNode("hips");
+    if (hipsNode == null) {
+      this._initialHipsHeight = 1;
+      return;
+    }
+
+    const hipsPosition = hipsNode.getWorldPosition(new THREE.Vector3());
+    const rootPosition = vrm.scene.getWorldPosition(new THREE.Vector3());
+    const height = Math.abs(hipsPosition.y - rootPosition.y);
+    this._initialHipsHeight = height > 0 ? height : 1;
+  }
+
+  private pickRandomMotionPath(paths: readonly string[]): string | undefined {
+    if (paths.length === 0) {
+      return undefined;
+    }
+
+    if (paths.length === 1) {
+      return paths[0];
+    }
+
+    const candidates = paths.filter((path) => path !== this._lastRandomMotionPath);
+    return candidates[Math.floor(Math.random() * candidates.length)] ?? paths[0];
+  }
+
+  private buildMotionUrl(path: string): string {
+    return encodeURI(buildUrl(path));
   }
 }

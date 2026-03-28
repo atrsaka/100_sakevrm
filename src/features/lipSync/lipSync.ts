@@ -132,6 +132,20 @@ export class LipSync {
     this.resetStreamingState();
   }
 
+  public async dispose() {
+    this.stop();
+
+    if (this.audio.state === "closed") {
+      return;
+    }
+
+    try {
+      await this.audio.close();
+    } catch {
+      // Ignore duplicate close or browser-specific disposal failures.
+    }
+  }
+
   private async ensureAudioReady() {
     const initialState = this.audio.state;
     if (initialState === "running") {

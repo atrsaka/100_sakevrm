@@ -1,10 +1,31 @@
+const MIXAMO_IDLE_MOTION_PATHS = [
+  "/motions/idle/Idle1.fbx",
+  "/motions/idle/Idle2.fbx",
+  "/motions/idle/Standing Idle.fbx",
+] as const;
+
+type BuiltInMotionFormat = "vrma" | "fbx";
+type BuiltInMotionPlayback = "loop" | "random";
+
 export const BUILT_IN_MOTIONS = {
   default: {
     id: "default",
     label: "Default",
     durationLabel: "11s",
     description: "Original bundled idle loop.",
-    path: "/idle_loop.vrma",
+    format: "vrma" as BuiltInMotionFormat,
+    paths: ["/idle_loop.vrma"],
+    playback: "loop" as BuiltInMotionPlayback,
+    smoothingWindowSize: 0,
+  },
+  mixamoRandom: {
+    id: "mixamoRandom",
+    label: "Random Idle",
+    durationLabel: "Auto",
+    description: "Cycles through three bundled Mixamo idle motions.",
+    format: "fbx" as BuiltInMotionFormat,
+    paths: MIXAMO_IDLE_MOTION_PATHS,
+    playback: "random" as BuiltInMotionPlayback,
     smoothingWindowSize: 0,
   },
   stand: {
@@ -12,7 +33,9 @@ export const BUILT_IN_MOTIONS = {
     label: "Stand",
     durationLabel: "3s",
     description: "Shortest neutral pose.",
-    path: "/motions/accad_female1_stand.vrma",
+    format: "vrma" as BuiltInMotionFormat,
+    paths: ["/motions/accad_female1_stand.vrma"],
+    playback: "loop" as BuiltInMotionPlayback,
     smoothingWindowSize: 2,
   },
   sway: {
@@ -20,7 +43,9 @@ export const BUILT_IN_MOTIONS = {
     label: "Sway",
     durationLabel: "12s",
     description: "Soft breathing and body sway.",
-    path: "/motions/accad_female1_sway.vrma",
+    format: "vrma" as BuiltInMotionFormat,
+    paths: ["/motions/accad_female1_sway.vrma"],
+    playback: "loop" as BuiltInMotionPlayback,
     smoothingWindowSize: 2,
   },
   wait: {
@@ -28,14 +53,18 @@ export const BUILT_IN_MOTIONS = {
     label: "Wait",
     durationLabel: "39s",
     description: "Longer idle performance.",
-    path: "/motions/accad_female1_wait.vrma",
+    format: "vrma" as BuiltInMotionFormat,
+    paths: ["/motions/accad_female1_wait.vrma"],
+    playback: "loop" as BuiltInMotionPlayback,
     smoothingWindowSize: 2,
   },
 } as const;
 
 export type BuiltInMotionId = keyof typeof BUILT_IN_MOTIONS;
+export type BuiltInMotionDefinition =
+  (typeof BUILT_IN_MOTIONS)[BuiltInMotionId];
 
-export const DEFAULT_BUILT_IN_MOTION_ID: BuiltInMotionId = "default";
+export const DEFAULT_BUILT_IN_MOTION_ID: BuiltInMotionId = "mixamoRandom";
 
 export const BUILT_IN_MOTION_LIST = Object.values(BUILT_IN_MOTIONS);
 

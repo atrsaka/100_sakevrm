@@ -30,16 +30,16 @@ const outputPath = path.resolve(repoRoot, output);
 
 const faviconSvg = await fs.readFile(sourcePath, "utf8");
 ensureSvgSource(faviconSvg, source);
+const faviconMarkup = buildInlineSvgMarkup(faviconSvg);
 
 await fs.mkdir(path.dirname(outputPath), { recursive: true });
-const faviconHref = buildPublishedRelativeHref(outputPath, sourcePath);
 const svg = buildReleaseHeaderSvg({
   eyebrow,
   title,
   subtitle,
   callout,
   highlights,
-  faviconHref,
+  faviconMarkup,
   source,
 });
 
@@ -83,35 +83,56 @@ function ensureSvgSource(svg, sourcePathLabel) {
   }
 }
 
-function buildPublishedRelativeHref(outputFilePath, sourceFilePath) {
-  const outputRelativePath = toPosix(path.relative(repoRoot, outputFilePath));
-  const sourceRelativePath = toPosix(path.relative(repoRoot, sourceFilePath));
+function buildInlineSvgMarkup(svgSource) {
+  const sanitizedSvg = svgSource
+    .replace(/<\?xml[\s\S]*?\?>/gi, "")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .trim();
+  const openTagMatch = sanitizedSvg.match(/^<svg\b([^>]*)>/i);
+  const closeTagIndex = sanitizedSvg.toLowerCase().lastIndexOf("</svg>");
 
-  const publishedOutputPath = toPublishedPath(outputRelativePath);
-  const publishedSourcePath = toPublishedPath(sourceRelativePath);
+  if (!openTagMatch || closeTagIndex === -1) {
+    throw new Error("Could not parse SVG root for inline embedding.");
+  }
 
-  return toPosix(
-    path.posix.relative(
-      path.posix.dirname(publishedOutputPath),
-      publishedSourcePath
-    )
+  const rootAttributes = openTagMatch[1] || "";
+  const innerMarkup = sanitizedSvg
+    .slice(openTagMatch[0].length, closeTagIndex)
+    .trim();
+
+  const viewBoxMatch = rootAttributes.match(
+    /\bviewBox\s*=\s*(['"])([^'"]+)\1/i
   );
-}
+  const widthMatch = rootAttributes.match(
+    /\bwidth\s*=\s*(['"])([^'"]+)\1/i
+  );
+  const heightMatch = rootAttributes.match(
+    /\bheight\s*=\s*(['"])([^'"]+)\1/i
+  );
 
-function toPublishedPath(repoRelativePath) {
-  if (repoRelativePath.startsWith("docs/public/")) {
-    return `docs/${repoRelativePath.slice("docs/public/".length)}`;
+  const width = parseSvgLength(widthMatch?.[2]);
+  const height = parseSvgLength(heightMatch?.[2]);
+  const fallbackViewBox =
+    width !== null && height !== null ? `0 0 ${width} ${height}` : null;
+  const viewBox = viewBoxMatch?.[2] || fallbackViewBox;
+
+  if (!viewBox) {
+    throw new Error("SVG source requires either a viewBox or width/height.");
   }
 
-  if (repoRelativePath.startsWith("public/")) {
-    return repoRelativePath.slice("public/".length);
-  }
-
-  return repoRelativePath;
+  return {
+    markup: innerMarkup,
+    viewBox,
+  };
 }
 
-function toPosix(value) {
-  return value.split(path.sep).join("/");
+function parseSvgLength(value) {
+  if (!value) {
+    return null;
+  }
+
+  const match = value.trim().match(/^([0-9]+(?:\.[0-9]+)?)/);
+  return match ? Number.parseFloat(match[1]) : null;
 }
 
 function escapeXml(value) {
@@ -131,7 +152,7 @@ function buildReleaseHeaderSvg({
   subtitle: subtitleText,
   callout: calloutText,
   highlights: highlightItems,
-  faviconHref: faviconHrefValue,
+  faviconMarkup,
   source: sourcePathLabel,
 }) {
   const highlightLines = highlightItems
@@ -191,14 +212,21 @@ function buildReleaseHeaderSvg({
     <circle cx="206" cy="178" r="138" fill="url(#accent)" fill-opacity="0.12" />
     <rect x="36" y="34" width="184" height="30" rx="15" fill="#e9f1fc" />
     <rect x="36" y="78" width="120" height="20" rx="10" fill="#e9f1fc" />
-    <image
-      href="${escapeAttribute(faviconHrefValue)}"
-      x="52"
-      y="100"
-      width="308"
-      height="308"
-      preserveAspectRatio="xMidYMid meet"
-    />
+    <clipPath id="iconClip">
+      <rect x="52" y="100" width="308" height="308" rx="24" />
+    </clipPath>
+    <g clip-path="url(#iconClip)">
+      <svg
+        x="52"
+        y="100"
+        width="308"
+        height="308"
+        viewBox="${escapeAttribute(faviconMarkup.viewBox)}"
+        preserveAspectRatio="xMidYMid meet"
+      >
+${faviconMarkup.markup}
+      </svg>
+    </g>
   </g>
 
   <g transform="translate(620 178)">

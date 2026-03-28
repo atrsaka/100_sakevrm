@@ -893,40 +893,47 @@
       RELEASE NOTES
     </text>
 
-    <text x="0" y="112" fill="#1f2b3d" font-family="Montserrat, Arial, sans-serif" font-size="58" font-weight="700">
+    <rect id="titleBoundary" x="0" y="60" width="520" height="68" fill="transparent" opacity="0" pointer-events="none" />
+    <text id="titleText" data-fit-boundary="titleBoundary" x="0" y="112" fill="#1f2b3d" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="700">
         <tspan x="0" dy="0">GeminiVRM v0.1.0</tspan>
     </text>
-    <text x="0" y="146" fill="#475569" font-family="M PLUS 2, Arial, sans-serif" font-size="20">
+    <rect id="subtitleBoundary" x="0" y="127" width="500" height="56" fill="transparent" opacity="0" pointer-events="none" />
+    <text id="subtitleText" data-fit-boundary="subtitleBoundary" x="0" y="146" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="20">
         <tspan x="0" dy="0">Generated from public/favicon.svg for the</tspan>
         <tspan x="0" dy="24">published v0.1.0 release</tspan>
     </text>
 
     <g transform="translate(0 196)">
-      <rect width="480" height="74" rx="24" fill="#ffffff" stroke="#dbe8f7" stroke-width="3" />
+      <rect id="calloutFrame" width="500" height="74" rx="24" fill="#ffffff" stroke="#dbe8f7" stroke-width="3" />
       <path d="M28 24h108" stroke="#2F7CF6" stroke-width="12" stroke-linecap="round" />
       <path d="M160 24h32" stroke="#00B894" stroke-width="12" stroke-linecap="round" />
       <path d="M214 24h72" stroke="#dbe8f7" stroke-width="12" stroke-linecap="round" />
       <circle cx="314" cy="24" r="12" fill="#00B894" />
-      <text x="28" y="54" fill="#1f2b3d" font-family="M PLUS 2, Arial, sans-serif" font-size="16" font-weight="700">
+      <clipPath id="calloutTextClip">
+        <rect x="20" y="36" width="460" height="58" rx="16" />
+      </clipPath>
+      <g clip-path="url(#calloutTextClip)">
+      <text id="calloutText" data-fit-boundary="calloutFrame" data-fit-padding="20" x="28" y="54" fill="#1f2b3d" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">
         <tspan x="28" dy="0">Browser-first VRM chat powered by Gemini Live</tspan>
       </text>
+      </g>
     </g>
 
     <g transform="translate(0 296)">
-      <rect width="534" height="172" rx="30" fill="#1f2b3d" />
-      <text x="38" y="50" fill="#eef4ff" font-family="Montserrat, Arial, sans-serif" font-size="24" font-weight="700">
+      <rect id="highlightsFrame" width="534" height="172" rx="30" fill="#1f2b3d" />
+      <text data-fit-boundary="highlightsFrame" data-fit-padding="18" x="38" y="50" fill="#eef4ff" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">
         Highlights
       </text>
       <circle cx="18" cy="77" r="6" fill="#00B894" />
-      <text x="38" y="84" fill="#c7d4e5" font-family="M PLUS 2, Arial, sans-serif" font-size="22">
+      <text data-fit-boundary="highlightsFrame" data-fit-padding="18" x="38" y="84" fill="#c7d4e5" font-family="Arial, Helvetica, sans-serif" font-size="22">
         Gemini Live native audio
       </text>
       <circle cx="18" cy="109" r="6" fill="#00B894" />
-      <text x="38" y="116" fill="#c7d4e5" font-family="M PLUS 2, Arial, sans-serif" font-size="22">
+      <text data-fit-boundary="highlightsFrame" data-fit-padding="18" x="38" y="116" fill="#c7d4e5" font-family="Arial, Helvetica, sans-serif" font-size="22">
         Bundled VRM avatar + idle motions
       </text>
       <circle cx="18" cy="141" r="6" fill="#00B894" />
-      <text x="38" y="148" fill="#c7d4e5" font-family="M PLUS 2, Arial, sans-serif" font-size="22">
+      <text data-fit-boundary="highlightsFrame" data-fit-padding="18" x="38" y="148" fill="#c7d4e5" font-family="Arial, Helvetica, sans-serif" font-size="22">
         Optional YouTube relay
       </text>
     </g>

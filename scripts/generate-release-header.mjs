@@ -246,7 +246,7 @@ function buildReleaseHeaderSvg({
       const y = 84 + index * 32;
       return [
         `      <circle cx="18" cy="${y - 7}" r="6" fill="#00B894" />`,
-        `      <text x="38" y="${y}" fill="#c7d4e5" font-family="M PLUS 2, Arial, sans-serif" font-size="22">`,
+        `      <text data-fit-boundary="highlightsFrame" data-fit-padding="18" x="38" y="${y}" fill="#c7d4e5" font-family="Arial, Helvetica, sans-serif" font-size="22">`,
         `        ${escapeXml(item)}`,
         "      </text>",
       ].join("\n");
@@ -256,6 +256,9 @@ function buildReleaseHeaderSvg({
   const titleLines = wrapText(titleText, 520, titleFontSize, 0.56, 2);
   const titleLineHeight = Math.round(titleFontSize * 1.02);
   const titleMarkup = buildTspanMarkup(titleLines, 0, titleLineHeight);
+  const titleBoundaryY = 112 - titleFontSize + 6;
+  const titleBoundaryHeight =
+    titleFontSize + (titleLines.length - 1) * titleLineHeight + 10;
   const subtitleFontSize = 20;
   const subtitleLines = wrapText(subtitleText, 500, subtitleFontSize, 0.52, 2);
   const subtitleLineHeight = 24;
@@ -263,9 +266,12 @@ function buildReleaseHeaderSvg({
   const subtitleStartY = 146 + (titleLines.length - 1) * titleLineHeight;
   const subtitleLastBaseline =
     subtitleStartY + (subtitleLines.length - 1) * subtitleLineHeight;
-  const calloutFontSize = 16;
-  const calloutWidth = 480;
-  const calloutLines = wrapText(calloutText, 420, calloutFontSize, 0.52, 2);
+  const subtitleBoundaryY = subtitleStartY - subtitleFontSize + 1;
+  const subtitleBoundaryHeight =
+    subtitleFontSize + (subtitleLines.length - 1) * subtitleLineHeight + 12;
+  const calloutFontSize = fitFontSize(calloutText, 404, 15, 14, 0.6);
+  const calloutWidth = 500;
+  const calloutLines = wrapText(calloutText, 404, calloutFontSize, 0.58, 2);
   const calloutLineHeight = 18;
   const calloutHeight = 74 + (calloutLines.length - 1) * calloutLineHeight;
   const calloutMarkup = buildTspanMarkup(calloutLines, 28, calloutLineHeight);
@@ -340,27 +346,34 @@ ${faviconMarkup.markup}
       ${escapeXml(eyebrowText)}
     </text>
 
-    <text x="0" y="112" fill="#1f2b3d" font-family="Montserrat, Arial, sans-serif" font-size="${titleFontSize}" font-weight="700">
+    <rect id="titleBoundary" x="0" y="${titleBoundaryY}" width="520" height="${titleBoundaryHeight}" fill="transparent" opacity="0" pointer-events="none" />
+    <text id="titleText" data-fit-boundary="titleBoundary" x="0" y="112" fill="#1f2b3d" font-family="Arial, Helvetica, sans-serif" font-size="${titleFontSize}" font-weight="700">
 ${titleMarkup}
     </text>
-    <text x="0" y="${subtitleStartY}" fill="#475569" font-family="M PLUS 2, Arial, sans-serif" font-size="${subtitleFontSize}">
+    <rect id="subtitleBoundary" x="0" y="${subtitleBoundaryY}" width="500" height="${subtitleBoundaryHeight}" fill="transparent" opacity="0" pointer-events="none" />
+    <text id="subtitleText" data-fit-boundary="subtitleBoundary" x="0" y="${subtitleStartY}" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="${subtitleFontSize}">
 ${subtitleMarkup}
     </text>
 
     <g transform="translate(0 ${calloutY})">
-      <rect width="${calloutWidth}" height="${calloutHeight}" rx="24" fill="#ffffff" stroke="#dbe8f7" stroke-width="3" />
+      <rect id="calloutFrame" width="${calloutWidth}" height="${calloutHeight}" rx="24" fill="#ffffff" stroke="#dbe8f7" stroke-width="3" />
       <path d="M28 24h108" stroke="#2F7CF6" stroke-width="12" stroke-linecap="round" />
       <path d="M160 24h32" stroke="#00B894" stroke-width="12" stroke-linecap="round" />
       <path d="M214 24h72" stroke="#dbe8f7" stroke-width="12" stroke-linecap="round" />
       <circle cx="314" cy="24" r="12" fill="#00B894" />
-      <text x="28" y="54" fill="#1f2b3d" font-family="M PLUS 2, Arial, sans-serif" font-size="${calloutFontSize}" font-weight="700">
+      <clipPath id="calloutTextClip">
+        <rect x="20" y="36" width="${calloutWidth - 40}" height="${calloutHeight - 16}" rx="16" />
+      </clipPath>
+      <g clip-path="url(#calloutTextClip)">
+      <text id="calloutText" data-fit-boundary="calloutFrame" data-fit-padding="20" x="28" y="54" fill="#1f2b3d" font-family="Arial, Helvetica, sans-serif" font-size="${calloutFontSize}" font-weight="700">
 ${calloutMarkup}
       </text>
+      </g>
     </g>
 
     <g transform="translate(0 ${highlightsY})">
-      <rect width="534" height="172" rx="30" fill="#1f2b3d" />
-      <text x="38" y="50" fill="#eef4ff" font-family="Montserrat, Arial, sans-serif" font-size="24" font-weight="700">
+      <rect id="highlightsFrame" width="534" height="172" rx="30" fill="#1f2b3d" />
+      <text data-fit-boundary="highlightsFrame" data-fit-padding="18" x="38" y="50" fill="#eef4ff" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">
         Highlights
       </text>
 ${highlightLines}

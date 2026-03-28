@@ -269,12 +269,15 @@ function buildReleaseHeaderSvg({
   const subtitleBoundaryY = subtitleStartY - subtitleFontSize + 1;
   const subtitleBoundaryHeight =
     subtitleFontSize + (subtitleLines.length - 1) * subtitleLineHeight + 12;
-  const calloutFontSize = fitFontSize(calloutText, 404, 15, 14, 0.6);
+  const calloutFontSize = fitFontSize(calloutText, 404, 15, 14, 0.58);
   const calloutWidth = 500;
   const calloutLines = wrapText(calloutText, 404, calloutFontSize, 0.58, 2);
   const calloutLineHeight = 18;
-  const calloutHeight = 74 + (calloutLines.length - 1) * calloutLineHeight;
+  const calloutHeight = 82 + (calloutLines.length - 1) * calloutLineHeight;
   const calloutMarkup = buildTspanMarkup(calloutLines, 28, calloutLineHeight);
+  const calloutTextBoundaryY = 40;
+  const calloutTextBoundaryHeight =
+    24 + (calloutLines.length - 1) * calloutLineHeight;
   const calloutY = subtitleLastBaseline + 26;
   const highlightsY = calloutY + calloutHeight + 26;
 
@@ -361,11 +364,12 @@ ${subtitleMarkup}
       <path d="M160 24h32" stroke="#00B894" stroke-width="12" stroke-linecap="round" />
       <path d="M214 24h72" stroke="#dbe8f7" stroke-width="12" stroke-linecap="round" />
       <circle cx="314" cy="24" r="12" fill="#00B894" />
+      <rect id="calloutTextBoundary" x="22" y="${calloutTextBoundaryY}" width="${calloutWidth - 44}" height="${calloutTextBoundaryHeight}" fill="transparent" opacity="0" pointer-events="none" />
       <clipPath id="calloutTextClip">
-        <rect x="20" y="36" width="${calloutWidth - 40}" height="${calloutHeight - 16}" rx="16" />
+        <rect x="22" y="${calloutTextBoundaryY - 2}" width="${calloutWidth - 44}" height="${calloutTextBoundaryHeight + 6}" rx="14" />
       </clipPath>
       <g clip-path="url(#calloutTextClip)">
-      <text id="calloutText" data-fit-boundary="calloutFrame" data-fit-padding="20" x="28" y="54" fill="#1f2b3d" font-family="Arial, Helvetica, sans-serif" font-size="${calloutFontSize}" font-weight="700">
+      <text id="calloutText" data-fit-boundary="calloutTextBoundary" data-fit-padding="0" x="28" y="58" fill="#1f2b3d" font-family="Arial, Helvetica, sans-serif" font-size="${calloutFontSize}" font-weight="700">
 ${calloutMarkup}
       </text>
       </g>

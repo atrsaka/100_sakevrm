@@ -7,6 +7,8 @@ import { LipSync } from "../lipSync/lipSync";
 import { EmoteController } from "../emoteController/emoteController";
 import { Screenplay } from "../messages/messages";
 
+const DEFAULT_ANIMATION_FADE_DURATION_SECONDS = 0.45;
+
 export type AnimationPlaybackOptions = {
   loop?: THREE.AnimationActionLoopStyles;
   repetitions?: number;
@@ -30,6 +32,10 @@ export class Model {
     "finished",
     THREE.AnimationMixer
   >;
+  private _pendingActionRetirements = new Map<
+    THREE.AnimationAction,
+    ReturnType<typeof globalThis.setTimeout>
+  >();
   private _lipSync?: LipSync;
 
   constructor(lookAtTargetParent: THREE.Object3D) {
@@ -58,6 +64,7 @@ export class Model {
   }
 
   public unLoadVrm() {
+    this.clearPendingActionRetirements();
     this.clearAnimationFinishedHandler();
     this._lipSync?.dispose().catch(() => {
       // Ignore AudioContext disposal failures during unload.
@@ -160,7 +167,9 @@ export class Model {
     const previousClip = previousAction?.getClip();
 
     const action = mixer.clipAction(clip);
-    const fadeDuration = options?.fadeDuration ?? 0.25;
+    this.cancelPendingActionRetirement(action);
+    const fadeDuration =
+      options?.fadeDuration ?? DEFAULT_ANIMATION_FADE_DURATION_SECONDS;
     action.reset();
     action.clampWhenFinished = options?.clampWhenFinished ?? false;
     action.setLoop(
@@ -173,18 +182,17 @@ export class Model {
       action.setEffectiveTimeScale(1);
       action.setEffectiveWeight(1);
       action.play();
-      action.crossFadeFrom(previousAction, fadeDuration, true);
+      action.crossFadeFrom(previousAction, fadeDuration, false);
 
       const retiringClip =
         previousClip != null && previousClip !== clip ? previousClip : undefined;
-      globalThis.setTimeout(() => {
-        previousAction.stop();
-        if (retiringClip != null) {
-          mixer.uncacheAction(retiringClip);
-          mixer.uncacheClip(retiringClip);
-        }
-      }, Math.max(fadeDuration * 1000, 0) + 50);
+      this.scheduleActionRetirement(
+        previousAction,
+        retiringClip,
+        Math.max(fadeDuration * 1000, 0) + 50
+      );
     } else {
+      this.cancelPendingActionRetirement(previousAction);
       previousAction?.stop();
       if (previousClip != null && previousClip !== clip) {
         mixer.uncacheAction(previousClip);
@@ -226,5 +234,54 @@ export class Model {
       this._currentAnimationFinishedHandler
     );
     this._currentAnimationFinishedHandler = undefined;
+  }
+
+  private scheduleActionRetirement(
+    action: THREE.AnimationAction,
+    clip: THREE.AnimationClip | undefined,
+    delayMs: number
+  ): void {
+    this.cancelPendingActionRetirement(action);
+    const timeoutHandle = globalThis.setTimeout(() => {
+      if (this._pendingActionRetirements.get(action) !== timeoutHandle) {
+        return;
+      }
+
+      this._pendingActionRetirements.delete(action);
+      if (this._currentAnimationAction === action) {
+        return;
+      }
+
+      action.stop();
+      if (this.mixer != null && clip != null) {
+        this.mixer.uncacheAction(clip);
+        this.mixer.uncacheClip(clip);
+      }
+    }, delayMs);
+
+    this._pendingActionRetirements.set(action, timeoutHandle);
+  }
+
+  private cancelPendingActionRetirement(
+    action?: THREE.AnimationAction
+  ): void {
+    if (action == null) {
+      return;
+    }
+
+    const timeoutHandle = this._pendingActionRetirements.get(action);
+    if (timeoutHandle == null) {
+      return;
+    }
+
+    globalThis.clearTimeout(timeoutHandle);
+    this._pendingActionRetirements.delete(action);
+  }
+
+  private clearPendingActionRetirements(): void {
+    this._pendingActionRetirements.forEach((timeoutHandle) => {
+      globalThis.clearTimeout(timeoutHandle);
+    });
+    this._pendingActionRetirements.clear();
   }
 }

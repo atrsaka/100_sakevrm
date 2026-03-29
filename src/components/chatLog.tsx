@@ -20,8 +20,8 @@ export const ChatLog = ({ messages }: Props) => {
     });
   }, [messages]);
   return (
-    <div className="absolute w-col-span-6 max-w-full h-[100svh] pb-64">
-      <div className="max-h-full px-16 pt-104 pb-64 overflow-y-auto scroll-hidden">
+    <div className="absolute h-[100svh] max-w-full pb-96 sm:pb-112">
+      <div className="max-h-full overflow-y-auto scroll-hidden px-16 pt-104 pb-96 sm:pb-112">
         {messages.map((msg, i) => {
           return (
             <div key={i} ref={messages.length - 1 === i ? chatScrollRef : null}>

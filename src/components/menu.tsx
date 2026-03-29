@@ -186,6 +186,7 @@ export const Menu = ({
           message={assistantMessage || assistantStatus}
           status={assistantStatus || undefined}
           speakerName={assistantSpeakerName}
+          interactionMode={interactionMode}
         />
       )}
       <input

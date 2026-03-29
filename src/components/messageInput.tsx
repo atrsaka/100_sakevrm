@@ -5,7 +5,6 @@ type Props = {
   isMicRecording: boolean;
   isChatProcessing: boolean;
   placeholder?: string;
-  modeLabel?: string;
   onChangeUserMessage: (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => void;
@@ -18,21 +17,15 @@ export const MessageInput = ({
   isMicRecording,
   isChatProcessing,
   placeholder = "Type a message",
-  modeLabel,
   onChangeUserMessage,
   onClickMicButton,
   onClickSendButton,
 }: Props) => {
   return (
-    <div className="absolute bottom-0 z-20 w-screen">
-      <div className="bg-base text-black">
-        <div className="mx-auto max-w-4xl p-16">
-          {modeLabel ? (
-            <div className="mb-8 inline-flex rounded-full bg-white/80 px-12 py-6 text-xs font-bold uppercase tracking-[0.18em] text-secondary shadow-sm">
-              {modeLabel}
-            </div>
-          ) : null}
-          <div className="grid grid-flow-col grid-cols-[min-content_1fr_min-content] gap-[8px]">
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-12 pb-12 sm:px-16 sm:pb-16">
+      <div className="mx-auto flex max-w-4xl flex-col items-center gap-8">
+        <div className="pointer-events-auto w-full rounded-[28px] border border-white/65 bg-base/92 p-10 text-black shadow-[0_20px_50px_rgba(64,43,23,0.18)] backdrop-blur-md sm:p-12">
+          <div className="grid grid-flow-col grid-cols-[min-content_1fr_min-content] gap-[8px] sm:gap-[10px]">
             <IconButton
               iconName="24/Microphone"
               className="bg-secondary hover:bg-secondary-hover active:bg-secondary-press disabled:bg-secondary-disabled"
@@ -45,7 +38,7 @@ export const MessageInput = ({
               placeholder={placeholder}
               onChange={onChangeUserMessage}
               disabled={isChatProcessing}
-              className="disabled bg-surface1 hover:bg-surface1-hover focus:bg-surface1 disabled:bg-surface1-disabled disabled:text-primary-disabled w-full rounded-16 px-16 text-text-primary typography-16 font-bold"
+              className="disabled bg-surface1 hover:bg-surface1-hover focus:bg-surface1 disabled:bg-surface1-disabled disabled:text-primary-disabled min-h-[52px] w-full rounded-16 px-16 text-text-primary typography-16 font-bold"
               value={userMessage}
             />
 
@@ -58,7 +51,7 @@ export const MessageInput = ({
             />
           </div>
         </div>
-        <div className="bg-[#413D43] py-4 text-center font-Montserrat text-white">
+        <div className="pointer-events-none px-8 text-center font-Montserrat text-[10px] uppercase tracking-[0.16em] text-white/80 drop-shadow-[0_1px_6px_rgba(0,0,0,0.28)] sm:text-[11px]">
           powered by VRoid, Gemini Live, and @pixiv/three-vrm
         </div>
       </div>

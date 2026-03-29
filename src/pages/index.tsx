@@ -37,6 +37,7 @@ import {
   type PodcastSpeakerId,
   type PodcastTurn,
 } from "@/features/podcast/podcastConfig";
+import { logPodcastDebugEvent } from "@/features/podcast/podcastDebug";
 import {
   listLiveBroadcasts,
   listLiveChatMessages,
@@ -47,6 +48,20 @@ import {
   type YouTubeBroadcastSummary,
   type YouTubeLiveChatMessage,
 } from "@/features/youtube";
+import {
+  GEMINI_VRM_EXTERNAL_CONTROL_MESSAGE_TYPE,
+  GEMINI_VRM_EXTERNAL_CONTROL_RESULT_TYPE,
+  isExternalControlEnabled,
+  isExternalControlOriginAllowed,
+  isGeminiVrmExternalControlRequestMessage,
+  toExternalControlSummary,
+  toExternalControlLog,
+  type GeminiVrmExternalControlApi,
+  type GeminiVrmExternalControlCommand,
+  type GeminiVrmExternalControlCommandResult,
+  type GeminiVrmExternalControlResponseMessage,
+  type GeminiVrmExternalControlState,
+} from "@/features/externalControl/geminiVrmExternalControl";
 import {
   BUILT_IN_MOTIONS,
   BuiltInMotionId,
@@ -132,10 +147,18 @@ export default function Home() {
     YouTubeLiveChatMessage[]
   >([]);
 
+  const interactionModeRef = useRef<InteractionMode>(interactionMode);
+  const podcastTurnCountRef = useRef(podcastTurnCount);
+  const podcastYukitoVoiceNameRef = useRef(podcastYukitoVoiceName);
+  const podcastKiyokaVoiceNameRef = useRef(podcastKiyokaVoiceName);
+  const chatProcessingRef = useRef(chatProcessing);
+  const externalControlBusyRef = useRef(false);
   const chatLogRef = useRef<Message[]>([]);
   const podcastTurnsRef = useRef<PodcastTurn[]>([]);
   const podcastViewerRegistryRef = useRef<Partial<PodcastViewerRegistry>>({});
   const podcastRunTokenRef = useRef(0);
+  const externalControlStateRef =
+    useRef<GeminiVrmExternalControlState | null>(null);
   const youtubeSeenCommentIdsRef = useRef<Set<string>>(new Set());
   const youtubePollPageTokenRef = useRef<string | null>(null);
   const youtubeRelayPrimedRef = useRef(false);
@@ -143,6 +166,12 @@ export default function Home() {
   const youtubeAutoReplyInFlightRef = useRef(false);
   const isYoutubeAutoReplyEnabledRef = useRef(isYoutubeAutoReplyEnabled);
   const restoredYoutubeAccessTokenRef = useRef<string | null>(null);
+
+  interactionModeRef.current = interactionMode;
+  podcastTurnCountRef.current = podcastTurnCount;
+  podcastYukitoVoiceNameRef.current = podcastYukitoVoiceName;
+  podcastKiyokaVoiceNameRef.current = podcastKiyokaVoiceName;
+  chatProcessingRef.current = chatProcessing;
 
   useEffect(() => {
     chatLogRef.current = chatLog;
@@ -346,6 +375,69 @@ export default function Home() {
     kiyokaVoiceName: podcastKiyokaVoiceName,
   });
 
+  const getExternalControlState = useCallback(
+    (): GeminiVrmExternalControlState => {
+      const serializedChatLog = toExternalControlLog(chatLog);
+      const serializedPodcastLog = toExternalControlLog(podcastLog);
+
+      return {
+        interactionMode,
+        chatProcessing,
+        assistantMessage,
+        assistantStatus,
+        assistantSpeakerName,
+        hasGeminiApiKey: geminiApiKey.trim().length > 0,
+        geminiModel,
+        geminiVoiceName,
+        selectedMotionId,
+        podcastTurnCount,
+        podcastYukitoVoiceName,
+        podcastKiyokaVoiceName,
+        activePodcastSpeakerId,
+        chatViewerReady: viewer.model != null,
+        podcastViewerReady: {
+          yukito: podcastViewerRegistryRef.current.yukito?.model != null,
+          kiyoka: podcastViewerRegistryRef.current.kiyoka?.model != null,
+        },
+        chatLog: serializedChatLog,
+        podcastLog: serializedPodcastLog,
+        activeConversationLog:
+          interactionMode === "podcast"
+            ? serializedPodcastLog
+            : serializedChatLog,
+        externalControl: {
+          postMessageEnabled: isExternalControlEnabled(),
+          messageType: GEMINI_VRM_EXTERNAL_CONTROL_MESSAGE_TYPE,
+          resultType: GEMINI_VRM_EXTERNAL_CONTROL_RESULT_TYPE,
+        },
+      };
+    },
+    [
+      activePodcastSpeakerId,
+      assistantMessage,
+      assistantSpeakerName,
+      assistantStatus,
+      chatLog,
+      chatProcessing,
+      geminiApiKey,
+      geminiModel,
+      geminiVoiceName,
+      interactionMode,
+      podcastKiyokaVoiceName,
+      podcastLog,
+      podcastTurnCount,
+      podcastYukitoVoiceName,
+      selectedMotionId,
+      viewer.model,
+    ],
+  );
+  externalControlStateRef.current = getExternalControlState();
+
+  const getLatestExternalControlState = useCallback(
+    () => externalControlStateRef.current ?? getExternalControlState(),
+    [getExternalControlState],
+  );
+
   const handlePodcastViewersReady = useCallback(
     (viewers: PodcastViewerRegistry) => {
       podcastViewerRegistryRef.current = viewers;
@@ -375,6 +467,7 @@ export default function Home() {
         content: trimmedContent,
       };
 
+      chatProcessingRef.current = true;
       setChatProcessing(true);
       setAssistantSpeakerName("CHARACTER");
       setAssistantMessage("");
@@ -444,6 +537,7 @@ export default function Home() {
         );
         return false;
       } finally {
+        chatProcessingRef.current = false;
         setChatProcessing(false);
       }
     },
@@ -480,14 +574,30 @@ export default function Home() {
       const runToken = ++podcastRunTokenRef.current;
       podcastTurnsRef.current = [];
       setPodcastLog([]);
+      chatProcessingRef.current = true;
       setChatProcessing(true);
       setAssistantSpeakerName("");
       setAssistantMessage("");
       setAssistantStatus("Preparing podcast mode...");
+      logPodcastDebugEvent("start", {
+        topic: trimmedTopic,
+        runToken,
+        turnCount: podcastTurnCount,
+        participants: Object.values(podcastParticipants).map((participant) => ({
+          id: participant.id,
+          displayName: participant.displayName,
+          voiceName: participant.voiceName,
+        })),
+      });
 
       try {
         for (let turnIndex = 0; turnIndex < podcastTurnCount; turnIndex += 1) {
           if (runToken !== podcastRunTokenRef.current) {
+            logPodcastDebugEvent("cancelled", {
+              reason: "run-token-changed",
+              runToken,
+              turnIndex,
+            });
             return false;
           }
 
@@ -587,6 +697,12 @@ export default function Home() {
                     setAssistantMessage(partialTranscript);
                   },
                 });
+          const inputTranscript =
+            "inputTranscript" in response ? response.inputTranscript : "";
+          const usedFallbackTextInput =
+            "usedFallbackTextInput" in response
+              ? response.usedFallbackTextInput
+              : false;
 
           const transcript =
             response.transcript.trim() ||
@@ -600,8 +716,28 @@ export default function Home() {
           };
 
           podcastTurnsRef.current = [...podcastTurnsRef.current, nextTurn];
-          setPodcastLog(buildPodcastDisplayLog(podcastTurnsRef.current));
+          const displayLog = buildPodcastDisplayLog(podcastTurnsRef.current);
+          setPodcastLog(displayLog);
           setAssistantMessage(transcript);
+          logPodcastDebugEvent("turn-complete", {
+            runToken,
+            turnIndex,
+            speakerId,
+            speakerName: speaker.displayName,
+            partnerId,
+            partnerName: partner.displayName,
+            transcript,
+            inputTranscript,
+            usedFallbackTextInput,
+            audioMimeType: response.audioMimeType,
+            audioBytesLength: response.audioBytes.byteLength,
+            conversationLog: displayLog.map((entry, index) => ({
+              index,
+              role: entry.role,
+              name: entry.name,
+              content: entry.displayContent ?? entry.content,
+            })),
+          });
 
           await speakerModel.finishStreamingSpeak();
 
@@ -614,12 +750,29 @@ export default function Home() {
         }
 
         setAssistantStatus("Podcast finished.");
+        logPodcastDebugEvent("finished", {
+          runToken,
+          topic: trimmedTopic,
+          turnCount: podcastTurnsRef.current.length,
+          turns: podcastTurnsRef.current.map((turn, index) => ({
+            index,
+            speakerId: turn.speakerId,
+            speakerName: turn.speakerName,
+            transcript: turn.transcript,
+          })),
+        });
         return true;
       } catch (error) {
         Object.values(podcastViewers).forEach((podcastViewer) =>
           podcastViewer.model?.stopSpeaking(),
         );
         console.error(error);
+        logPodcastDebugEvent("error", {
+          runToken,
+          topic: trimmedTopic,
+          turnCount: podcastTurnsRef.current.length,
+          error: error instanceof Error ? error.message : String(error),
+        });
         setAssistantStatus("Error");
         setAssistantMessage(
           error instanceof Error ? error.message : "Podcast mode failed.",
@@ -627,6 +780,7 @@ export default function Home() {
         return false;
       } finally {
         setActivePodcastSpeakerId(null);
+        chatProcessingRef.current = false;
         setChatProcessing(false);
       }
     },
@@ -658,6 +812,260 @@ export default function Home() {
     },
     [interactionMode, startChatTurn, startPodcastConversation],
   );
+
+  const dispatchExternalControlCommand = useCallback(
+    async (
+      command: GeminiVrmExternalControlCommand,
+    ): Promise<GeminiVrmExternalControlCommandResult> => {
+      const ensureIdle = () => {
+        if (chatProcessingRef.current) {
+          throw new Error("A chat or podcast turn is already in progress.");
+        }
+      };
+
+      const shouldSerializeCommand = command.type !== "getState";
+      if (shouldSerializeCommand) {
+        if (externalControlBusyRef.current) {
+          throw new Error("Another external control command is already running.");
+        }
+
+        externalControlBusyRef.current = true;
+      }
+
+      try {
+        switch (command.type) {
+          case "getState":
+            return {
+              state: getLatestExternalControlState(),
+              detail: "External control state snapshot captured.",
+            };
+          case "setInteractionMode": {
+            ensureIdle();
+            interactionModeRef.current = command.interactionMode;
+            setInteractionMode(command.interactionMode);
+            await wait(0);
+
+            return {
+              state: getLatestExternalControlState(),
+              detail: `Interaction mode switched to ${command.interactionMode}.`,
+            };
+          }
+          case "updatePodcastSettings": {
+            ensureIdle();
+
+            const nextPodcastTurnCount =
+              command.podcastTurnCount == null
+                ? podcastTurnCountRef.current
+                : clampPodcastTurnCount(command.podcastTurnCount);
+            const nextPodcastYukitoVoiceName =
+              command.podcastYukitoVoiceName == null
+                ? podcastYukitoVoiceNameRef.current
+                : resolveExternalVoiceName(
+                    command.podcastYukitoVoiceName,
+                    DEFAULT_PODCAST_PARTICIPANTS.yukito.voiceName,
+                  );
+            const nextPodcastKiyokaVoiceName =
+              command.podcastKiyokaVoiceName == null
+                ? podcastKiyokaVoiceNameRef.current
+                : resolveExternalVoiceName(
+                    command.podcastKiyokaVoiceName,
+                    DEFAULT_PODCAST_PARTICIPANTS.kiyoka.voiceName,
+                  );
+
+            podcastTurnCountRef.current = nextPodcastTurnCount;
+            podcastYukitoVoiceNameRef.current = nextPodcastYukitoVoiceName;
+            podcastKiyokaVoiceNameRef.current = nextPodcastKiyokaVoiceName;
+            setPodcastTurnCount(nextPodcastTurnCount);
+            setPodcastYukitoVoiceName(nextPodcastYukitoVoiceName);
+            setPodcastKiyokaVoiceName(nextPodcastKiyokaVoiceName);
+            await wait(0);
+
+            return {
+              state: getLatestExternalControlState(),
+              detail: "Podcast settings updated.",
+            };
+          }
+          case "setMotion":
+            ensureIdle();
+            setSelectedMotionId(command.motionId);
+            await wait(0);
+
+            return {
+              state: getLatestExternalControlState(),
+              detail: `Motion switched to ${command.motionId}.`,
+            };
+          case "sendMessage": {
+            ensureIdle();
+
+            const trimmedText = command.text.trim();
+            if (!trimmedText) {
+              throw new Error("Message text is empty.");
+            }
+
+            const currentInteractionMode = interactionModeRef.current;
+            const didStartConversation =
+              currentInteractionMode === "podcast"
+                ? await startPodcastConversation(trimmedText)
+                : await startChatTurn({
+                    role: "user",
+                    content: trimmedText,
+                    source: "manual",
+                    name: command.authorName?.trim() || "AGENT",
+                  });
+
+            if (!didStartConversation) {
+              await wait(0);
+              throw new Error(
+                currentInteractionMode === "podcast"
+                  ? "Podcast topic was not accepted. Check the returned state for readiness or error details."
+                  : "Chat message was not accepted. Check the returned state for error details.",
+              );
+            }
+
+            await wait(0);
+            return {
+              state: getLatestExternalControlState(),
+              detail:
+                currentInteractionMode === "podcast"
+                  ? "Podcast topic submitted."
+                  : "Chat message submitted.",
+            };
+          }
+          case "resetConversation": {
+            ensureIdle();
+
+            const currentState = getLatestExternalControlState();
+            const target = command.target ?? "active";
+            const resetChatLog =
+              target === "chat" ||
+              (target === "active" && currentState.interactionMode === "chat");
+            const resetPodcastLog =
+              target === "podcast" ||
+              (target === "active" && currentState.interactionMode === "podcast");
+
+            if (resetChatLog) {
+              chatLogRef.current = [];
+              setChatLog([]);
+            }
+
+            if (resetPodcastLog) {
+              podcastTurnsRef.current = [];
+              setPodcastLog([]);
+            }
+
+            setAssistantSpeakerName("");
+            setAssistantMessage("");
+            setAssistantStatus("");
+            setActivePodcastSpeakerId(null);
+            await wait(0);
+
+            return {
+              state: getLatestExternalControlState(),
+              detail:
+                target === "active"
+                  ? "The active conversation log was reset."
+                  : `${target} conversation log was reset.`,
+            };
+          }
+        }
+      } finally {
+        if (shouldSerializeCommand) {
+          externalControlBusyRef.current = false;
+        }
+      }
+    },
+    [
+      getLatestExternalControlState,
+      startChatTurn,
+      startPodcastConversation,
+    ],
+  );
+
+  useEffect(() => {
+    const externalControlApi: GeminiVrmExternalControlApi = {
+      isPostMessageEnabled: isExternalControlEnabled,
+      getState: getLatestExternalControlState,
+      setInteractionMode: (nextInteractionMode) =>
+        dispatchExternalControlCommand({
+          type: "setInteractionMode",
+          interactionMode: nextInteractionMode,
+        }),
+      updatePodcastSettings: (settings) =>
+        dispatchExternalControlCommand({
+          type: "updatePodcastSettings",
+          ...settings,
+        }),
+      setMotion: (motionId) =>
+        dispatchExternalControlCommand({
+          type: "setMotion",
+          motionId,
+        }),
+      sendMessage: (text, authorName) =>
+        dispatchExternalControlCommand({
+          type: "sendMessage",
+          text,
+          authorName,
+        }),
+      resetConversation: (target) =>
+        dispatchExternalControlCommand({
+          type: "resetConversation",
+          target,
+        }),
+    };
+
+    if (!isExternalControlEnabled()) {
+      delete window.geminiVrmControl;
+      return;
+    }
+
+    window.geminiVrmControl = externalControlApi;
+
+    const handleExternalControlMessage = async (event: MessageEvent<unknown>) => {
+      if (!isGeminiVrmExternalControlRequestMessage(event.data)) {
+        return;
+      }
+
+      if (!isExternalControlOriginAllowed(event.origin)) {
+        return;
+      }
+
+      try {
+        const result = await dispatchExternalControlCommand(event.data.command);
+        postExternalControlResponse(event, {
+          type: GEMINI_VRM_EXTERNAL_CONTROL_RESULT_TYPE,
+          id: event.data.id,
+          ok: true,
+          result: {
+            state: toExternalControlSummary(result.state),
+            detail: result.detail,
+          },
+        });
+      } catch (error) {
+        postExternalControlResponse(event, {
+          type: GEMINI_VRM_EXTERNAL_CONTROL_RESULT_TYPE,
+          id: event.data.id,
+          ok: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : "External control command failed.",
+          result: {
+            state: toExternalControlSummary(getLatestExternalControlState()),
+          },
+        });
+      }
+    };
+
+    window.addEventListener("message", handleExternalControlMessage);
+
+    return () => {
+      window.removeEventListener("message", handleExternalControlMessage);
+
+      if (window.geminiVrmControl === externalControlApi) {
+        delete window.geminiVrmControl;
+      }
+    };
+  }, [dispatchExternalControlCommand, getLatestExternalControlState]);
 
   const resetYoutubeSession = useCallback((message: string) => {
     clearYoutubeAuthSession();
@@ -996,7 +1404,7 @@ export default function Home() {
   useEffect(() => {
     if (
       !isYoutubeAutoReplyEnabled ||
-      chatProcessing ||
+      chatProcessingRef.current ||
       youtubeAutoReplyInFlightRef.current ||
       youtubePendingComments.length === 0
     ) {
@@ -1023,8 +1431,6 @@ export default function Home() {
     interactionMode === "podcast"
       ? "Type a podcast topic"
       : "Type a message";
-  const inputModeLabel =
-    interactionMode === "podcast" ? "Podcast Mode" : undefined;
 
   return (
     <div className="relative min-h-[100svh] font-M_PLUS_2">
@@ -1064,7 +1470,6 @@ export default function Home() {
       <MessageInputContainer
         isChatProcessing={chatProcessing}
         placeholder={inputPlaceholder}
-        modeLabel={inputModeLabel}
         onChatProcessStart={handleSendChat}
       />
       <Menu
@@ -1243,6 +1648,10 @@ function clampPodcastTurnCount(value: unknown): number {
   return Math.min(Math.max(parsed, 2), 12);
 }
 
+function resolveExternalVoiceName(value: string, fallback: string): string {
+  return value.trim() || fallback;
+}
+
 function buildRuntimePodcastParticipants({
   yukitoVoiceName,
   kiyokaVoiceName,
@@ -1262,6 +1671,25 @@ function buildRuntimePodcastParticipants({
         kiyokaVoiceName.trim() || DEFAULT_PODCAST_PARTICIPANTS.kiyoka.voiceName,
     },
   };
+}
+
+function postExternalControlResponse(
+  event: MessageEvent<unknown>,
+  response: GeminiVrmExternalControlResponseMessage,
+): void {
+  const messageSource = event.source;
+  if (!messageSource) {
+    return;
+  }
+
+  try {
+    (messageSource as WindowProxy).postMessage(
+      response,
+      event.origin && event.origin !== "null" ? event.origin : "*",
+    );
+  } catch {
+    // Ignore best-effort response failures for detached or cross-context sources.
+  }
 }
 
 function compareYoutubeBroadcasts(

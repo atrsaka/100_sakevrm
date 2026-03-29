@@ -6,6 +6,7 @@ import {
   type LiveServerMessage,
 } from "@google/genai";
 import type { Message } from "../messages/messages";
+import { buildPodcastRelayFallbackLogPayload } from "./podcastDebug";
 import {
   DEFAULT_GEMINI_LIVE_MODEL,
   DEFAULT_GEMINI_VOICE_NAME,
@@ -73,7 +74,15 @@ export async function getGeminiLiveAudioRelayResponse({
 
     console.warn(
       "Podcast audio relay fell back to transcript input.",
-      audioRelayError,
+      buildPodcastRelayFallbackLogPayload({
+        relayAudioMimeType,
+        relayAudioBytesLength: relayAudioBytes.byteLength,
+        relayTranscript: trimmedTranscript,
+        error:
+          audioRelayError instanceof Error
+            ? audioRelayError.message
+            : String(audioRelayError),
+      }),
     );
 
     const fallbackResponse = await getGeminiLiveChatResponse({

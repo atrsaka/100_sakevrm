@@ -71,15 +71,18 @@ export function PodcastStage({
         .filter(Boolean)
         .join(" ")}
     >
-      <div className="pointer-events-none absolute inset-x-0 top-16 z-20 hidden justify-center px-16 sm:flex">
-        <div className="rounded-full border border-white/70 bg-black/45 px-16 py-8 text-xs font-bold uppercase tracking-[0.24em] text-white shadow-lg backdrop-blur-sm">
-          {activeSpeakerId
-            ? `Podcast Stage - ${
-                activeSpeakerId === leftParticipant.id
-                  ? leftParticipant.displayName
-                  : rightParticipant.displayName
-              } on mic`
-          : "Podcast Stage"}
+      <div className="pointer-events-none absolute inset-x-0 top-14 z-20 flex justify-center px-12 sm:top-16 sm:px-16">
+        <div className="inline-flex items-center gap-8 rounded-full border border-white/70 bg-black/45 px-12 py-7 text-[10px] font-bold uppercase tracking-[0.2em] text-white shadow-lg backdrop-blur-sm sm:px-16 sm:py-8 sm:text-xs sm:tracking-[0.24em]">
+          <span className="h-2.5 w-2.5 rounded-full bg-rose-300 shadow-[0_0_12px_rgba(251,113,133,0.85)]" />
+          <span>
+            {activeSpeakerId
+              ? `${
+                  activeSpeakerId === leftParticipant.id
+                    ? leftParticipant.displayName
+                    : rightParticipant.displayName
+                } speaking`
+              : "Podcast live"}
+          </span>
         </div>
       </div>
       <div className="pointer-events-none absolute inset-y-[20%] left-1/2 z-[3] hidden w-24 -translate-x-1/2 rounded-full bg-white/15 blur-3xl sm:block" />
@@ -152,21 +155,21 @@ function PodcastStageCard({
         }`}
       />
       <header
-        className={`absolute top-12 z-10 flex items-center gap-8 rounded-full bg-black/45 px-10 py-5 text-[10px] font-bold uppercase tracking-[0.22em] text-white backdrop-blur-sm sm:top-20 sm:px-12 sm:py-6 sm:text-xs ${
+        className={`absolute top-44 z-10 flex max-w-[42vw] items-center gap-6 rounded-full bg-black/45 px-10 py-5 text-[9px] font-bold uppercase tracking-[0.18em] text-white backdrop-blur-sm sm:top-20 sm:max-w-none sm:gap-8 sm:px-12 sm:py-6 sm:text-xs sm:tracking-[0.22em] ${
           align === "left" ? "left-12 sm:left-16" : "right-12 sm:right-16"
         }`}
       >
-        <span>{participant.displayName}</span>
+        <span className="truncate">{participant.displayName}</span>
         {isIdle ? (
-          <span className="rounded-full bg-white/20 px-8 py-2 text-[10px] text-white/90">
+          <span className="hidden rounded-full bg-white/20 px-8 py-2 text-[10px] text-white/90 sm:inline-flex">
             Ready
           </span>
         ) : isActive ? (
-          <span className="rounded-full bg-amber-300 px-8 py-2 text-[10px] text-black">
+          <span className="hidden rounded-full bg-amber-300 px-8 py-2 text-[10px] text-black sm:inline-flex">
             Speaking
           </span>
         ) : (
-          <span className="rounded-full bg-white/20 px-8 py-2 text-[10px] text-white/90">
+          <span className="hidden rounded-full bg-white/20 px-8 py-2 text-[10px] text-white/90 sm:inline-flex">
             Listening
           </span>
         )}

@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 type Props = {
   isChatProcessing: boolean;
   placeholder?: string;
-  modeLabel?: string;
   onChatProcessStart: (text: string) => void;
 };
 
@@ -17,7 +16,6 @@ type Props = {
 export const MessageInputContainer = ({
   isChatProcessing,
   placeholder,
-  modeLabel,
   onChatProcessStart,
 }: Props) => {
   const [userMessage, setUserMessage] = useState("");
@@ -99,7 +97,6 @@ export const MessageInputContainer = ({
       isChatProcessing={isChatProcessing}
       isMicRecording={isMicRecording}
       placeholder={placeholder}
-      modeLabel={modeLabel}
       onChangeUserMessage={(e) => setUserMessage(e.target.value)}
       onClickMicButton={handleClickMicButton}
       onClickSendButton={handleClickSendButton}

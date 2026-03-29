@@ -42,3 +42,6 @@ client_secret_*.json
 next-env.d.ts
 
 .env
+
+*.fbx
+.codex-artifacts/

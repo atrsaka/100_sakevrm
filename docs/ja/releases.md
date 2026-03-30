@@ -1,16 +1,17 @@
 ---
-title: リリースノート
+title: Release Notes
 ---
 
-# リリースノート
+# Release Notes
 
-## GeminiVRM リリースガイド
+## Companion Walkthroughs
 
+- [v0.2.0 Podcast Mode ガイド](./articles/v0.2.0-podcast-mode.md)
 - [v0.1.0 リリースガイド](./articles/v0.1.0-launch.md)
 
-GeminiVRM のリリースノートをバージョン別に管理します。  
-`v0.1.0` は初回リリースとして、リリースノートと公開ガイドを英日両方でそろえた公開コラテラルです。
+GeminiVRM の versioned release notes をここにまとめています。feature release では、構造化されたリリースノートに加えて、運用者向けの companion walkthrough を並べます。
 
-| バージョン | ステータス | 範囲 |
+| Version | Status | Scope |
 | --- | --- | --- |
-| [v0.1.0](./releases/v0.1.0.md) | 公開済みの初回リリース | 正確な比較範囲 `991bff6..v0.1.0` |
+| [v0.2.0](./releases/v0.2.0.md) | 公開済み feature release | 正確な比較範囲 `v0.1.0..v0.2.0` |
+| [v0.1.0](./releases/v0.1.0.md) | 公開済み initial release | 正確な比較範囲 `991bff6..v0.1.0` |

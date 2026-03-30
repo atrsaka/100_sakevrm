@@ -1,7 +1,7 @@
 <div align="center">
   <img src="./public/ogp.jpg" alt="GeminiVRM hero" width="960" />
   <h1>GeminiVRM</h1>
-  <p>Browser-first VRM chat powered by Gemini Live native audio.</p>
+  <p>Browser-first VRM chat and podcast staging powered by Gemini Live native audio.</p>
   <p>
     <a href="https://github.com/Sunwood-ai-labs/GeminiVRM/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Sunwood-ai-labs/GeminiVRM/ci.yml?branch=main&label=ci" /></a>
     <a href="./LICENSE"><img alt="License" src="https://img.shields.io/github/license/Sunwood-ai-labs/GeminiVRM" /></a>
@@ -12,31 +12,34 @@
   <p>
     <strong>Languages</strong><br />
     <a href="./README.md">English</a> |
-    <a href="./README.ja.md">日本語</a>
+    <a href="./README.ja.md">Japanese</a>
   </p>
 </div>
 
-## ✨ Overview
+## Overview
 
 GeminiVRM is a polished fork of [`pixiv/ChatVRM`](https://github.com/pixiv/ChatVRM) that replaces the old OpenAI + Koeiromap response path with Gemini Live native audio while keeping the browser-first VRM experience intact.
 
 The current build focuses on:
 
-- streamed Gemini Live audio playback so the avatar starts speaking before the full turn finishes
-- a default `public/Kiyoka.vrm` model and configurable Gemini voice presets
-- a local-first workflow where you can run everything in the browser with your own Gemini API key
+- browser-first single-avatar chat with streamed Gemini Live transcript and audio
+- capped dual-host podcast mode where `Yukito` and `Kiyoka` alternate short native-audio turns from one topic
+- bundled `public/Kiyoka.vrm` and `public/Yukito.vrm` avatars, per-mode voice controls, and Mixamo-backed motion presets
+- a local-first workflow with optional YouTube relay and browser automation hooks
 
-## ✨ Features
+## Features
 
-- Stream Gemini Live transcript and audio in the browser
-- Start with `public/Kiyoka.vrm` or load your own local `.vrm`
-- Change the live model, prebuilt voice, and system prompt from the UI
-- Configure an optional YouTube Live relay from `Settings` -> `Streaming` and receive live chat comments from a broadcast
-- Reuse the existing VRM lip-sync pipeline with chunked PCM scheduling
+- Stream Gemini Live transcript and audio in the browser for character chat
+- Switch between `Character chat` and `Podcast mode` from `Settings`
+- Start with bundled `Kiyoka.vrm` and `Yukito.vrm`, or load your own local `.vrm`
+- Tune the live model, single-chat voice, system prompt, podcast turn cap, and per-host podcast voices from the UI
+- Reuse the VRM lip-sync pipeline with bundled Mixamo idle and talking motion rotation
+- Configure an optional YouTube Live relay from `Settings` -> `Streaming` and receive inbound live chat comments inside GeminiVRM
+- Drive the app from `window.geminiVrmControl` or `postMessage` for local automation and orchestration
 - Run a lightweight smoke E2E check with Playwright
-- Publish the static app to GitHub Pages
+- Publish the static app and docs to GitHub Pages
 
-## 🧱 Tech Stack
+## Tech Stack
 
 - Next.js 15
 - React 18
@@ -46,7 +49,7 @@ The current build focuses on:
 - Tailwind CSS
 - Playwright
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 npm install
@@ -63,7 +66,7 @@ npm run dev:all
 
 This starts the app at `http://127.0.0.1:3100` and the docs at `http://127.0.0.1:4173`.
 
-## 🔐 Environment Variables
+## Environment Variables
 
 See [.env.example](./.env.example).
 
@@ -84,28 +87,32 @@ If the default preview alias is not available for your account, switch the model
 gemini-2.5-flash-native-audio-preview-12-2025
 ```
 
-## 🕹️ How To Use
+## How To Use
 
 1. Launch the app and enter a Gemini API key.
-2. Keep the default `Kiyoka.vrm` model or load another VRM from `Settings`.
-3. Send a text prompt or use the microphone button.
-4. Adjust the live model, voice preset, and system prompt as needed.
-5. Open `Settings` to tune the live model, voice preset, system prompt, and other core chat settings.
-6. If you want live streaming support, open `Settings` -> `Streaming` -> `YouTube relay`, use `NEXT_PUBLIC_GOOGLE_CLIENT_ID` or paste a Google OAuth client ID into the page, sign in with Google, pick an active or upcoming broadcast, turn relay on, and toggle auto-reply separately if you want Gemini to answer incoming comments automatically while streaming this app window through YouTube Live Control Room or OBS.
+2. Open `Settings` and choose `Character chat` or `Podcast mode`.
+3. In character chat, keep the default `Kiyoka.vrm` avatar or load another VRM, then send a text prompt or use the microphone button.
+4. In podcast mode, enter one topic and let Yukito and Kiyoka alternate short audio turns until the configured turn cap is reached.
+5. Open `Settings` -> `Podcast settings` if you want to change the max loop count or podcast-only voice routing.
+6. Use `Settings` to tune the live model, single-chat voice, system prompt, idle motion, and other core runtime settings.
+7. If you want live streaming support, open `Settings` -> `Streaming` -> `YouTube relay`, use `NEXT_PUBLIC_GOOGLE_CLIENT_ID` or paste a Google OAuth client ID into the page, sign in with Google, pick an active or upcoming broadcast, turn relay on, and toggle auto-reply separately if you want Gemini to answer incoming comments automatically while streaming this app window through YouTube Live Control Room or OBS.
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```text
-public/                     Static VRM, images, and social assets
-scripts/e2e-smoke.mjs       Lightweight browser smoke test
-src/components/             UI components
-src/features/chat/          Gemini Live transport and config
-src/features/lipSync/       Audio playback and analysis
-src/features/vrmViewer/     Viewer and model runtime
-docs/                       Architecture, deployment, and QA notes
+public/                       Static VRM, images, and social assets
+scripts/                      Release, Pages, and smoke-test helpers
+src/components/               UI components
+src/features/chat/            Gemini Live transport and config
+src/features/externalControl/ Browser automation and postMessage control hooks
+src/features/lipSync/         Audio playback and analysis
+src/features/podcast/         Dual-host podcast orchestration
+src/features/vrmViewer/       Viewer and model runtime
+src/lib/fbxAnimation/         Mixamo retargeting helpers for bundled motions
+docs/                         Architecture, deployment, release, and QA notes
 ```
 
-## 📚 Documentation
+## Documentation
 
 - Live docs (English): [https://sunwood-ai-labs.github.io/GeminiVRM/docs/](https://sunwood-ai-labs.github.io/GeminiVRM/docs/)
 - Live docs (Japanese): [https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/](https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/)
@@ -113,6 +120,9 @@ docs/                       Architecture, deployment, and QA notes
 - [Usage Guide](./docs/usage.md)
 - [YouTube Relay Guide](./docs/youtube-relay.md)
 - [Release Notes](./docs/releases.md)
+- [Release Articles](./docs/articles.md)
+- [Latest v0.2.0 Release Notes](./docs/releases/v0.2.0.md)
+- [Latest v0.2.0 Podcast Mode Guide](./docs/articles/v0.2.0-podcast-mode.md)
 - [Architecture notes](./docs/architecture.md)
 - [Deployment guide](./docs/deployment.md)
 - [Troubleshooting](./docs/troubleshooting.md)
@@ -125,7 +135,7 @@ npm run docs:build
 npm run docs:preview
 ```
 
-## 🧪 Verification
+## Verification
 
 ```bash
 npm run verify
@@ -143,7 +153,7 @@ npm run e2e:smoke
 
 The smoke test checks that the app boots, the send flow works, and known chunk/icon/fallback request failures stay absent. When no Gemini API key is present, the missing-key error path is treated as a valid smoke outcome.
 
-## 🌐 Deployment
+## Deployment
 
 The repository is prepared for GitHub Pages deployment through GitHub Actions.
 
@@ -154,13 +164,14 @@ The repository is prepared for GitHub Pages deployment through GitHub Actions.
 
 For step-by-step instructions, see [docs/deployment.md](./docs/deployment.md).
 
-## ⚠️ Security Notes
+## Security Notes
 
-- This project currently sends the Gemini API key from the browser, matching the original local-first ChatVRM setup style.
+- This project still sends the Gemini API key from the browser, matching the original local-first ChatVRM setup style.
 - The YouTube relay stores the Google OAuth client ID and short-lived YouTube access token in browser local storage until sign-out or token expiry so the session can be restored after reload.
+- The external-control `postMessage` surface is enabled by default in development. In production it is gated by local storage and allowed-origin checks, so do not assume it is globally active on public deployments.
 - For public production deployments, prefer a token relay or another server-side key handling strategy.
 
-## 🙏 Acknowledgements
+## Acknowledgements
 
 - [`pixiv/ChatVRM`](https://github.com/pixiv/ChatVRM)
 - [`@pixiv/three-vrm`](https://github.com/pixiv/three-vrm)

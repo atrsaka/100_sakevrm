@@ -1,10 +1,20 @@
+import fs from "node:fs/promises";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 
 const args = parseArgs(process.argv.slice(2));
-const input = args.input || "docs/public/releases/release-header-v0.1.0.svg";
-const inputPath = path.resolve(process.cwd(), input);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const repoRoot = path.resolve(__dirname, "..");
+const packageJson = JSON.parse(
+  await fs.readFile(path.join(repoRoot, "package.json"), "utf8")
+);
+
+const input =
+  args.input ||
+  `docs/public/releases/release-header-v${packageJson.version}.svg`;
+const inputPath = path.resolve(repoRoot, input);
 const inputUrl = pathToFileURL(inputPath).href;
 const tolerance = Number.parseFloat(args.tolerance || "1.5");
 

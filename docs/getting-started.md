@@ -42,7 +42,17 @@ This starts:
 2. Enter a Gemini API key.
 3. Send a short prompt from the message box.
 4. Wait for the assistant transcript and streamed audio playback.
-5. Open `Settings` to tune the model, voice, and system prompt.
+5. Open `Settings` to tune the model, voice, system prompt, and motion preset.
+
+## Optional Podcast Mode Quick Start
+
+If you want to verify the new dual-host flow right away:
+
+1. Open `Settings` and switch `Conversation mode` to `Podcast mode`.
+2. Wait for both `Kiyoka` and `Yukito` viewers to finish loading.
+3. Open `Podcast settings` if you want to change the max loop count or assign different prebuilt voices per host.
+4. Type a short topic and send it.
+5. Confirm the stage alternates speakers and stops automatically when the configured turn count is reached.
 
 ## Optional YouTube Relay Setup
 

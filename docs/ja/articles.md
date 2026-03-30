@@ -1,12 +1,12 @@
 ---
-title: リリース記事
+title: Release Articles
 ---
 
-# リリース記事
+# Release Articles
 
-GeminiVRM の主要リリース向け companion walkthrough をここに集約します。
+GeminiVRM の主要な release に対応する companion walkthrough をここにまとめています。
 
-## GeminiVRM リリースガイド
+## GeminiVRM Release Guides
 
+- [v0.2.0 Podcast Mode ガイド](./articles/v0.2.0-podcast-mode.md)
 - [v0.1.0 Launch Guide](./articles/v0.1.0-launch.md)
-

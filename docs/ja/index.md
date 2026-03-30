@@ -12,25 +12,27 @@ title: GeminiVRM ドキュメント
   />
 </div>
 
-このサイトでは、GeminiVRM の導入、運用、公開、検証に加えて、任意の YouTube relay 設定に必要な情報をまとめています。
+このサイトでは、GeminiVRM の character chat、podcast mode、任意の YouTube relay を実行・理解・公開・検証・自動化するための情報をまとめています。
 
 ## はじめに
 
-- [開始手順](./getting-started.md)
-- [使い方](./usage.md)
-- [YouTube リレーガイド](./youtube-relay.md)
-- [デプロイ](./deployment.md)
+- [Getting Started](./getting-started.md)
+- [Usage Guide](./usage.md)
+- [YouTube Relay Guide](./youtube-relay.md)
+- [Deployment Guide](./deployment.md)
 
-## 詳細
+## 詳細ガイド
 
-- [アーキテクチャ](./architecture.md)
-- [トラブルシュート](./troubleshooting.md)
+- [Architecture Guide](./architecture.md)
+- [Troubleshooting](./troubleshooting.md)
 
 ## 参照
 
-- [リリースノート](./releases.md)
+- [最新の v0.2.0 リリースノート](./releases/v0.2.0.md)
+- [最新の v0.2.0 Podcast Mode ガイド](./articles/v0.2.0-podcast-mode.md)
+- [Release Notes](./releases.md)
+- [Release Articles](./articles.md)
 - [Repository QA Inventory](./repository-qa-inventory.md)
-- [記事一覧](./articles.md)
 
 ## Languages
 

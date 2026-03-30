@@ -4,7 +4,7 @@ title: Usage Guide
 
 # Usage Guide
 
-## Core Chat Flow
+## Character Chat Flow
 
 1. Start the app and provide a Gemini API key.
 2. Keep the bundled `Kiyoka.vrm` avatar or load your own `.vrm` file.
@@ -12,14 +12,40 @@ title: Usage Guide
 4. Read the partial transcript while audio streams in.
 5. Let the viewer finish playback before sending the next prompt if you want the cleanest lip sync.
 
+## Podcast Mode
+
+Use this flow when you want Yukito and Kiyoka to alternate short Gemini Live turns from one topic:
+
+1. Open `Settings` and switch `Conversation mode` to `Podcast mode`.
+2. Wait until both podcast viewers are ready.
+3. Open `Podcast settings` if you want to change the max loop count or route different prebuilt voices to Yukito and Kiyoka.
+4. Enter one topic in the composer. The placeholder changes to `Type a podcast topic`.
+5. GeminiVRM starts a capped alternating conversation and stops automatically when the configured turn count is reached.
+
+Important notes:
+
+- podcast mode is a turn-based back-and-forth, not simultaneous duet playback
+- later turns relay the previous speaker's audio into Gemini Live when possible
+- if the relay path cannot be reused, GeminiVRM falls back to transcript-driven continuation instead of stopping the run
+
 ## Settings You Can Tune
 
+- conversation mode (`Character chat` or `Podcast mode`)
 - live model
-- voice preset
+- single-chat voice preset or custom voice name
 - system prompt
+- podcast turn cap (`2..12`)
+- podcast-only Yukito / Kiyoka voice routing
+- idle motion preset
 - chat history reset
 - local VRM file input
 - optional `Streaming` entry that opens the YouTube relay page
+
+## Motion And Viewer Runtime
+
+- `Random Idle` rotates through bundled Mixamo idle clips
+- talking motion swaps in automatically while audio is playing
+- camera framing is preserved between sessions for the main viewer
 
 ## Optional YouTube Live Relay
 
@@ -36,6 +62,7 @@ Important notes:
 - only new comments received after relay starts are forwarded into Gemini
 - comments posted by the stream owner's own account are ignored to prevent reply loops
 - the saved Google client ID and short-lived access token are restored from local storage until sign-out or token expiry
+- relay is inbound-only; GeminiVRM does not post replies back into YouTube chat
 
 See the [YouTube Relay Guide](./youtube-relay.md) for prerequisites, step-by-step setup, and failure cases.
 
@@ -49,6 +76,7 @@ The app exposes a `Docs` shortcut in the top-right action area.
 ## What To Watch During Testing
 
 - transcript updates appear before the full turn completes
-- audio starts without chunk/fallback errors
+- audio starts without chunk or fallback errors
 - mouth movement remains synchronized with audio playback
-- switching voice or model does not break the next turn
+- podcast mode waits for both viewers and stops at the configured turn cap
+- switching voice, motion, or conversation mode does not break the next run

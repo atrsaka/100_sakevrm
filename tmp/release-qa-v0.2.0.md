@@ -34,6 +34,10 @@
 | docs/ja/releases.md | pass | Added the Japanese `v0.2.0` release entry and companion guide index link |
 | docs/articles.md | pass | Added the `v0.2.0` podcast guide entry |
 | docs/ja/articles.md | pass | Added the Japanese `v0.2.0` podcast guide entry |
+| docs/releases/v0.2.0.md | pass | Added the English docs-backed `v0.2.0` release notes page with the published release header and validation section |
+| docs/ja/releases/v0.2.0.md | pass | Added the Japanese docs-backed `v0.2.0` release notes page with the same scope and published release metadata |
+| docs/articles/v0.2.0-podcast-mode.md | pass | Added the English companion walkthrough for podcast mode and linked it from the release note surface |
+| docs/ja/articles/v0.2.0-podcast-mode.md | pass | Added the Japanese companion walkthrough for podcast mode and linked it from the locale release note surface |
 
 ## QA Inventory
 

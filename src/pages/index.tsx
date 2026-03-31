@@ -439,7 +439,11 @@ export default function Home() {
   externalControlStateRef.current = getExternalControlState();
 
   const getLatestExternalControlState = useCallback(
-    () => externalControlStateRef.current ?? getExternalControlState(),
+    () => {
+      const nextState = getExternalControlState();
+      externalControlStateRef.current = nextState;
+      return nextState;
+    },
     [getExternalControlState],
   );
 

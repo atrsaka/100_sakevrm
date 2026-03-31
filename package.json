@@ -15,6 +15,7 @@
     "start": "next start",
     "lint": "next lint",
     "e2e:smoke": "node scripts/e2e-smoke.mjs",
+    "e2e:podcast": "node scripts/e2e-podcast-relay.mjs",
     "verify": "npm run lint && npm run build && npm run e2e:smoke"
   },
   "dependencies": {

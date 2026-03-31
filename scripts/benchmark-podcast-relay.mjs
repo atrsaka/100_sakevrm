@@ -10,13 +10,22 @@ const apiKey =
 const topic =
   process.env.E2E_PODCAST_BENCH_TOPIC ||
   "Keep the exchange brief: one short sentence each about AI agents and local models.";
-const requestTimeoutMs = Number(process.env.E2E_TIMEOUT_MS || 240000);
+const requestTimeoutMs = Number(process.env.E2E_TIMEOUT_MS || 480000);
 const startupTimeoutMs = Number(process.env.E2E_STARTUP_TIMEOUT_MS || 60000);
 const rawIterations = Number.parseInt(
   String(process.env.E2E_BENCH_ITERATIONS || 2),
   10,
 );
-const iterationsPerMode = Number.isNaN(rawIterations) ? 2 : Math.min(Math.max(rawIterations, 1), 5);
+const iterationsPerMode = Number.isNaN(rawIterations)
+  ? 2
+  : Math.min(Math.max(rawIterations, 1), 6);
+const rawPodcastTurnCount = Number.parseInt(
+  String(process.env.E2E_BENCH_TURN_COUNT || 6),
+  10,
+);
+const podcastTurnCount = Number.isNaN(rawPodcastTurnCount)
+  ? 6
+  : Math.min(Math.max(rawPodcastTurnCount, 2), 6);
 const artifactDir =
   process.env.E2E_BENCH_ARTIFACT_DIR ||
   path.join(process.cwd(), ".tmp-benchmark-podcast-relay");
@@ -43,6 +52,7 @@ try {
       apiKey,
       mode,
       perModeIndex,
+      podcastTurnCount,
       requestTimeoutMs,
       targetUrl,
       topic,
@@ -52,6 +62,7 @@ try {
 
   const summary = summarizeBenchmarkResults({
     iterationsPerMode,
+    podcastTurnCount,
     results,
     targetUrl,
     topic,
@@ -69,7 +80,16 @@ try {
 
 async function runBenchmarkIteration(
   browser,
-  { artifactDir, apiKey, mode, perModeIndex, requestTimeoutMs, targetUrl, topic },
+  {
+    artifactDir,
+    apiKey,
+    mode,
+    perModeIndex,
+    podcastTurnCount,
+    requestTimeoutMs,
+    targetUrl,
+    topic,
+  },
 ) {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
@@ -143,13 +163,15 @@ async function runBenchmarkIteration(
       "podcast mode and viewer readiness",
     );
 
-    await page.evaluate(async () => {
-      await window.geminiVrmControl.updatePodcastSettings({ podcastTurnCount: 2 });
+    await page.evaluate(async (nextTurnCount) => {
+      await window.geminiVrmControl.updatePodcastSettings({
+        podcastTurnCount: nextTurnCount,
+      });
       await window.geminiVrmControl.resetConversation("podcast");
-    });
+    }, podcastTurnCount);
     await waitForExternalControlState(
       page,
-      () => {
+      (expectedTurnCount) => {
         const state = window.geminiVrmControl?.getState?.();
         return Boolean(
           state &&
@@ -157,10 +179,10 @@ async function runBenchmarkIteration(
             state.chatProcessing === false &&
             Array.isArray(state.podcastLog) &&
             state.podcastLog.length === 0 &&
-            state.podcastTurnCount === 2,
+            state.podcastTurnCount === expectedTurnCount,
         );
       },
-      undefined,
+      podcastTurnCount,
       requestTimeoutMs,
       "podcast reset state",
     );
@@ -174,17 +196,17 @@ async function runBenchmarkIteration(
 
     await waitForExternalControlState(
       page,
-      () => {
+      (expectedTurnCount) => {
         const state = window.geminiVrmControl?.getState?.();
         return Boolean(
           state &&
             state.chatProcessing === false &&
             state.assistantStatus === "Podcast finished." &&
             Array.isArray(state.podcastLog) &&
-            state.podcastLog.length >= 2,
+            state.podcastLog.length >= expectedTurnCount,
         );
       },
-      undefined,
+      podcastTurnCount,
       requestTimeoutMs,
       "podcast benchmark completion",
     );
@@ -211,11 +233,16 @@ async function runBenchmarkIteration(
       );
     }
 
-    const metrics = computeBenchmarkMetrics(mode, debugEvents);
+    const metrics = computeBenchmarkMetrics({
+      mode,
+      debugEvents,
+      podcastTurnCount,
+    });
 
     return {
       mode,
       perModeIndex,
+      podcastTurnCount,
       finalState: {
         assistantStatus: finalState.assistantStatus,
         podcastLogLength: finalState.podcastLog.length,
@@ -337,135 +364,219 @@ async function waitForExternalControlState(
   }
 }
 
-function computeBenchmarkMetrics(mode, events) {
-  const turn1PlaybackFinished = findEvent(
-    events,
-    "turn-playback-finished",
-    (event) => event.turnIndex === 0,
+function computeBenchmarkMetrics({ mode, debugEvents, podcastTurnCount }) {
+  const relayTurnIndices = Array.from(
+    { length: Math.max(0, podcastTurnCount - 1) },
+    (_, index) => index + 1,
   );
-  const turn2Start = findEvent(events, "turn-start", (event) => event.turnIndex === 1);
-  const turn2FirstAudio = findEvent(
-    events,
-    "turn-first-audio",
-    (event) => event.turnIndex === 1,
-  );
-  const turn2Complete = findEvent(
-    events,
-    "turn-complete",
-    (event) => event.turnIndex === 1,
-  );
-  const turn2PlaybackFinished = findEvent(
-    events,
-    "turn-playback-finished",
-    (event) => event.turnIndex === 1,
-  );
-  const batchRelayStart = findEvent(
-    events,
-    "batch-relay-start",
-    (event) => event.turnIndex === 1,
-  );
-  const preparedInputFirstChunk = findEvent(
-    events,
-    "prepared-relay-input-first-chunk",
-    (event) => event.targetTurnIndex === 1,
-  );
-  const preparedInputComplete = findEvent(
-    events,
-    "prepared-relay-input-complete",
-    (event) => event.targetTurnIndex === 1,
-  );
-  const preparedOutputFirstChunk = findEvent(
-    events,
-    "prepared-relay-output-first-chunk",
-    (event) => event.targetTurnIndex === 1,
-  );
-  const preparedOutputFirstPlayed = findEvent(
-    events,
-    "prepared-relay-output-first-played",
-    (event) => event.targetTurnIndex === 1,
-  );
+  const relayTurns = relayTurnIndices.map((turnIndex) => {
+    const turnStart = findEvent(
+      debugEvents,
+      "turn-start",
+      (event) => event.turnIndex === turnIndex,
+    );
+    const turnFirstAudio = findEvent(
+      debugEvents,
+      "turn-first-audio",
+      (event) => event.turnIndex === turnIndex,
+    );
+    const turnComplete = findEvent(
+      debugEvents,
+      "turn-complete",
+      (event) => event.turnIndex === turnIndex,
+    );
+    const turnPlaybackFinished = findEvent(
+      debugEvents,
+      "turn-playback-finished",
+      (event) => event.turnIndex === turnIndex,
+    );
+    const previousTurnPlaybackFinished = findEvent(
+      debugEvents,
+      "turn-playback-finished",
+      (event) => event.turnIndex === turnIndex - 1,
+    );
+    const batchRelayStart = findEvent(
+      debugEvents,
+      "batch-relay-start",
+      (event) => event.turnIndex === turnIndex,
+    );
+    const preparedInputFirstChunk = findEvent(
+      debugEvents,
+      "prepared-relay-input-first-chunk",
+      (event) => event.targetTurnIndex === turnIndex,
+    );
+    const preparedInputComplete = findEvent(
+      debugEvents,
+      "prepared-relay-input-complete",
+      (event) => event.targetTurnIndex === turnIndex,
+    );
+    const preparedOutputFirstChunk = findEvent(
+      debugEvents,
+      "prepared-relay-output-first-chunk",
+      (event) => event.targetTurnIndex === turnIndex,
+    );
+    const preparedOutputFirstPlayed = findEvent(
+      debugEvents,
+      "prepared-relay-output-first-played",
+      (event) => event.targetTurnIndex === turnIndex,
+    );
+
+    return {
+      turnIndex,
+      firstAudioDelayMs: asFiniteNumber(turnFirstAudio?.firstAssistantAudioDelayMs),
+      responseResolvedMs: asFiniteNumber(turnComplete?.turnDurationMs),
+      playbackFinishedMs: asFiniteNumber(turnPlaybackFinished?.playbackFinishedDelayMs),
+      handoffSilenceMs: diffPerf(turnFirstAudio, previousTurnPlaybackFinished),
+      usedFallbackTextInput: Boolean(turnComplete?.usedFallbackTextInput),
+      batchPostHandoffToFirstAudioMs: diffPerf(turnFirstAudio, batchRelayStart),
+      preparedInputFirstChunkAfterPreviousTurnStartMs: diffPerf(
+        preparedInputFirstChunk,
+        findEvent(debugEvents, "turn-start", (event) => event.turnIndex === turnIndex - 1),
+      ),
+      preparedOutputReadyBeforeTurnStartMs: diffPerf(
+        turnStart,
+        preparedOutputFirstChunk,
+      ),
+      preparedOutputPlayedAfterTurnStartMs: diffPerf(
+        preparedOutputFirstPlayed,
+        turnStart,
+      ),
+      preparedInputLeadMs: diffPerf(
+        preparedInputComplete,
+        preparedOutputFirstChunk,
+      ),
+      proof: {
+        sawPreparedInputChunk: Boolean(preparedInputFirstChunk),
+        sawPreparedOutputChunk: Boolean(preparedOutputFirstChunk),
+      },
+    };
+  });
 
   return {
-    turn2FirstAudioDelayMs: asFiniteNumber(turn2FirstAudio?.firstAssistantAudioDelayMs),
-    turn2ResponseResolvedMs: asFiniteNumber(turn2Complete?.turnDurationMs),
-    turn2PlaybackFinishedMs: asFiniteNumber(turn2PlaybackFinished?.playbackFinishedDelayMs),
-    handoffSilenceMs: diffPerf(turn2FirstAudio, turn1PlaybackFinished),
-    turn2UsedFallbackTextInput: Boolean(turn2Complete?.usedFallbackTextInput),
-    batchPostHandoffToFirstAudioMs: diffPerf(turn2FirstAudio, batchRelayStart),
-    streamingPreparedInputLeadMs: diffPerf(preparedInputComplete, preparedOutputFirstChunk),
-    streamingOutputReadyBeforeTurn2StartMs: diffPerf(turn2Start, preparedOutputFirstChunk),
-    streamingOutputReadyBeforeTurn1PlaybackFinishMs: diffPerf(
-      turn1PlaybackFinished,
-      preparedOutputFirstChunk,
-    ),
-    preparedInputFirstChunkAfterTurn1StartMs: diffPerf(
-      preparedInputFirstChunk,
-      findEvent(events, "turn-start", (event) => event.turnIndex === 0),
-    ),
-    preparedOutputFirstPlayedAfterTurn2StartMs: diffPerf(
-      preparedOutputFirstPlayed,
-      turn2Start,
-    ),
-    proof: {
-      mode,
-      sawPreparedInputChunk: Boolean(preparedInputFirstChunk),
-      sawPreparedOutputChunk: Boolean(preparedOutputFirstChunk),
-      sawPreparedOutputBeforeTurn1PlaybackFinish:
-        diffPerf(turn1PlaybackFinished, preparedOutputFirstChunk) != null &&
-        diffPerf(turn1PlaybackFinished, preparedOutputFirstChunk) > 0,
-    },
+    mode,
+    expectedRelayTurns: relayTurnIndices.length,
+    relayTurnIndices,
+    relayTurns,
+    relayTurnFirstAudioDelayMs: relayTurns
+      .map((turn) => turn.firstAudioDelayMs)
+      .filter((value) => Number.isFinite(value)),
+    relayTurnResponseResolvedMs: relayTurns
+      .map((turn) => turn.responseResolvedMs)
+      .filter((value) => Number.isFinite(value)),
+    relayTurnPlaybackFinishedMs: relayTurns
+      .map((turn) => turn.playbackFinishedMs)
+      .filter((value) => Number.isFinite(value)),
+    relayTurnHandoffSilenceMs: relayTurns
+      .map((turn) => turn.handoffSilenceMs)
+      .filter((value) => Number.isFinite(value)),
+    relayTurnBatchPostHandoffToFirstAudioMs: relayTurns
+      .map((turn) => turn.batchPostHandoffToFirstAudioMs)
+      .filter((value) => Number.isFinite(value)),
+    transcriptFallbackTurnIndices: relayTurns
+      .filter((turn) => turn.usedFallbackTextInput)
+      .map((turn) => turn.turnIndex),
+    preparedInputTurnIndices: relayTurns
+      .filter((turn) => turn.proof.sawPreparedInputChunk)
+      .map((turn) => turn.turnIndex),
+    preparedOutputTurnIndices: relayTurns
+      .filter((turn) => turn.proof.sawPreparedOutputChunk)
+      .map((turn) => turn.turnIndex),
   };
 }
 
-function summarizeBenchmarkResults({ iterationsPerMode, results, targetUrl, topic }) {
+function summarizeBenchmarkResults({
+  iterationsPerMode,
+  podcastTurnCount,
+  results,
+  targetUrl,
+  topic,
+}) {
   const grouped = {
     streaming: results.filter((result) => result.mode === "streaming"),
     batch: results.filter((result) => result.mode === "batch"),
   };
   const commonMetrics = [
-    "turn2FirstAudioDelayMs",
-    "handoffSilenceMs",
-    "turn2ResponseResolvedMs",
-    "turn2PlaybackFinishedMs",
+    "relayTurnFirstAudioDelayMs",
+    "relayTurnHandoffSilenceMs",
+    "relayTurnResponseResolvedMs",
+    "relayTurnPlaybackFinishedMs",
   ];
 
   const summaryByMode = Object.fromEntries(
-    Object.entries(grouped).map(([mode, modeResults]) => [
-      mode,
-      {
-        runs: modeResults.length,
-        turn2TranscriptFallbackRuns: modeResults.filter(
-          (result) => result.metrics.turn2UsedFallbackTextInput,
-        ).length,
-        metrics: Object.fromEntries(
-          commonMetrics.map((metricName) => [
-            metricName,
-            summarizeNumericMetric(modeResults, metricName),
-          ]),
-        ),
-        proof: modeResults.map((result) => result.metrics.proof),
-      },
-    ]),
+    Object.entries(grouped).map(([mode, modeResults]) => {
+      const flattened = {
+        relayTurnFirstAudioDelayMs: flattenMetric(modeResults, "relayTurnFirstAudioDelayMs"),
+        relayTurnHandoffSilenceMs: flattenMetric(modeResults, "relayTurnHandoffSilenceMs"),
+        relayTurnResponseResolvedMs: flattenMetric(modeResults, "relayTurnResponseResolvedMs"),
+        relayTurnPlaybackFinishedMs: flattenMetric(modeResults, "relayTurnPlaybackFinishedMs"),
+      };
+
+      return [
+        mode,
+        {
+          runs: modeResults.length,
+          expectedRelayTurns: modeResults.length * Math.max(0, podcastTurnCount - 1),
+          measuredRelayTurns: modeResults.reduce(
+            (sum, result) => sum + result.metrics.relayTurns.length,
+            0,
+          ),
+          transcriptFallbackTurns: modeResults.reduce(
+            (sum, result) => sum + result.metrics.transcriptFallbackTurnIndices.length,
+            0,
+          ),
+          metrics: Object.fromEntries(
+            commonMetrics.map((metricName) => [
+              metricName,
+              summarizeNumericValues(flattened[metricName]),
+            ]),
+          ),
+          proof: {
+            preparedInputTurns: modeResults.flatMap(
+              (result) => result.metrics.preparedInputTurnIndices,
+            ).length,
+            preparedOutputTurns: modeResults.flatMap(
+              (result) => result.metrics.preparedOutputTurnIndices,
+            ).length,
+          },
+        },
+      ];
+    }),
   );
 
-  const streamingFirstAudio = summaryByMode.streaming.metrics.turn2FirstAudioDelayMs.mean;
-  const batchFirstAudio = summaryByMode.batch.metrics.turn2FirstAudioDelayMs.mean;
-  const streamingHandoff = summaryByMode.streaming.metrics.handoffSilenceMs.mean;
-  const batchHandoff = summaryByMode.batch.metrics.handoffSilenceMs.mean;
+  const streamingFirstAudio =
+    summaryByMode.streaming.metrics.relayTurnFirstAudioDelayMs.mean;
+  const batchFirstAudio =
+    summaryByMode.batch.metrics.relayTurnFirstAudioDelayMs.mean;
+  const streamingHandoff =
+    summaryByMode.streaming.metrics.relayTurnHandoffSilenceMs.mean;
+  const batchHandoff =
+    summaryByMode.batch.metrics.relayTurnHandoffSilenceMs.mean;
 
   return {
     ok: true,
     targetUrl,
     topic,
     iterationsPerMode,
+    podcastTurnCount,
+    relayTurnsPerRun: Math.max(0, podcastTurnCount - 1),
     benchmarkOrder: benchmarkModes,
     summaryByMode,
     improvements: {
-      turn2FirstAudioDelayMs: buildImprovementSummary(streamingFirstAudio, batchFirstAudio),
-      handoffSilenceMs: buildImprovementSummary(streamingHandoff, batchHandoff),
+      relayTurnFirstAudioDelayMs: buildImprovementSummary(
+        streamingFirstAudio,
+        batchFirstAudio,
+      ),
+      relayTurnHandoffSilenceMs: buildImprovementSummary(
+        streamingHandoff,
+        batchHandoff,
+      ),
     },
     rawRuns: results,
   };
+}
+
+function flattenMetric(results, metricName) {
+  return results.flatMap((result) => result.metrics[metricName]);
 }
 
 function buildImprovementSummary(streamingValue, batchValue) {
@@ -481,12 +592,10 @@ function buildImprovementSummary(streamingValue, batchValue) {
   };
 }
 
-function summarizeNumericMetric(results, metricName) {
-  const values = results
-    .map((result) => result.metrics[metricName])
-    .filter((value) => Number.isFinite(value));
+function summarizeNumericValues(values) {
+  const finiteValues = values.filter((value) => Number.isFinite(value));
 
-  if (values.length === 0) {
+  if (finiteValues.length === 0) {
     return {
       mean: null,
       min: null,
@@ -496,10 +605,10 @@ function summarizeNumericMetric(results, metricName) {
   }
 
   return {
-    mean: roundMetric(values.reduce((sum, value) => sum + value, 0) / values.length),
-    min: roundMetric(Math.min(...values)),
-    max: roundMetric(Math.max(...values)),
-    samples: values.map((value) => roundMetric(value)),
+    mean: roundMetric(finiteValues.reduce((sum, value) => sum + value, 0) / finiteValues.length),
+    min: roundMetric(Math.min(...finiteValues)),
+    max: roundMetric(Math.max(...finiteValues)),
+    samples: finiteValues.map((value) => roundMetric(value)),
   };
 }
 

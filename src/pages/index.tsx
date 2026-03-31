@@ -879,7 +879,7 @@ export default function Home() {
             }
 
             try {
-              return preparedSessionForCurrentTurn.getResponse();
+              return await preparedSessionForCurrentTurn.getResponse();
             } catch (error) {
               preparedSessionForCurrentTurn.setOutputSink(null);
               preparedSessionForCurrentTurn.setPartialTranscriptSink(null);

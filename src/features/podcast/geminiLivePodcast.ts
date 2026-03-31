@@ -212,7 +212,6 @@ export async function createGeminiLiveAudioRelaySession(
 
     session!.sendRealtimeInput({
       audio: relayAudioBlob,
-      audioStreamEnd: false,
     });
   };
 
@@ -236,7 +235,6 @@ export async function createGeminiLiveAudioRelaySession(
 
             session!.sendRealtimeInput({
               audio: trailingRelayAudioBlob,
-              audioStreamEnd: false,
             });
           }
           session!.sendRealtimeInput({ audioStreamEnd: true });

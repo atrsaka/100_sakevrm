@@ -24,7 +24,12 @@ import {
   DEFAULT_GEMINI_VOICE_NAME,
 } from "@/features/chat/geminiLiveConfig";
 import { getGeminiLiveChatResponse } from "@/features/chat/geminiLiveChat";
-import { getGeminiLiveAudioRelayResponse } from "@/features/podcast/geminiLivePodcast";
+import {
+  createGeminiLiveAudioRelaySession,
+  getGeminiLiveAudioRelayResponse,
+  type GeminiLiveAudioRelayResponse,
+  type GeminiLiveAudioRelaySession,
+} from "@/features/podcast/geminiLivePodcast";
 import {
   buildPodcastDisplayLog,
   buildPodcastOpeningPrompt,
@@ -590,7 +595,129 @@ export default function Home() {
         })),
       });
 
+      type PodcastRelayChunk = {
+        data: Uint8Array;
+        mimeType: string;
+      };
+
+      type PreparedRelaySession = {
+        speakerId: PodcastSpeakerId;
+        session: Promise<GeminiLiveAudioRelaySession>;
+        completeInput: () => void;
+        getResponse: () => Promise<GeminiLiveAudioRelayResponse>;
+        setOutputSink: (
+          sink: ((chunk: PodcastRelayChunk) => void) | null,
+        ) => void;
+        setPartialTranscriptSink: (
+          sink: ((transcript: string) => void) | null,
+        ) => void;
+        close: (reason?: unknown) => void;
+      };
+
+      const createPreparedRelaySession = (
+        targetSpeaker: PodcastParticipant,
+        partnerSpeaker: PodcastParticipant,
+        turnsForHistory: PodcastTurn[],
+      ): PreparedRelaySession => {
+        const pendingChunks: PodcastRelayChunk[] = [];
+        let outputSink: ((chunk: PodcastRelayChunk) => void) | null = null;
+        let partialTranscriptSink:
+          | ((transcript: string) => void)
+          | null = null;
+        let completion: Promise<GeminiLiveAudioRelayResponse> | undefined;
+
+        const flushQueuedChunks = () => {
+          if (outputSink == null || pendingChunks.length === 0) {
+            return;
+          }
+
+          const chunks = pendingChunks.splice(0, pendingChunks.length);
+          for (const chunk of chunks) {
+            outputSink(chunk);
+          }
+        };
+
+        const session = createGeminiLiveAudioRelaySession({
+          apiKey: geminiApiKey,
+          historyMessages: podcastTurnsToGeminiMessages(
+            turnsForHistory,
+            targetSpeaker.id,
+          ),
+          systemPrompt: buildPodcastRelaySystemPrompt(
+            targetSpeaker,
+            partnerSpeaker,
+            turnsForHistory,
+          ),
+          model: geminiModel,
+          voiceName: targetSpeaker.voiceName,
+          onAudioChunk: (chunk) => {
+            if (outputSink == null) {
+              pendingChunks.push({
+                data: new Uint8Array(chunk.data),
+                mimeType: chunk.mimeType,
+              });
+              return;
+            }
+
+            outputSink(chunk);
+          },
+          onPartialTranscript: (partialTranscript) => {
+            partialTranscriptSink?.(partialTranscript);
+          },
+        });
+
+        return {
+          speakerId: targetSpeaker.id,
+          session,
+          completeInput() {
+            if (!completion) {
+              completion = session.then((relaySession) => relaySession.audioStreamEnd());
+              void completion.catch(() => {
+                // Deferred to the active turn fallback path.
+              });
+            }
+          },
+          getResponse() {
+            if (!completion) {
+              completion = session.then((relaySession) => relaySession.audioStreamEnd());
+            }
+
+            return completion;
+          },
+          setOutputSink(sink) {
+            outputSink = sink;
+            flushQueuedChunks();
+          },
+          setPartialTranscriptSink(sink) {
+            partialTranscriptSink = sink;
+          },
+          close(reason) {
+            void session.then((relaySession) =>
+              relaySession.close(
+                reason instanceof Error ? reason.message : String(reason ?? ""),
+              ),
+            ).catch(() => {
+              // Ignore setup failures during best-effort cleanup.
+            });
+          },
+        };
+      };
+
+      const closePreparedRelaySession = (
+        targetSession: PreparedRelaySession | null,
+        reason: unknown,
+      ) => {
+        if (!targetSession) {
+          return;
+        }
+
+        targetSession.close(reason);
+      };
+
+      let preparedSessionForNextTurn: PreparedRelaySession | null = null;
+
       try {
+
         for (let turnIndex = 0; turnIndex < podcastTurnCount; turnIndex += 1) {
           if (runToken !== podcastRunTokenRef.current) {
             logPodcastDebugEvent("cancelled", {
@@ -615,7 +742,26 @@ export default function Home() {
           const priorTurns = podcastTurnsRef.current;
           const priorMessages = podcastTurnsToGeminiMessages(priorTurns, speakerId);
           const latestPartnerTurn = priorTurns[priorTurns.length - 1];
+          let preparedSessionForCurrentTurn =
+            preparedSessionForNextTurn?.speakerId === speakerId
+              ? preparedSessionForNextTurn
+              : null;
+          const nextSpeakerId =
+            speakerId === "yukito" ? "kiyoka" : "yukito";
+          let preparedSessionForFollowingTurn: PreparedRelaySession | null = null;
           let hasStartedAudio = false;
+
+          if (
+            preparedSessionForNextTurn &&
+            preparedSessionForNextTurn.speakerId !== speakerId
+          ) {
+            closePreparedRelaySession(
+              preparedSessionForNextTurn,
+              "Speaker rotation changed before relay session consumed.",
+            );
+            preparedSessionForCurrentTurn = null;
+          }
+          preparedSessionForNextTurn = null;
 
           setActivePodcastSpeakerId(speakerId);
           setAssistantSpeakerName(speaker.displayName);
@@ -625,6 +771,144 @@ export default function Home() {
           );
 
           await speakerModel.beginStreamingSpeak(createNeutralScreenplay(""));
+
+          const nextSpeaker =
+            podcastParticipants[nextSpeakerId];
+          if (turnIndex < podcastTurnCount - 1) {
+            preparedSessionForFollowingTurn = createPreparedRelaySession(
+              nextSpeaker,
+              speaker,
+              priorTurns,
+            );
+            preparedSessionForNextTurn = preparedSessionForFollowingTurn;
+          }
+
+          const forwardCurrentSpeakerAudioChunk = (chunk: PodcastRelayChunk) => {
+            if (!preparedSessionForFollowingTurn) {
+              return;
+            }
+
+            void preparedSessionForFollowingTurn.session
+              .then((relaySession) => {
+                relaySession.sendRelayAudioChunk(chunk.data, chunk.mimeType);
+              })
+              .catch((error) => {
+                logPodcastDebugEvent("relay-forward-error", {
+                  runToken,
+                  turnIndex,
+                  speakerId,
+                  targetSpeakerId: preparedSessionForFollowingTurn?.speakerId ?? null,
+                  error:
+                    error instanceof Error ? error.message : String(error),
+                });
+                closePreparedRelaySession(
+                  preparedSessionForFollowingTurn,
+                  error instanceof Error ? error : String(error),
+                );
+                if (preparedSessionForNextTurn === preparedSessionForFollowingTurn) {
+                  preparedSessionForNextTurn = null;
+                }
+                preparedSessionForFollowingTurn = null;
+              });
+          };
+
+          if (preparedSessionForCurrentTurn) {
+            const relayReplyStatus = `Podcast ${turnIndex + 1}/${podcastTurnCount} - ${speaker.displayName} replying...`;
+            const relayDraftStatus = `Podcast ${turnIndex + 1}/${podcastTurnCount} - ${speaker.displayName} thinking...`;
+
+            preparedSessionForCurrentTurn.setOutputSink((chunk) => {
+              if (!hasStartedAudio) {
+                hasStartedAudio = true;
+                setAssistantStatus(relayReplyStatus);
+              }
+
+              speakerModel.appendPCMChunk(chunk.data, chunk.mimeType);
+              forwardCurrentSpeakerAudioChunk(chunk);
+            });
+            preparedSessionForCurrentTurn.setPartialTranscriptSink((partialTranscript) => {
+              if (!hasStartedAudio) {
+                setAssistantStatus(relayDraftStatus);
+              }
+              setAssistantMessage(partialTranscript);
+            });
+          }
+
+          const runFallbackRelayResponse = async () => {
+            if (!latestPartnerTurn) {
+              throw new Error("Fallback relay response has no previous turn.");
+            }
+
+            return getGeminiLiveAudioRelayResponse({
+              apiKey: geminiApiKey,
+              historyMessages: priorMessages,
+              systemPrompt: buildPodcastRelaySystemPrompt(
+                speaker,
+                partner,
+                priorTurns,
+                latestPartnerTurn.transcript,
+              ),
+              relayAudioBytes: latestPartnerTurn.audioBytes,
+              relayAudioMimeType: latestPartnerTurn.audioMimeType,
+              relayTranscript: latestPartnerTurn.transcript,
+              model: geminiModel,
+              voiceName: speaker.voiceName,
+              onAudioChunk: (chunk) => {
+                if (!hasStartedAudio) {
+                  hasStartedAudio = true;
+                  setAssistantStatus(
+                    `Podcast ${turnIndex + 1}/${podcastTurnCount} - ${speaker.displayName} replying...`,
+                  );
+                }
+                speakerModel.appendPCMChunk(chunk.data, chunk.mimeType);
+                forwardCurrentSpeakerAudioChunk(chunk);
+              },
+              onPartialTranscript: (partialTranscript) => {
+                if (!hasStartedAudio) {
+                  setAssistantStatus(
+                    `Podcast ${turnIndex + 1}/${podcastTurnCount} - ${speaker.displayName} thinking...`,
+                  );
+                }
+                setAssistantMessage(partialTranscript);
+              },
+            });
+          };
+
+          const runRelayResponse = async () => {
+            if (!preparedSessionForCurrentTurn) {
+              return runFallbackRelayResponse();
+            }
+
+            try {
+              return preparedSessionForCurrentTurn.getResponse();
+            } catch (error) {
+              preparedSessionForCurrentTurn.setOutputSink(null);
+              preparedSessionForCurrentTurn.setPartialTranscriptSink(null);
+              preparedSessionForCurrentTurn.close(error);
+
+              if (preparedSessionForFollowingTurn) {
+                closePreparedRelaySession(
+                  preparedSessionForFollowingTurn,
+                  "Discarding prewarmed next relay after current turn relay failure.",
+                );
+                preparedSessionForFollowingTurn = null;
+                preparedSessionForNextTurn = null;
+              }
+
+              if (turnIndex < podcastTurnCount - 1) {
+                preparedSessionForFollowingTurn = createPreparedRelaySession(
+                  nextSpeaker,
+                  speaker,
+                  priorTurns,
+                );
+                preparedSessionForNextTurn = preparedSessionForFollowingTurn;
+              }
+
+              speakerModel.stopSpeaking();
+              hasStartedAudio = false;
+              await speakerModel.beginStreamingSpeak(createNeutralScreenplay(""));
+              return runFallbackRelayResponse();
+            }
+          };
 
           const response =
             latestPartnerTurn == null
@@ -655,6 +939,7 @@ export default function Home() {
                       );
                     }
                     speakerModel.appendPCMChunk(chunk.data, chunk.mimeType);
+                    forwardCurrentSpeakerAudioChunk(chunk);
                   },
                   onPartialTranscript: (partialTranscript) => {
                     if (!hasStartedAudio) {
@@ -665,38 +950,14 @@ export default function Home() {
                     setAssistantMessage(partialTranscript);
                   },
                 })
-              : await getGeminiLiveAudioRelayResponse({
-                  apiKey: geminiApiKey,
-                  historyMessages: priorMessages,
-                  systemPrompt: buildPodcastRelaySystemPrompt(
-                    speaker,
-                    partner,
-                    priorTurns,
-                    latestPartnerTurn.transcript,
-                  ),
-                  relayAudioBytes: latestPartnerTurn.audioBytes,
-                  relayAudioMimeType: latestPartnerTurn.audioMimeType,
-                  relayTranscript: latestPartnerTurn.transcript,
-                  model: geminiModel,
-                  voiceName: speaker.voiceName,
-                  onAudioChunk: (chunk) => {
-                    if (!hasStartedAudio) {
-                      hasStartedAudio = true;
-                      setAssistantStatus(
-                        `Podcast ${turnIndex + 1}/${podcastTurnCount} - ${speaker.displayName} replying...`,
-                      );
-                    }
-                    speakerModel.appendPCMChunk(chunk.data, chunk.mimeType);
-                  },
-                  onPartialTranscript: (partialTranscript) => {
-                    if (!hasStartedAudio) {
-                      setAssistantStatus(
-                        `Podcast ${turnIndex + 1}/${podcastTurnCount} - ${speaker.displayName} thinking...`,
-                      );
-                    }
-                    setAssistantMessage(partialTranscript);
-                  },
-                });
+              : await runRelayResponse();
+
+          preparedSessionForFollowingTurn?.completeInput();
+
+          closePreparedRelaySession(
+            preparedSessionForCurrentTurn,
+            "Relay session completed for current turn.",
+          );
           const inputTranscript =
             "inputTranscript" in response ? response.inputTranscript : "";
           const usedFallbackTextInput =
@@ -766,6 +1027,12 @@ export default function Home() {
         Object.values(podcastViewers).forEach((podcastViewer) =>
           podcastViewer.model?.stopSpeaking(),
         );
+        if (preparedSessionForNextTurn) {
+          closePreparedRelaySession(
+            preparedSessionForNextTurn,
+            error instanceof Error ? error : String(error),
+          );
+        }
         console.error(error);
         logPodcastDebugEvent("error", {
           runToken,
@@ -779,6 +1046,12 @@ export default function Home() {
         );
         return false;
       } finally {
+        if (preparedSessionForNextTurn) {
+          closePreparedRelaySession(
+            preparedSessionForNextTurn,
+            "Podcast conversation ended before relay handoff.",
+          );
+        }
         setActivePodcastSpeakerId(null);
         chatProcessingRef.current = false;
         setChatProcessing(false);

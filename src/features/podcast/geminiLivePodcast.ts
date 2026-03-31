@@ -1,9 +1,11 @@
 import {
+  ActivityHandling,
   GoogleGenAI,
   type LiveSendRealtimeInputParameters,
   MediaResolution,
   Modality,
   type LiveServerMessage,
+  TurnCoverage,
 } from "@google/genai";
 import type { Message } from "../messages/messages";
 import { buildPodcastRelayFallbackLogPayload } from "./podcastDebug";
@@ -28,6 +30,7 @@ type GeminiLiveAudioRelayParams = {
   apiKey: string;
   historyMessages: Message[];
   systemPrompt: string;
+  historyTurnComplete?: boolean;
   relayAudioBytes: Uint8Array;
   relayAudioMimeType: string;
   relayTranscript?: string;
@@ -55,6 +58,7 @@ export async function createGeminiLiveAudioRelaySession(
     apiKey,
     historyMessages,
     systemPrompt,
+    historyTurnComplete = false,
     model = DEFAULT_GEMINI_LIVE_MODEL,
     voiceName = DEFAULT_GEMINI_VOICE_NAME,
     onPartialTranscript,
@@ -72,6 +76,8 @@ export async function createGeminiLiveAudioRelaySession(
   let turnSettled = false;
   let hasReceivedAudio = false;
   let streamEndSignaled = false;
+  let activityStarted = false;
+  let activityEnded = false;
   const audioChunks: Uint8Array[] = [];
   const resolvedVoiceName = resolveGeminiVoiceName(voiceName);
   const relayAudioNormalizer = createRelayAudioStreamNormalizer();
@@ -169,6 +175,13 @@ export async function createGeminiLiveAudioRelaySession(
     config: {
       responseModalities: [Modality.AUDIO],
       mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
+      realtimeInputConfig: {
+        automaticActivityDetection: {
+          disabled: true,
+        },
+        activityHandling: ActivityHandling.NO_INTERRUPTION,
+        turnCoverage: TurnCoverage.TURN_INCLUDES_ONLY_ACTIVITY,
+      },
       speechConfig: {
         voiceConfig: {
           prebuiltVoiceConfig: {
@@ -185,7 +198,7 @@ export async function createGeminiLiveAudioRelaySession(
   if (historyMessages.length > 0) {
     session.sendClientContent({
       turns: messagesToGeminiTurns(historyMessages),
-      turnComplete: false,
+      turnComplete: historyTurnComplete,
     });
   }
 
@@ -203,6 +216,12 @@ export async function createGeminiLiveAudioRelaySession(
     );
     if (!normalizedRelayAudio || normalizedRelayAudio.data.byteLength === 0) {
       return;
+    }
+    if (!activityStarted) {
+      activityStarted = true;
+      session!.sendRealtimeInput({
+        activityStart: {},
+      });
     }
     const relayAudioBlob =
       {
@@ -227,6 +246,12 @@ export async function createGeminiLiveAudioRelaySession(
           ensureSessionActive();
           const trailingRelayAudio = relayAudioNormalizer.flush();
           if (trailingRelayAudio && trailingRelayAudio.data.byteLength > 0) {
+            if (!activityStarted) {
+              activityStarted = true;
+              session!.sendRealtimeInput({
+                activityStart: {},
+              });
+            }
             const trailingRelayAudioBlob =
               {
                 data: encodeBase64(trailingRelayAudio.data),
@@ -235,6 +260,12 @@ export async function createGeminiLiveAudioRelaySession(
 
             session!.sendRealtimeInput({
               audio: trailingRelayAudioBlob,
+            });
+          }
+          if (activityStarted && !activityEnded) {
+            activityEnded = true;
+            session!.sendRealtimeInput({
+              activityEnd: {},
             });
           }
           session!.sendRealtimeInput({ audioStreamEnd: true });
@@ -287,6 +318,7 @@ export async function getGeminiLiveAudioRelayResponse({
   relayAudioBytes,
   relayAudioMimeType,
   relayTranscript,
+  historyTurnComplete = false,
   model = DEFAULT_GEMINI_LIVE_MODEL,
   voiceName = DEFAULT_GEMINI_VOICE_NAME,
   onPartialTranscript,
@@ -296,6 +328,7 @@ export async function getGeminiLiveAudioRelayResponse({
     const session = await createGeminiLiveAudioRelaySession({
       apiKey,
       historyMessages,
+      historyTurnComplete,
       model,
       systemPrompt,
       voiceName,

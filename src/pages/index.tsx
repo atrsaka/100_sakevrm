@@ -689,10 +689,7 @@ export default function Home() {
 
         const session = createGeminiLiveAudioRelaySession({
           apiKey: geminiApiKey,
-          historyMessages: podcastTurnsToGeminiMessages(
-            turnsForHistory,
-            targetSpeaker.id,
-          ),
+          historyMessages: [],
           systemPrompt: buildPodcastRelaySystemPrompt(
             targetSpeaker,
             partnerSpeaker,

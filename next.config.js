@@ -1,3 +1,5 @@
+const path = require("node:path");
+
 const isStaticExport = process.env.NEXT_EXPORT === "true";
 const basePath = process.env.BASE_PATH || "";
 const docsUrl = process.env.NEXT_PUBLIC_DOCS_URL || `${basePath || ""}/docs/`;
@@ -12,6 +14,7 @@ const nextConfig = {
   images: {
     unoptimized: isStaticExport,
   },
+  outputFileTracingRoot: path.resolve(__dirname),
   eslint: {
     ignoreDuringBuilds: true,
   },

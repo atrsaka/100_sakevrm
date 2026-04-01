@@ -17,6 +17,7 @@
     "e2e:smoke": "node scripts/e2e-smoke.mjs",
     "e2e:podcast": "node scripts/e2e-podcast-relay.mjs",
     "bench:podcast-relay": "node scripts/benchmark-podcast-relay.mjs",
+    "bench:podcast:topic": "node scripts/run-podcast-topic-benchmark.mjs",
     "verify": "npm run lint && npm run build && npm run e2e:smoke"
   },
   "dependencies": {

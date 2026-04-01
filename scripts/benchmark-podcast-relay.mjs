@@ -1,4 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { chromium } from "playwright";
 
@@ -10,8 +11,11 @@ const apiKey =
 const topic =
   process.env.E2E_PODCAST_BENCH_TOPIC ||
   "Keep the exchange brief: one short sentence each about AI agents and local models.";
+const liveModel =
+  process.env.E2E_GEMINI_MODEL || "gemini-2.5-flash-native-audio-latest";
 const requestTimeoutMs = Number(process.env.E2E_TIMEOUT_MS || 480000);
 const startupTimeoutMs = Number(process.env.E2E_STARTUP_TIMEOUT_MS || 60000);
+const setupTimeoutMs = Number(process.env.E2E_SETUP_TIMEOUT_MS || 120000);
 const rawIterations = Number.parseInt(
   String(process.env.E2E_BENCH_ITERATIONS || 2),
   10,
@@ -26,16 +30,27 @@ const rawPodcastTurnCount = Number.parseInt(
 const podcastTurnCount = Number.isNaN(rawPodcastTurnCount)
   ? 6
   : Math.min(Math.max(rawPodcastTurnCount, 2), 6);
-const artifactDir =
+const configuredArtifactDir =
   process.env.E2E_BENCH_ARTIFACT_DIR ||
-  path.join(process.cwd(), ".tmp-benchmark-podcast-relay");
-const benchmarkModes = buildBenchmarkModes(iterationsPerMode);
+  process.env.E2E_BENCH_OUTPUT_DIR ||
+  path.join(os.tmpdir(), "gemini-vrm-benchmark-podcast-relay");
+const artifactDir = path.resolve(configuredArtifactDir);
+const explicitBenchmarkModes = String(process.env.E2E_BENCH_MODES || "")
+  .split(",")
+  .map((value) => value.trim().toLowerCase())
+  .filter((value) => value === "streaming" || value === "batch");
+const benchmarkModes =
+  explicitBenchmarkModes.length > 0
+    ? explicitBenchmarkModes
+    : buildBenchmarkModes(iterationsPerMode);
 
 if (!apiKey) {
   throw new Error(
     "Podcast relay benchmark requires E2E_GEMINI_API_KEY or NEXT_PUBLIC_GEMINI_API_KEY.",
   );
 }
+
+assertSafeArtifactDir(artifactDir, targetUrl);
 
 const browser = await chromium.launch({ headless: true });
 const results = [];
@@ -54,13 +69,21 @@ try {
       perModeIndex,
       podcastTurnCount,
       requestTimeoutMs,
+      setupTimeoutMs,
       targetUrl,
       topic,
     });
     results.push(result);
+    await writeSuccessfulRunArtifact({
+      artifactDir,
+      mode,
+      perModeIndex,
+      result,
+    });
   }
 
   const summary = summarizeBenchmarkResults({
+    artifactDir,
     iterationsPerMode,
     podcastTurnCount,
     results,
@@ -87,6 +110,7 @@ async function runBenchmarkIteration(
     perModeIndex,
     podcastTurnCount,
     requestTimeoutMs,
+    setupTimeoutMs,
     targetUrl,
     topic,
   },
@@ -95,6 +119,8 @@ async function runBenchmarkIteration(
     viewport: { width: 1440, height: 900 },
   });
   const page = await context.newPage();
+  page.setDefaultTimeout(setupTimeoutMs);
+  page.setDefaultNavigationTimeout(setupTimeoutMs);
   const failedRequests = [];
   const blockingConsoleErrors = [];
   const pageErrors = [];
@@ -131,11 +157,8 @@ async function runBenchmarkIteration(
   });
 
   try {
-    await page.goto(targetUrl, { waitUntil: "domcontentloaded" });
-    await page.waitForLoadState("networkidle").catch(() => {});
-
-    await configureBenchmarkFlags(page, mode);
-    await ensureExternalControl(page);
+    await configureBenchmarkFlags(page, targetUrl, mode);
+    await ensureExternalControl(page, setupTimeoutMs);
     await setGeminiApiKey(page, apiKey);
 
     const startButton = page.getByRole("button", { name: /start/i });
@@ -269,13 +292,82 @@ async function runBenchmarkIteration(
   }
 }
 
-async function configureBenchmarkFlags(page, mode) {
-  await page.evaluate((nextMode) => {
+async function configureBenchmarkFlags(page, targetUrl, mode) {
+  await page.addInitScript(({ nextMode, nextModel }) => {
+    const rawParams = window.localStorage.getItem("chatVRMParams");
+    let params = {};
+    if (rawParams) {
+      try {
+        params = JSON.parse(rawParams);
+      } catch {
+        params = {};
+      }
+    }
+
     window.localStorage.setItem("geminiVrmExternalControl", "true");
     window.localStorage.setItem("podcastDebug", "true");
     window.localStorage.setItem("podcastRelayMode", nextMode);
-  }, mode);
-  await page.reload({ waitUntil: "domcontentloaded" });
+    window.localStorage.setItem(
+      "chatVRMParams",
+      JSON.stringify({
+        ...params,
+        geminiModel: nextModel,
+        chatLog: [],
+        podcastLog: [],
+        interactionMode: "chat",
+      }),
+    );
+  }, { nextMode: mode, nextModel: liveModel });
+  await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: setupTimeoutMs });
+  await page.waitForLoadState("networkidle").catch(() => {});
+  let lastError;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.evaluate(({ nextMode, nextModel }) => {
+        const rawParams = window.localStorage.getItem("chatVRMParams");
+        let params = {};
+        if (rawParams) {
+          try {
+            params = JSON.parse(rawParams);
+          } catch {
+            params = {};
+          }
+        }
+
+        window.localStorage.setItem("geminiVrmExternalControl", "true");
+        window.localStorage.setItem("podcastDebug", "true");
+        window.localStorage.setItem("podcastRelayMode", nextMode);
+        window.localStorage.setItem(
+          "chatVRMParams",
+          JSON.stringify({
+            ...params,
+            geminiModel: nextModel,
+            chatLog: [],
+            podcastLog: [],
+            interactionMode: "chat",
+          }),
+        );
+      }, { nextMode: mode, nextModel: liveModel });
+      lastError = undefined;
+      break;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.includes("Execution context was destroyed")) {
+        throw error;
+      }
+
+      lastError = error;
+      await page.waitForLoadState("domcontentloaded").catch(() => {});
+      await page.waitForTimeout(500);
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+
+  await page.reload({ waitUntil: "domcontentloaded", timeout: setupTimeoutMs });
   await page.waitForLoadState("networkidle").catch(() => {});
 }
 
@@ -284,28 +376,19 @@ async function setGeminiApiKey(page, key) {
     .locator("#intro-gemini-api-key, #settings-gemini-api-key")
     .first();
 
-  await keyInput.waitFor({ state: "attached", timeout: 10000 });
-  await keyInput.evaluate((element, value) => {
-    const input = element;
-    const descriptor = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value",
-    );
-
-    descriptor?.set?.call(input, value);
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-  }, key);
+  await keyInput.waitFor({ state: "attached", timeout: setupTimeoutMs });
+  await keyInput.fill(key, { timeout: setupTimeoutMs });
+  await keyInput.blur().catch(() => {});
   await waitForExternalControlState(
     page,
     () => Boolean(window.geminiVrmControl?.getState?.()?.hasGeminiApiKey),
     undefined,
-    10000,
+    setupTimeoutMs,
     "Gemini API key acceptance",
   );
 }
 
-async function ensureExternalControl(page) {
+async function ensureExternalControl(page, timeoutMs = setupTimeoutMs) {
   await page.waitForFunction(
     () =>
       typeof window.geminiVrmControl?.getState === "function" &&
@@ -313,7 +396,7 @@ async function ensureExternalControl(page) {
       typeof window.geminiVrmControl?.updatePodcastSettings === "function" &&
       typeof window.geminiVrmControl?.sendMessage === "function" &&
       typeof window.geminiVrmControl?.resetConversation === "function",
-    { timeout: 30000 },
+    { timeout: timeoutMs },
   );
 }
 
@@ -485,6 +568,7 @@ function computeBenchmarkMetrics({ mode, debugEvents, podcastTurnCount }) {
 }
 
 function summarizeBenchmarkResults({
+  artifactDir,
   iterationsPerMode,
   podcastTurnCount,
   results,
@@ -555,6 +639,7 @@ function summarizeBenchmarkResults({
   return {
     ok: true,
     targetUrl,
+    artifactDir,
     topic,
     iterationsPerMode,
     podcastTurnCount,
@@ -620,6 +705,43 @@ function buildBenchmarkModes(iterationsPerMode) {
   return modes;
 }
 
+function assertSafeArtifactDir(resolvedArtifactDir, url) {
+  if (process.env.E2E_ALLOW_WORKSPACE_ARTIFACTS === "true") {
+    return;
+  }
+
+  if (!isLoopbackTarget(url)) {
+    return;
+  }
+
+  const workspaceDir = path.resolve(process.cwd());
+  const normalizedArtifactDir = resolvedArtifactDir.toLowerCase();
+  const normalizedWorkspaceDir = workspaceDir.toLowerCase();
+  const workspacePrefix = `${normalizedWorkspaceDir}${path.sep}`;
+
+  if (
+    normalizedArtifactDir === normalizedWorkspaceDir ||
+    normalizedArtifactDir.startsWith(workspacePrefix)
+  ) {
+    throw new Error(
+      [
+        "Refusing to write benchmark artifacts inside the repository while targeting a local dev server.",
+        "This can trigger Next.js Fast Refresh and invalidate Playwright runs.",
+        "Set E2E_BENCH_OUTPUT_DIR to a directory outside the repo, or set E2E_ALLOW_WORKSPACE_ARTIFACTS=true to override this safeguard.",
+      ].join(" "),
+    );
+  }
+}
+
+function isLoopbackTarget(url) {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost";
+  } catch {
+    return false;
+  }
+}
+
 function findEvent(events, eventName, predicate = () => true) {
   return events.find((event) => event.eventName === eventName && predicate(event)) ?? null;
 }
@@ -679,6 +801,30 @@ async function writeBenchmarkArtifacts({
       fullPage: true,
     })
     .catch(() => {});
+}
+
+async function writeSuccessfulRunArtifact({
+  artifactDir,
+  mode,
+  perModeIndex,
+  result,
+}) {
+  await mkdir(artifactDir, { recursive: true });
+  const runLabel = `${mode}-${String(perModeIndex).padStart(2, "0")}`;
+  await writeFile(
+    path.join(artifactDir, `${runLabel}.json`),
+    JSON.stringify(
+      {
+        ok: true,
+        mode,
+        perModeIndex,
+        result,
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  );
 }
 
 async function resolveApiKeyFromDotEnv() {

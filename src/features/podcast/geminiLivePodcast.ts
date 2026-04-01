@@ -453,8 +453,8 @@ function concatenateAudioChunks(chunks: Uint8Array[]): Uint8Array {
 }
 
 function createRelayAudioStreamNormalizer() {
-  const outputMimeType = "audio/pcm;rate=16000;channels=1";
-  const defaultInputMimeType = "audio/pcm;rate=24000;channels=1";
+  const outputMimeType = "audio/pcm;rate=16000";
+  const defaultInputMimeType = "audio/pcm;rate=24000";
 
   let format:
     | {

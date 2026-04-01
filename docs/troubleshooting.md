@@ -33,6 +33,25 @@ gemini-2.5-flash-native-audio-preview-12-2025
 - hard refresh the tab
 - if the issue persists, stop the dev server and restart it
 
+## Podcast Benchmark Reloads Or Never Finishes
+
+Symptoms:
+
+- Playwright fails with `Execution context was destroyed`, `page.reload timeout`, or `ERR_CONNECTION_REFUSED`
+- Next.js logs `Fast Refresh had to perform a full reload` while the benchmark is running
+- repeated benchmark runs become slower or stop accepting the topic
+
+Cause:
+
+- benchmark artifacts were written into the repository while `next dev` was watching the workspace, so each artifact write could trigger a reload and invalidate the browser session
+
+Prevention:
+
+- run Japanese or UTF-8 topics through `npm run bench:podcast:topic -- <topic-file>`
+- keep `E2E_BENCH_OUTPUT_DIR` outside the repository; the benchmark runner now defaults to the system temp directory
+- use `E2E_BENCH_MODES=streaming` or `E2E_BENCH_MODES=batch` if you want isolated retries per mode
+- if you need many repeated samples under `next dev`, restart the dev server between isolated runs
+
 ## Google Blocks YouTube Sign-In
 
 - if the OAuth consent screen is still in testing, add the Google account you use for the relay as a test user

@@ -153,6 +153,15 @@ npm run e2e:smoke
 
 The smoke test checks that the app boots, the send flow works, and known chunk/icon/fallback request failures stay absent. When no Gemini API key is present, the missing-key error path is treated as a valid smoke outcome.
 
+## Podcast Benchmark Safety
+
+When you benchmark podcast relay with Playwright, keep the run isolated from the watched Next.js workspace.
+
+- Use `npm run bench:podcast:topic -- .tmp-topic-files/agi.txt` or `node scripts/run-podcast-topic-benchmark.mjs <topic-file>` when the topic contains Japanese text or other non-ASCII content.
+- Keep `E2E_BENCH_OUTPUT_DIR` outside the repository. The benchmark runner now defaults to the system temp directory so artifact writes do not trigger `next dev` Fast Refresh.
+- Use `E2E_BENCH_MODES=streaming` or `E2E_BENCH_MODES=batch` when you want isolated retries per mode.
+- If you are collecting many repeated runs under `next dev`, restart the dev server between isolated runs to keep Playwright stable.
+
 ## Deployment
 
 The repository is prepared for GitHub Pages deployment through GitHub Actions.

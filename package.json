@@ -15,7 +15,7 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs --host 127.0.0.1 --port 4174",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "node scripts/run-eslint.mjs",
     "e2e:smoke": "node scripts/e2e-smoke.mjs",
     "e2e:podcast": "node scripts/e2e-podcast-relay.mjs",
     "bench:podcast-relay": "node scripts/benchmark-podcast-relay.mjs",

@@ -7,6 +7,30 @@ type Props = {
   onChatProcessStart: (text: string) => void;
 };
 
+type BrowserSpeechRecognitionEvent = Event & {
+  results: SpeechRecognitionResultList;
+};
+
+type BrowserSpeechRecognition = EventTarget & {
+  abort: () => void;
+  start: () => void;
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  addEventListener: (
+    type: "result" | "end",
+    listener: EventListenerOrEventListenerObject
+  ) => void;
+};
+
+type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
+
+type SpeechRecognitionWindow = Window &
+  typeof globalThis & {
+    SpeechRecognition?: BrowserSpeechRecognitionConstructor;
+    webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor;
+  };
+
 /**
  * テキスト入力と音声入力を提供する
  *
@@ -20,18 +44,19 @@ export const MessageInputContainer = ({
 }: Props) => {
   const [userMessage, setUserMessage] = useState("");
   const [speechRecognition, setSpeechRecognition] =
-    useState<SpeechRecognition>();
+    useState<BrowserSpeechRecognition>();
   const [isMicRecording, setIsMicRecording] = useState(false);
   const hasMountedRef = useRef(false);
 
   // 音声認識の結果を処理する
   const handleRecognitionResult = useCallback(
-    (event: SpeechRecognitionEvent) => {
-      const text = event.results[0][0].transcript;
+    (event: Event) => {
+      const recognitionEvent = event as BrowserSpeechRecognitionEvent;
+      const text = recognitionEvent.results[0][0].transcript;
       setUserMessage(text);
 
       // 発言の終了時
-      if (event.results[0].isFinal) {
+      if (recognitionEvent.results[0].isFinal) {
         setUserMessage(text);
         // 返答文の生成を開始
         onChatProcessStart(text);
@@ -62,14 +87,15 @@ export const MessageInputContainer = ({
   }, [onChatProcessStart, userMessage]);
 
   useEffect(() => {
-    const SpeechRecognition =
-      window.webkitSpeechRecognition || window.SpeechRecognition;
+    const speechWindow = window as SpeechRecognitionWindow;
+    const Recognition =
+      speechWindow.webkitSpeechRecognition || speechWindow.SpeechRecognition;
 
     // FirefoxなどSpeechRecognition非対応環境対策
-    if (!SpeechRecognition) {
+    if (!Recognition) {
       return;
     }
-    const recognition = new SpeechRecognition();
+    const recognition = new Recognition();
     recognition.lang = "ja-JP";
     recognition.interimResults = true; // 認識の途中結果を返す
     recognition.continuous = false; // 発言の終了時に認識を終了する

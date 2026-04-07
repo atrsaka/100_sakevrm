@@ -12,7 +12,7 @@ type PcmStreamOptions = {
 export class LipSync {
   public readonly audio: AudioContext;
   public readonly analyser: AnalyserNode;
-  public readonly timeDomainData: Float32Array;
+  public readonly timeDomainData: Float32Array<ArrayBuffer>;
   private _activeSources = new Set<AudioBufferSourceNode>();
   private _scheduledPlaybackTime = 0;
   private _isStreaming = false;
@@ -27,11 +27,15 @@ export class LipSync {
     this.audio = audio;
 
     this.analyser = audio.createAnalyser();
-    this.timeDomainData = new Float32Array(TIME_DOMAIN_DATA_LENGTH);
+    this.timeDomainData = new Float32Array(
+      new ArrayBuffer(TIME_DOMAIN_DATA_LENGTH * Float32Array.BYTES_PER_ELEMENT)
+    );
   }
 
   public update(): LipSyncAnalyzeResult {
-    this.analyser.getFloatTimeDomainData(this.timeDomainData);
+    this.analyser.getFloatTimeDomainData(
+      this.timeDomainData as Float32Array<ArrayBuffer>
+    );
 
     let volume = 0.0;
     for (let i = 0; i < TIME_DOMAIN_DATA_LENGTH; i++) {

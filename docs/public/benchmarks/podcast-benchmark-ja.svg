@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1280" viewBox="0 0 1800 1280" role="img" aria-labelledby="title desc">
+<title id="title">ポッドキャスト中継ベンチマーク</title>
+<desc id="desc">3つの日本語トピックに対してストリーミングとバッチのポッドキャスト中継レイテンシを比較したベンチマークレポート。</desc>
+<defs>
+  <linearGradient id="bgGradient" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#f5f1e8" />
+    <stop offset="70%" stop-color="#eef7f5" />
+    <stop offset="100%" stop-color="#fff8ee" />
+  </linearGradient>
+  <linearGradient id="headerGradient" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#153541" />
+    <stop offset="100%" stop-color="#164c48" />
+  </linearGradient>
+  <filter id="panelShadow" x="-20%" y="-20%" width="140%" height="160%">
+    <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#14212b18" />
+  </filter>
+</defs>
+<rect width="1800" height="1280" fill="url(#bgGradient)" />
+<circle cx="1600" cy="120" r="180" fill="#ffffff" opacity="0.6" />
+<circle cx="108" cy="1160" r="150" fill="#dff3ef" opacity="0.72" />
+<g filter="url(#panelShadow)">
+  <rect x="56" y="36" width="1688" height="1208" rx="40" fill="#fffdf9" stroke="#e4ddd0" stroke-width="1.5" />
+  <rect x="92" y="74" width="1616" height="220" rx="34" fill="url(#headerGradient)" />
+  <rect x="92" y="330" width="980" height="676" rx="30" fill="#ffffff" stroke="#dde5ea" stroke-width="1.2" />
+  <rect x="92" y="1038" width="1616" height="168" rx="28" fill="#f6f4ef" stroke="#ddd6c7" stroke-width="1.2" />
+</g>
+<rect id="canvasBoundary" x="76" y="56" width="1648" height="1168" fill="transparent" opacity="0" pointer-events="none" />
+<text id="headerTitle" data-fit-boundary="canvasBoundary" x="130" y="168" text-anchor="start" fill="#f9fcff" font-family="Georgia, 'Times New Roman', serif" font-size="60" font-weight="700"><tspan x="130" dy="0">ポッドキャスト中継ベンチマーク</tspan></text>
+<text id="headerSubtitle" data-fit-boundary="canvasBoundary" x="130" y="210" text-anchor="start" fill="#dbe7ee" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="24" font-weight="500"><tspan x="130" dy="0">自然な日本語プロンプト | 会話ごとに6ターン | モードごと3回</tspan></text>
+<text id="headerBody" data-fit-boundary="canvasBoundary" x="130" y="250" text-anchor="start" fill="#d4e0e5" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="20" font-weight="500"><tspan x="130" dy="0">平均は 3 回の run mean の平均です。分散はその 3 回に対する sample variance を使っています。</tspan></text>
+<rect id="firstAudioCardBoundary" x="1116" y="102" width="252" height="122" rx="22" fill="#f8fafc" stroke="#dce6ea" stroke-width="1.2" />
+<path d="M 1136 120 h 54" stroke="#45d0c6" stroke-width="8" stroke-linecap="round" />
+<text id="firstAudioCardTitle" data-fit-boundary="firstAudioCardBoundary" x="1134" y="141" text-anchor="start" fill="#3a4b57" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="17" font-weight="700"><tspan x="1134" dy="0">初回音声の平均</tspan></text>
+<text id="firstAudioCardPrimary" data-fit-boundary="firstAudioCardBoundary" x="1134" y="178" text-anchor="start" fill="#10212b" font-family="Georgia, 'Times New Roman', serif" font-size="24" font-weight="700"><tspan x="1134" dy="0">1.22s</tspan></text>
+<text id="firstAudioCardVersus" data-fit-boundary="firstAudioCardBoundary" x="1234" y="178" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="18" font-weight="500"><tspan x="1234" dy="0">vs 10.91s</tspan></text>
+<text id="firstAudioCardGain" data-fit-boundary="firstAudioCardBoundary" x="1134" y="206" text-anchor="start" fill="#157a6e" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="700"><tspan x="1134" dy="0">9.70秒 短縮 | 88.9% 改善</tspan></text>
+<rect id="handoffCardBoundary" x="1390" y="102" width="252" height="122" rx="22" fill="#f8fafc" stroke="#dce6ea" stroke-width="1.2" />
+<path d="M 1410 120 h 54" stroke="#f59f4a" stroke-width="8" stroke-linecap="round" />
+<text id="handoffCardTitle" data-fit-boundary="handoffCardBoundary" x="1408" y="141" text-anchor="start" fill="#3a4b57" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="17" font-weight="700"><tspan x="1408" dy="0">切り替え無音の平均</tspan></text>
+<text id="handoffCardPrimary" data-fit-boundary="handoffCardBoundary" x="1408" y="178" text-anchor="start" fill="#10212b" font-family="Georgia, 'Times New Roman', serif" font-size="24" font-weight="700"><tspan x="1408" dy="0">2.30s</tspan></text>
+<text id="handoffCardVersus" data-fit-boundary="handoffCardBoundary" x="1508" y="178" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="18" font-weight="500"><tspan x="1508" dy="0">vs 11.91s</tspan></text>
+<text id="handoffCardGain" data-fit-boundary="handoffCardBoundary" x="1408" y="206" text-anchor="start" fill="#8a4024" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="700"><tspan x="1408" dy="0">9.61秒 短縮 | 80.7% 改善</tspan></text>
+<rect x="802" y="360" width="14" height="14" rx="4" fill="#157a6e" />
+<text id="legendStreamingText" data-fit-boundary="canvasBoundary" x="826" y="371" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="13" font-weight="600"><tspan x="826" dy="0">ストリーミング</tspan></text>
+<rect x="922" y="360" width="14" height="14" rx="4" fill="#de6d46" />
+<text id="legendBatchText" data-fit-boundary="canvasBoundary" x="946" y="374" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="600"><tspan x="946" dy="0">バッチ</tspan></text>
+<rect id="relayTurnFirstAudioDelayMsSectionBoundary" x="110" y="360" width="944" height="326" fill="transparent" opacity="0" pointer-events="none" />
+<rect id="relayTurnFirstAudioDelayMsPlotBoundary" x="242" y="444" width="800" height="276" fill="transparent" opacity="0" pointer-events="none" />
+<text id="relayTurnFirstAudioDelayMsTitle" data-fit-boundary="relayTurnFirstAudioDelayMsSectionBoundary" x="132" y="396" text-anchor="start" fill="#10212b" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="700"><tspan x="132" dy="0">最初の音声が出るまで</tspan></text>
+<text id="relayTurnFirstAudioDelayMsSubtitle" data-fit-boundary="relayTurnFirstAudioDelayMsSectionBoundary" x="132" y="420" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="18" font-weight="500"><tspan x="132" dy="0">リレーターンごとの平均秒数</tspan></text>
+<line x1="266" y1="452" x2="266" y2="668" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnFirstAudioDelayMsTick0" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="266" y="692" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="266" dy="0">0s</tspan></text>
+<line x1="360" y1="452" x2="360" y2="668" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnFirstAudioDelayMsTick2" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="360" y="692" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="360" dy="0">2s</tspan></text>
+<line x1="454" y1="452" x2="454" y2="668" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnFirstAudioDelayMsTick4" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="454" y="692" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="454" dy="0">4s</tspan></text>
+<line x1="548" y1="452" x2="548" y2="668" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnFirstAudioDelayMsTick6" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="548" y="692" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="548" dy="0">6s</tspan></text>
+<line x1="642" y1="452" x2="642" y2="668" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnFirstAudioDelayMsTick8" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="642" y="692" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="642" dy="0">8s</tspan></text>
+<line x1="736" y1="452" x2="736" y2="668" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnFirstAudioDelayMsTick10" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="736" y="692" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="736" dy="0">10s</tspan></text>
+<line x1="830" y1="452" x2="830" y2="668" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnFirstAudioDelayMsTick12" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="830" y="692" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="830" dy="0">12s</tspan></text>
+<line x1="924" y1="452" x2="924" y2="668" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnFirstAudioDelayMsTick14" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="924" y="692" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="924" dy="0">14s</tspan></text>
+<line x1="1018" y1="452" x2="1018" y2="668" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnFirstAudioDelayMsTick16" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="1018" y="692" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1018" dy="0">16s</tspan></text>
+<text id="relayTurnFirstAudioDelayMsmealTopic" data-fit-boundary="relayTurnFirstAudioDelayMsSectionBoundary" x="132" y="451" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="17" font-weight="700"><tspan x="132" dy="0">きょうのご飯</tspan></text>
+<rect x="266" y="458" width="147.10999999999999" height="18" rx="9" fill="#157a6e" opacity="0.96" />
+<line x1="376.45" y1="467" x2="449.77" y2="467" stroke="#0f4f4a" stroke-width="3" stroke-linecap="round" />
+<text id="relayTurnFirstAudioDelayMsmealStreamingValue" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="425.11" y="473" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="700">3.13s</text>
+<rect x="266" y="490" width="640.14" height="18" rx="9" fill="#de6d46" opacity="0.96" />
+<line x1="853.03" y1="499" x2="959.25" y2="499" stroke="#8a4024" stroke-width="3" stroke-linecap="round" />
+<text id="relayTurnFirstAudioDelayMsmealBatchValue" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="918.14" y="505" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="700">13.62s</text>
+<text id="relayTurnFirstAudioDelayMsagiTopic" data-fit-boundary="relayTurnFirstAudioDelayMsSectionBoundary" x="132" y="527" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="17" font-weight="700"><tspan x="132" dy="0">AGI</tspan></text>
+<rect x="266" y="534" width="5.17" height="18" rx="9" fill="#157a6e" opacity="0.96" />
+<line x1="266" y1="543" x2="280.1" y2="543" stroke="#0f4f4a" stroke-width="3" stroke-linecap="round" />
+<text id="relayTurnFirstAudioDelayMsagiStreamingValue" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="283.17" y="549" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="700">0.11s</text>
+<rect x="266" y="566" width="456.84000000000003" height="18" rx="9" fill="#de6d46" opacity="0.96" />
+<line x1="712.97" y1="575" x2="732.71" y2="575" stroke="#8a4024" stroke-width="3" stroke-linecap="round" />
+<text id="relayTurnFirstAudioDelayMsagiBatchValue" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="734.84" y="581" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="700">9.72s</text>
+<text id="relayTurnFirstAudioDelayMsaiMindTopic" data-fit-boundary="relayTurnFirstAudioDelayMsSectionBoundary" x="132" y="603" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="17" font-weight="700"><tspan x="132" dy="0">AIの心</tspan></text>
+<rect x="266" y="610" width="19.27" height="18" rx="9" fill="#157a6e" opacity="0.96" />
+<line x1="266" y1="619" x2="312.06" y2="619" stroke="#0f4f4a" stroke-width="3" stroke-linecap="round" />
+<text id="relayTurnFirstAudioDelayMsaiMindStreamingValue" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="297.27" y="625" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="700">0.41s</text>
+<rect x="266" y="642" width="442.27" height="18" rx="9" fill="#de6d46" opacity="0.96" />
+<line x1="654.69" y1="651" x2="761.85" y2="651" stroke="#8a4024" stroke-width="3" stroke-linecap="round" />
+<text id="relayTurnFirstAudioDelayMsaiMindBatchValue" data-fit-boundary="relayTurnFirstAudioDelayMsPlotBoundary" x="720.27" y="657" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="700">9.41s</text>
+<rect id="relayTurnHandoffSilenceMsSectionBoundary" x="110" y="688" width="944" height="326" fill="transparent" opacity="0" pointer-events="none" />
+<rect id="relayTurnHandoffSilenceMsPlotBoundary" x="242" y="772" width="800" height="276" fill="transparent" opacity="0" pointer-events="none" />
+<text id="relayTurnHandoffSilenceMsTitle" data-fit-boundary="relayTurnHandoffSilenceMsSectionBoundary" x="132" y="724" text-anchor="start" fill="#10212b" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="700"><tspan x="132" dy="0">話者切り替えの無音</tspan></text>
+<text id="relayTurnHandoffSilenceMsSubtitle" data-fit-boundary="relayTurnHandoffSilenceMsSectionBoundary" x="132" y="748" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="18" font-weight="500"><tspan x="132" dy="0">前の発話終了から次の最初の音声までの平均秒数</tspan></text>
+<line x1="266" y1="780" x2="266" y2="996" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnHandoffSilenceMsTick0" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="266" y="1020" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="266" dy="0">0s</tspan></text>
+<line x1="360" y1="780" x2="360" y2="996" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnHandoffSilenceMsTick2" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="360" y="1020" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="360" dy="0">2s</tspan></text>
+<line x1="454" y1="780" x2="454" y2="996" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnHandoffSilenceMsTick4" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="454" y="1020" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="454" dy="0">4s</tspan></text>
+<line x1="548" y1="780" x2="548" y2="996" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnHandoffSilenceMsTick6" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="548" y="1020" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="548" dy="0">6s</tspan></text>
+<line x1="642" y1="780" x2="642" y2="996" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnHandoffSilenceMsTick8" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="642" y="1020" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="642" dy="0">8s</tspan></text>
+<line x1="736" y1="780" x2="736" y2="996" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnHandoffSilenceMsTick10" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="736" y="1020" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="736" dy="0">10s</tspan></text>
+<line x1="830" y1="780" x2="830" y2="996" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnHandoffSilenceMsTick12" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="830" y="1020" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="830" dy="0">12s</tspan></text>
+<line x1="924" y1="780" x2="924" y2="996" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnHandoffSilenceMsTick14" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="924" y="1020" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="924" dy="0">14s</tspan></text>
+<line x1="1018" y1="780" x2="1018" y2="996" stroke="#d9e3e8" stroke-width="1" />
+<text id="relayTurnHandoffSilenceMsTick16" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="1018" y="1020" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1018" dy="0">16s</tspan></text>
+<text id="relayTurnHandoffSilenceMsmealTopic" data-fit-boundary="relayTurnHandoffSilenceMsSectionBoundary" x="132" y="779" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="17" font-weight="700"><tspan x="132" dy="0">きょうのご飯</tspan></text>
+<rect x="266" y="786" width="198.81000000000003" height="18" rx="9" fill="#157a6e" opacity="0.96" />
+<line x1="418.28" y1="795" x2="511.34000000000003" y2="795" stroke="#0f4f4a" stroke-width="3" stroke-linecap="round" />
+<text id="relayTurnHandoffSilenceMsmealStreamingValue" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="476.81000000000006" y="801" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="700">4.23s</text>
+<rect x="266" y="818" width="683.38" height="18" rx="9" fill="#de6d46" opacity="0.96" />
+<line x1="899.56" y1="827" x2="999.1999999999999" y2="827" stroke="#8a4024" stroke-width="3" stroke-linecap="round" />
+<text id="relayTurnHandoffSilenceMsmealBatchValue" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="961.38" y="833" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="700">14.54s</text>
+<text id="relayTurnHandoffSilenceMsagiTopic" data-fit-boundary="relayTurnHandoffSilenceMsSectionBoundary" x="132" y="855" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="17" font-weight="700"><tspan x="132" dy="0">AGI</tspan></text>
+<rect x="266" y="862" width="68.14999999999999" height="18" rx="9" fill="#157a6e" opacity="0.96" />
+<line x1="298.43" y1="871" x2="369.87" y2="871" stroke="#0f4f4a" stroke-width="3" stroke-linecap="round" />
+<text id="relayTurnHandoffSilenceMsagiStreamingValue" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="346.15" y="877" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="700">1.45s</text>
+<rect x="266" y="894" width="501.49" height="18" rx="9" fill="#de6d46" opacity="0.96" />
+<line x1="745.8699999999999" y1="903" x2="789.11" y2="903" stroke="#8a4024" stroke-width="3" stroke-linecap="round" />
+<text id="relayTurnHandoffSilenceMsagiBatchValue" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="779.49" y="909" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="700">10.67s</text>
+<text id="relayTurnHandoffSilenceMsaiMindTopic" data-fit-boundary="relayTurnHandoffSilenceMsSectionBoundary" x="132" y="931" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="17" font-weight="700"><tspan x="132" dy="0">AIの心</tspan></text>
+<rect x="266" y="938" width="57.81" height="18" rx="9" fill="#157a6e" opacity="0.96" />
+<line x1="300.78" y1="947" x2="346.84000000000003" y2="947" stroke="#0f4f4a" stroke-width="3" stroke-linecap="round" />
+<text id="relayTurnHandoffSilenceMsaiMindStreamingValue" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="335.81" y="953" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="700">1.23s</text>
+<rect x="266" y="970" width="494.44" height="18" rx="9" fill="#de6d46" opacity="0.96" />
+<line x1="705.92" y1="979" x2="814.96" y2="979" stroke="#8a4024" stroke-width="3" stroke-linecap="round" />
+<text id="relayTurnHandoffSilenceMsaiMindBatchValue" data-fit-boundary="relayTurnHandoffSilenceMsPlotBoundary" x="772.44" y="985" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="16" font-weight="700">10.52s</text>
+<text id="summaryTitle" data-fit-boundary="canvasBoundary" x="1104" y="348" text-anchor="start" fill="#10212b" font-family="Georgia, 'Times New Roman', serif" font-size="24" font-weight="700"><tspan x="1104" dy="0">トピック別メモ</tspan></text>
+<rect id="mealCardBoundary" x="1104" y="366" width="604" height="206" rx="28" fill="#f8fafc" stroke="#dce4e8" stroke-width="1.1" />
+<text id="mealCardTitle" data-fit-boundary="mealCardBoundary" x="1132" y="416" text-anchor="start" fill="#10212b" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="700"><tspan x="1132" dy="0">きょうのご飯</tspan></text>
+<text id="mealCardBody" data-fit-boundary="mealCardBoundary" x="1132" y="444" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1132" dy="0">各モード 3 runs | run mean に対する sample variance</tspan></text>
+<text id="mealCardFirstLabel" data-fit-boundary="mealCardBoundary" x="1132" y="475" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1132" dy="0">最初の音声</tspan></text>
+<text id="mealCardFirstPrimary" data-fit-boundary="mealCardBoundary" x="1402" y="475" text-anchor="end" fill="#157a6e" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1402" dy="0">3.13s</tspan></text>
+<text id="mealCardFirstVs" data-fit-boundary="mealCardBoundary" x="1429" y="475" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="500"><tspan x="1429" dy="0">vs</tspan></text>
+<text id="mealCardFirstSecondary" data-fit-boundary="mealCardBoundary" x="1578" y="475" text-anchor="end" fill="#de6d46" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1578" dy="0">13.62s</tspan></text>
+<text id="mealCardFirstVarLabel" data-fit-boundary="mealCardBoundary" x="1132" y="496" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1132" dy="0">分散</tspan></text>
+<text id="mealCardFirstVarPrimary" data-fit-boundary="mealCardBoundary" x="1402" y="496" text-anchor="end" fill="#157a6e" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1402" dy="0">0.60 s²</tspan></text>
+<text id="mealCardFirstVarVs" data-fit-boundary="mealCardBoundary" x="1429" y="496" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1429" dy="0">vs</tspan></text>
+<text id="mealCardFirstVarSecondary" data-fit-boundary="mealCardBoundary" x="1578" y="496" text-anchor="end" fill="#de6d46" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1578" dy="0">1.29 s²</tspan></text>
+<text id="mealCardHandoffLabel" data-fit-boundary="mealCardBoundary" x="1132" y="521" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1132" dy="0">切替の無音</tspan></text>
+<text id="mealCardHandoffPrimary" data-fit-boundary="mealCardBoundary" x="1402" y="521" text-anchor="end" fill="#157a6e" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1402" dy="0">4.23s</tspan></text>
+<text id="mealCardHandoffVs" data-fit-boundary="mealCardBoundary" x="1429" y="521" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="500"><tspan x="1429" dy="0">vs</tspan></text>
+<text id="mealCardHandoffSecondary" data-fit-boundary="mealCardBoundary" x="1578" y="521" text-anchor="end" fill="#de6d46" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1578" dy="0">14.54s</tspan></text>
+<text id="mealCardHandoffVarLabel" data-fit-boundary="mealCardBoundary" x="1132" y="542" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1132" dy="0">分散</tspan></text>
+<text id="mealCardHandoffVarPrimary" data-fit-boundary="mealCardBoundary" x="1402" y="542" text-anchor="end" fill="#157a6e" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1402" dy="0">0.98 s²</tspan></text>
+<text id="mealCardHandoffVarVs" data-fit-boundary="mealCardBoundary" x="1429" y="542" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1429" dy="0">vs</tspan></text>
+<text id="mealCardHandoffVarSecondary" data-fit-boundary="mealCardBoundary" x="1578" y="542" text-anchor="end" fill="#de6d46" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1578" dy="0">1.12 s²</tspan></text>
+<text id="mealCardNote" data-fit-boundary="mealCardBoundary" x="1132" y="563" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="13" font-weight="500"><tspan x="1132" dy="0">Batch 側も 15 ターンすべて音声入力のままでした。</tspan></text>
+<rect id="agiCardBoundary" x="1104" y="583" width="604" height="206" rx="28" fill="#f8fafc" stroke="#dce4e8" stroke-width="1.1" />
+<text id="agiCardTitle" data-fit-boundary="agiCardBoundary" x="1132" y="633" text-anchor="start" fill="#10212b" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="700"><tspan x="1132" dy="0">AGI</tspan></text>
+<text id="agiCardBody" data-fit-boundary="agiCardBoundary" x="1132" y="661" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1132" dy="0">各モード 3 runs | run mean に対する sample variance</tspan></text>
+<text id="agiCardFirstLabel" data-fit-boundary="agiCardBoundary" x="1132" y="692" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1132" dy="0">最初の音声</tspan></text>
+<text id="agiCardFirstPrimary" data-fit-boundary="agiCardBoundary" x="1402" y="692" text-anchor="end" fill="#157a6e" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1402" dy="0">0.11s</tspan></text>
+<text id="agiCardFirstVs" data-fit-boundary="agiCardBoundary" x="1429" y="692" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="500"><tspan x="1429" dy="0">vs</tspan></text>
+<text id="agiCardFirstSecondary" data-fit-boundary="agiCardBoundary" x="1578" y="692" text-anchor="end" fill="#de6d46" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1578" dy="0">9.72s</tspan></text>
+<text id="agiCardFirstVarLabel" data-fit-boundary="agiCardBoundary" x="1132" y="713" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1132" dy="0">分散</tspan></text>
+<text id="agiCardFirstVarPrimary" data-fit-boundary="agiCardBoundary" x="1402" y="713" text-anchor="end" fill="#157a6e" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1402" dy="0">0.04 s²</tspan></text>
+<text id="agiCardFirstVarVs" data-fit-boundary="agiCardBoundary" x="1429" y="713" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1429" dy="0">vs</tspan></text>
+<text id="agiCardFirstVarSecondary" data-fit-boundary="agiCardBoundary" x="1578" y="713" text-anchor="end" fill="#de6d46" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1578" dy="0">0.04 s²</tspan></text>
+<text id="agiCardHandoffLabel" data-fit-boundary="agiCardBoundary" x="1132" y="738" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1132" dy="0">切替の無音</tspan></text>
+<text id="agiCardHandoffPrimary" data-fit-boundary="agiCardBoundary" x="1402" y="738" text-anchor="end" fill="#157a6e" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1402" dy="0">1.45s</tspan></text>
+<text id="agiCardHandoffVs" data-fit-boundary="agiCardBoundary" x="1429" y="738" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="500"><tspan x="1429" dy="0">vs</tspan></text>
+<text id="agiCardHandoffSecondary" data-fit-boundary="agiCardBoundary" x="1578" y="738" text-anchor="end" fill="#de6d46" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1578" dy="0">10.67s</tspan></text>
+<text id="agiCardHandoffVarLabel" data-fit-boundary="agiCardBoundary" x="1132" y="759" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1132" dy="0">分散</tspan></text>
+<text id="agiCardHandoffVarPrimary" data-fit-boundary="agiCardBoundary" x="1402" y="759" text-anchor="end" fill="#157a6e" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1402" dy="0">0.57 s²</tspan></text>
+<text id="agiCardHandoffVarVs" data-fit-boundary="agiCardBoundary" x="1429" y="759" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1429" dy="0">vs</tspan></text>
+<text id="agiCardHandoffVarSecondary" data-fit-boundary="agiCardBoundary" x="1578" y="759" text-anchor="end" fill="#de6d46" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1578" dy="0">0.21 s²</tspan></text>
+<text id="agiCardNote" data-fit-boundary="agiCardBoundary" x="1132" y="780" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="13" font-weight="500"><tspan x="1132" dy="0">Batch 側は 15 ターンすべて transcript fallback でした。</tspan></text>
+<rect id="aiMindCardBoundary" x="1104" y="800" width="604" height="206" rx="28" fill="#f8fafc" stroke="#dce4e8" stroke-width="1.1" />
+<text id="aiMindCardTitle" data-fit-boundary="aiMindCardBoundary" x="1132" y="850" text-anchor="start" fill="#10212b" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="700"><tspan x="1132" dy="0">AIの心</tspan></text>
+<text id="aiMindCardBody" data-fit-boundary="aiMindCardBoundary" x="1132" y="878" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1132" dy="0">各モード 3 runs | run mean に対する sample variance</tspan></text>
+<text id="aiMindCardFirstLabel" data-fit-boundary="aiMindCardBoundary" x="1132" y="909" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1132" dy="0">最初の音声</tspan></text>
+<text id="aiMindCardFirstPrimary" data-fit-boundary="aiMindCardBoundary" x="1402" y="909" text-anchor="end" fill="#157a6e" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1402" dy="0">0.41s</tspan></text>
+<text id="aiMindCardFirstVs" data-fit-boundary="aiMindCardBoundary" x="1429" y="909" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="500"><tspan x="1429" dy="0">vs</tspan></text>
+<text id="aiMindCardFirstSecondary" data-fit-boundary="aiMindCardBoundary" x="1578" y="909" text-anchor="end" fill="#de6d46" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1578" dy="0">9.41s</tspan></text>
+<text id="aiMindCardFirstVarLabel" data-fit-boundary="aiMindCardBoundary" x="1132" y="930" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1132" dy="0">分散</tspan></text>
+<text id="aiMindCardFirstVarPrimary" data-fit-boundary="aiMindCardBoundary" x="1402" y="930" text-anchor="end" fill="#157a6e" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1402" dy="0">0.33 s²</tspan></text>
+<text id="aiMindCardFirstVarVs" data-fit-boundary="aiMindCardBoundary" x="1429" y="930" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1429" dy="0">vs</tspan></text>
+<text id="aiMindCardFirstVarSecondary" data-fit-boundary="aiMindCardBoundary" x="1578" y="930" text-anchor="end" fill="#de6d46" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1578" dy="0">1.29 s²</tspan></text>
+<text id="aiMindCardHandoffLabel" data-fit-boundary="aiMindCardBoundary" x="1132" y="955" text-anchor="start" fill="#10212b" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1132" dy="0">切替の無音</tspan></text>
+<text id="aiMindCardHandoffPrimary" data-fit-boundary="aiMindCardBoundary" x="1402" y="955" text-anchor="end" fill="#157a6e" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1402" dy="0">1.23s</tspan></text>
+<text id="aiMindCardHandoffVs" data-fit-boundary="aiMindCardBoundary" x="1429" y="955" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="500"><tspan x="1429" dy="0">vs</tspan></text>
+<text id="aiMindCardHandoffSecondary" data-fit-boundary="aiMindCardBoundary" x="1578" y="955" text-anchor="end" fill="#de6d46" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="700"><tspan x="1578" dy="0">10.52s</tspan></text>
+<text id="aiMindCardHandoffVarLabel" data-fit-boundary="aiMindCardBoundary" x="1132" y="976" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1132" dy="0">分散</tspan></text>
+<text id="aiMindCardHandoffVarPrimary" data-fit-boundary="aiMindCardBoundary" x="1402" y="976" text-anchor="end" fill="#157a6e" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1402" dy="0">0.24 s²</tspan></text>
+<text id="aiMindCardHandoffVarVs" data-fit-boundary="aiMindCardBoundary" x="1429" y="976" text-anchor="middle" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1429" dy="0">vs</tspan></text>
+<text id="aiMindCardHandoffVarSecondary" data-fit-boundary="aiMindCardBoundary" x="1578" y="976" text-anchor="end" fill="#de6d46" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="14" font-weight="500"><tspan x="1578" dy="0">1.35 s²</tspan></text>
+<text id="aiMindCardNote" data-fit-boundary="aiMindCardBoundary" x="1132" y="997" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="13" font-weight="500"><tspan x="1132" dy="0">Batch 側は 15 ターンすべて transcript fallback でした。</tspan></text>
+<rect id="footerLeftBoundary" x="120" y="1056" width="760" height="132" fill="transparent" opacity="0" pointer-events="none" />
+<rect id="footerRightBoundary" x="928" y="1056" width="744" height="132" fill="transparent" opacity="0" pointer-events="none" />
+<text id="footerTitle" data-fit-boundary="footerLeftBoundary" x="120" y="1082" text-anchor="start" fill="#10212b" font-family="Georgia, 'Times New Roman', serif" font-size="24" font-weight="700"><tspan x="120" dy="0">集計方法と注意点</tspan></text>
+<circle cx="128" cy="1102" r="4" fill="#157a6e" />
+<text id="footerMethod1" data-fit-boundary="footerLeftBoundary" x="142" y="1109" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="500"><tspan x="142" dy="0">平均: 3 回の run mean を等重みで平均しています。各 run は 5 relay turns です。</tspan></text>
+<circle cx="128" cy="1126" r="4" fill="#157a6e" />
+<text id="footerMethod2" data-fit-boundary="footerLeftBoundary" x="142" y="1133" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="500"><tspan x="142" dy="0">分散: 3 回の run mean に対する sample variance です。</tspan></text>
+<circle cx="128" cy="1150" r="4" fill="#157a6e" />
+<text id="footerMethod3" data-fit-boundary="footerLeftBoundary" x="142" y="1157" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="500"><tspan x="142" dy="0">AGI: 最初の成功 run は保存していた console mean を使っています。</tspan></text>
+<circle cx="128" cy="1174" r="4" fill="#157a6e" />
+<text id="footerMethod4" data-fit-boundary="footerLeftBoundary" x="142" y="1181" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="500"><tspan x="142" dy="0">誤差線: repeated runs に対する ±1 SD です。</tspan></text>
+<circle cx="936" cy="1102" r="4" fill="#157a6e" />
+<text id="footerPath1" data-fit-boundary="footerRightBoundary" x="950" y="1109" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="500"><tspan x="950" dy="0">Streaming 側は全トピックで prepared input 15/15、prepared output 15/15 です。</tspan></text>
+<circle cx="936" cy="1126" r="4" fill="#157a6e" />
+<text id="footerPath2" data-fit-boundary="footerRightBoundary" x="950" y="1133" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="500"><tspan x="950" dy="0">Batch 側は きょうのご飯 だけ音声入力のまま、AGI と AIの心 は transcript fallback です。</tspan></text>
+<circle cx="936" cy="1150" r="4" fill="#157a6e" />
+<text id="footerPath3" data-fit-boundary="footerRightBoundary" x="950" y="1157" text-anchor="start" fill="#556674" font-family="'Segoe UI', 'Yu Gothic UI', sans-serif" font-size="15" font-weight="500"><tspan x="950" dy="0">英語版と日本語版は同じ benchmark data と同じ layout checks から生成しています。</tspan></text>
+</svg>

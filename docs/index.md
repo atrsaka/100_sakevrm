@@ -24,6 +24,7 @@ Use this site when you want to run, understand, publish, verify, or automate Gem
 ## Deep Dives
 
 - [Architecture Guide](./architecture.md)
+- [Podcast Benchmark Report](./podcast-benchmark.md)
 - [Troubleshooting](./troubleshooting.md)
 
 ## Reference

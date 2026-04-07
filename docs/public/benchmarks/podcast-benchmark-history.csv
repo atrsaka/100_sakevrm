@@ -1,0 +1,2 @@
+generatedAt,benchmarkKey,gitSha,sourceKind,topics,firstAudioStreamingSec,firstAudioBatchSec,firstAudioGainSec,firstAudioGainPct,handoffStreamingSec,handoffBatchSec,handoffGainSec,handoffGainPct
+2026-04-01T09:22:58.202Z,podcast-natural-ja-3topics-6turns-3runs,111c73e,stable-snapshot,Today's Meal|AGI|AI Consciousness,1.22,10.91,9.7,88.9,2.3,11.91,9.61,80.7

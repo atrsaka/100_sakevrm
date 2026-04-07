@@ -22,6 +22,7 @@ const rootNav = [
   { text: "Home", link: "/" },
   { text: "Getting Started", link: "/getting-started" },
   { text: "Usage", link: "/usage" },
+  { text: "Podcast Benchmark", link: "/podcast-benchmark" },
   { text: "Release Notes", link: "/releases" },
   { text: "YouTube Relay", link: "/youtube-relay" },
   { text: "Architecture", link: "/architecture" },
@@ -35,6 +36,7 @@ const rootSidebar = [
       { text: "Documentation Home", link: "/" },
       { text: "Getting Started", link: "/getting-started" },
       { text: "Usage Guide", link: "/usage" },
+      { text: "Podcast Benchmark Report", link: "/podcast-benchmark" },
       { text: "Release Notes", link: "/releases" },
       { text: "YouTube Relay Guide", link: "/youtube-relay" },
       { text: "Deployment Guide", link: "/deployment" },
@@ -44,6 +46,7 @@ const rootSidebar = [
     text: "Deep Dives",
     items: [
       { text: "Architecture", link: "/architecture" },
+      { text: "Podcast Benchmark", link: "/podcast-benchmark" },
       { text: "Troubleshooting", link: "/troubleshooting" },
       { text: "Repository QA Inventory", link: "/repository-qa-inventory" },
     ],

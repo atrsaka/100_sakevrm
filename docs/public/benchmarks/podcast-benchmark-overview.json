@@ -1,0 +1,354 @@
+{
+  "generatedAt": "2026-04-01T09:22:58.202Z",
+  "methodology": {
+    "mean": "Average of 3 repeated run means with equal weight. Each run has 5 relay turns.",
+    "variance": "Sample variance across the 3 run means for each topic and mode.",
+    "note": "AGI includes one preserved successful run mean from console logs because its first artifact folder was overwritten before the benchmark output fix."
+  },
+  "statsByTopic": {
+    "meal": {
+      "streaming": {
+        "relayTurnFirstAudioDelayMs": {
+          "runs": [
+            3799.8,
+            2279.4,
+            3316.4
+          ],
+          "meanMs": 3131.9,
+          "varianceMs2": 603416.7,
+          "stdDevMs": 776.8,
+          "meanSec": 3.13,
+          "varianceSec2": 0.6,
+          "stdDevSec": 0.78
+        },
+        "relayTurnHandoffSilenceMs": {
+          "runs": [
+            4547.7,
+            3120,
+            5018
+          ],
+          "meanMs": 4228.6,
+          "varianceMs2": 976950.6,
+          "stdDevMs": 988.4,
+          "meanSec": 4.23,
+          "varianceSec2": 0.98,
+          "stdDevSec": 0.99
+        },
+        "relayTurnResponseResolvedMs": {
+          "runs": [
+            6095.6,
+            7616,
+            11023.1
+          ],
+          "meanMs": 8244.9,
+          "varianceMs2": 6366885,
+          "stdDevMs": 2523.3,
+          "meanSec": 8.24,
+          "varianceSec2": 6.37,
+          "stdDevSec": 2.52
+        },
+        "relayTurnPlaybackFinishedMs": {
+          "runs": [
+            11248.1,
+            12276.4,
+            15475.6
+          ],
+          "meanMs": 13000.1,
+          "varianceMs2": 4860637.9,
+          "stdDevMs": 2204.7,
+          "meanSec": 13,
+          "varianceSec2": 4.86,
+          "stdDevSec": 2.2
+        }
+      },
+      "batch": {
+        "relayTurnFirstAudioDelayMs": {
+          "runs": [
+            12663.1,
+            14871.3,
+            13321.8
+          ],
+          "meanMs": 13618.7,
+          "varianceMs2": 1285221.2,
+          "stdDevMs": 1133.7,
+          "meanSec": 13.62,
+          "varianceSec2": 1.29,
+          "stdDevSec": 1.13
+        },
+        "relayTurnHandoffSilenceMs": {
+          "runs": [
+            13611.7,
+            15694.2,
+            14310.1
+          ],
+          "meanMs": 14538.7,
+          "varianceMs2": 1123406.7,
+          "stdDevMs": 1059.9,
+          "meanSec": 14.54,
+          "varianceSec2": 1.12,
+          "stdDevSec": 1.06
+        },
+        "relayTurnResponseResolvedMs": {
+          "runs": [
+            15239.9,
+            18596.5,
+            15210.3
+          ],
+          "meanMs": 16348.9,
+          "varianceMs2": 3788999.5,
+          "stdDevMs": 1946.5,
+          "meanSec": 16.35,
+          "varianceSec2": 3.79,
+          "stdDevSec": 1.95
+        },
+        "relayTurnPlaybackFinishedMs": {
+          "runs": [
+            19839.8,
+            24952.2,
+            23694.6
+          ],
+          "meanMs": 22828.9,
+          "varianceMs2": 7096211.5,
+          "stdDevMs": 2663.9,
+          "meanSec": 22.83,
+          "varianceSec2": 7.1,
+          "stdDevSec": 2.66
+        }
+      }
+    },
+    "agi": {
+      "streaming": {
+        "relayTurnFirstAudioDelayMs": {
+          "runs": [
+            333.9,
+            2,
+            2.2
+          ],
+          "meanMs": 112.7,
+          "varianceMs2": 36697.1,
+          "stdDevMs": 191.6,
+          "meanSec": 0.11,
+          "varianceSec2": 0.04,
+          "stdDevSec": 0.19
+        },
+        "relayTurnHandoffSilenceMs": {
+          "runs": [
+            2296.8,
+            838.2,
+            1219.9
+          ],
+          "meanMs": 1451.6,
+          "varianceMs2": 572153.7,
+          "stdDevMs": 756.4,
+          "meanSec": 1.45,
+          "varianceSec2": 0.57,
+          "stdDevSec": 0.76
+        },
+        "relayTurnResponseResolvedMs": {
+          "runs": [
+            11928.3,
+            10771.5,
+            10170.3
+          ],
+          "meanMs": 10956.7,
+          "varianceMs2": 798365.3,
+          "stdDevMs": 893.5,
+          "meanSec": 10.96,
+          "varianceSec2": 0.8,
+          "stdDevSec": 0.89
+        },
+        "relayTurnPlaybackFinishedMs": {
+          "runs": [
+            15344.5,
+            13996.5,
+            15744
+          ],
+          "meanMs": 15028.3,
+          "varianceMs2": 838410.1,
+          "stdDevMs": 915.6,
+          "meanSec": 15.03,
+          "varianceSec2": 0.84,
+          "stdDevSec": 0.92
+        }
+      },
+      "batch": {
+        "relayTurnFirstAudioDelayMs": {
+          "runs": [
+            9955.4,
+            9572.4,
+            9619
+          ],
+          "meanMs": 9715.6,
+          "varianceMs2": 43670.9,
+          "stdDevMs": 209,
+          "meanSec": 9.72,
+          "varianceSec2": 0.04,
+          "stdDevSec": 0.21
+        },
+        "relayTurnHandoffSilenceMs": {
+          "runs": [
+            11186.3,
+            10531.7,
+            10293.9
+          ],
+          "meanMs": 10670.6,
+          "varianceMs2": 213571.3,
+          "stdDevMs": 462.1,
+          "meanSec": 10.67,
+          "varianceSec2": 0.21,
+          "stdDevSec": 0.46
+        },
+        "relayTurnResponseResolvedMs": {
+          "runs": [
+            17987.7,
+            19161.3,
+            20312
+          ],
+          "meanMs": 19153.7,
+          "varianceMs2": 1350636.3,
+          "stdDevMs": 1162.2,
+          "meanSec": 19.15,
+          "varianceSec2": 1.35,
+          "stdDevSec": 1.16
+        },
+        "relayTurnPlaybackFinishedMs": {
+          "runs": [
+            20524.3,
+            20649.7,
+            21695.5
+          ],
+          "meanMs": 20956.5,
+          "varianceMs2": 413522,
+          "stdDevMs": 643.1,
+          "meanSec": 20.96,
+          "varianceSec2": 0.41,
+          "stdDevSec": 0.64
+        }
+      }
+    },
+    "aiMind": {
+      "streaming": {
+        "relayTurnFirstAudioDelayMs": {
+          "runs": [
+            1062.8,
+            150.7,
+            2.1
+          ],
+          "meanMs": 405.2,
+          "varianceMs2": 329848.8,
+          "stdDevMs": 574.3,
+          "meanSec": 0.41,
+          "varianceSec2": 0.33,
+          "stdDevSec": 0.57
+        },
+        "relayTurnHandoffSilenceMs": {
+          "runs": [
+            1757.4,
+            1142.7,
+            798.2
+          ],
+          "meanMs": 1232.8,
+          "varianceMs2": 236100.2,
+          "stdDevMs": 485.9,
+          "meanSec": 1.23,
+          "varianceSec2": 0.24,
+          "stdDevSec": 0.49
+        },
+        "relayTurnResponseResolvedMs": {
+          "runs": [
+            15534.9,
+            12074.5,
+            11734.4
+          ],
+          "meanMs": 13114.6,
+          "varianceMs2": 4422306.1,
+          "stdDevMs": 2102.9,
+          "meanSec": 13.11,
+          "varianceSec2": 4.42,
+          "stdDevSec": 2.1
+        },
+        "relayTurnPlaybackFinishedMs": {
+          "runs": [
+            16632.6,
+            15903.9,
+            15580.8
+          ],
+          "meanMs": 16039.1,
+          "varianceMs2": 290280.1,
+          "stdDevMs": 538.8,
+          "meanSec": 16.04,
+          "varianceSec2": 0.29,
+          "stdDevSec": 0.54
+        }
+      },
+      "batch": {
+        "relayTurnFirstAudioDelayMs": {
+          "runs": [
+            10473,
+            8212.7,
+            9531.9
+          ],
+          "meanMs": 9405.9,
+          "varianceMs2": 1289152.3,
+          "stdDevMs": 1135.4,
+          "meanSec": 9.41,
+          "varianceSec2": 1.29,
+          "stdDevSec": 1.14
+        },
+        "relayTurnHandoffSilenceMs": {
+          "runs": [
+            11680.6,
+            9354.3,
+            10526.2
+          ],
+          "meanMs": 10520.4,
+          "varianceMs2": 1352943.4,
+          "stdDevMs": 1163.2,
+          "meanSec": 10.52,
+          "varianceSec2": 1.35,
+          "stdDevSec": 1.16
+        },
+        "relayTurnResponseResolvedMs": {
+          "runs": [
+            20233,
+            19089.1,
+            22394
+          ],
+          "meanMs": 20572,
+          "varianceMs2": 2816798.7,
+          "stdDevMs": 1678.3,
+          "meanSec": 20.57,
+          "varianceSec2": 2.82,
+          "stdDevSec": 1.68
+        },
+        "relayTurnPlaybackFinishedMs": {
+          "runs": [
+            21399.5,
+            20369.6,
+            23646.4
+          ],
+          "meanMs": 21805.2,
+          "varianceMs2": 2807778.6,
+          "stdDevMs": 1675.6,
+          "meanSec": 21.81,
+          "varianceSec2": 2.81,
+          "stdDevSec": 1.68
+        }
+      }
+    }
+  },
+  "overallCards": {
+    "firstAudio": {
+      "streamingSec": 1.22,
+      "batchSec": 10.91,
+      "gainSec": 9.7,
+      "gainPct": 88.9
+    },
+    "handoff": {
+      "streamingSec": 2.3,
+      "batchSec": 11.91,
+      "gainSec": 9.61,
+      "gainPct": 80.7
+    }
+  }
+}

@@ -118,6 +118,7 @@ docs/                         Architecture, deployment, release, and QA notes
 - Live docs (Japanese): [https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/](https://sunwood-ai-labs.github.io/GeminiVRM/docs/ja/)
 - [Getting Started](./docs/getting-started.md)
 - [Usage Guide](./docs/usage.md)
+- [Podcast Benchmark Report](./docs/podcast-benchmark.md)
 - [YouTube Relay Guide](./docs/youtube-relay.md)
 - [Release Notes](./docs/releases.md)
 - [Release Articles](./docs/articles.md)
@@ -161,6 +162,14 @@ When you benchmark podcast relay with Playwright, keep the run isolated from the
 - Keep `E2E_BENCH_OUTPUT_DIR` outside the repository. The benchmark runner now defaults to the system temp directory so artifact writes do not trigger `next dev` Fast Refresh.
 - Use `E2E_BENCH_MODES=streaming` or `E2E_BENCH_MODES=batch` when you want isolated retries per mode.
 - If you are collecting many repeated runs under `next dev`, restart the dev server between isolated runs to keep Playwright stable.
+
+For the bilingual latency chart and the text-overflow verifier:
+
+- Run `npm run report:podcast-benchmark` to rebuild the English and Japanese report images plus the shared JSON summary.
+- The same command also updates `docs/public/benchmarks/podcast-benchmark-history.json` and `.csv` for longitudinal tracking.
+- The tracked history fields are `generatedAt`, `benchmarkKey`, `gitSha`, `sourceKind`, `topics`, `firstAudio*`, and `handoff*`.
+- Run `npm run verify:podcast-benchmark-layout` to check missing `data-fit-boundary` annotations, text overflow, and text-on-text overlaps in both SVG files.
+- See [Podcast Benchmark Report](./docs/podcast-benchmark.md) for the latest captured numbers, caveats, and output paths.
 
 ## Deployment
 

@@ -24,6 +24,7 @@ title: GeminiVRM ドキュメント
 ## 詳細ガイド
 
 - [Architecture Guide](./architecture.md)
+- [ポッドキャストベンチマーク レポート](./podcast-benchmark.md)
 - [Troubleshooting](./troubleshooting.md)
 
 ## 参照

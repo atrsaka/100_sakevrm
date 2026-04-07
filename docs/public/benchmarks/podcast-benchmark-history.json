@@ -1,0 +1,21 @@
+[
+  {
+    "generatedAt": "2026-04-01T09:22:58.202Z",
+    "benchmarkKey": "podcast-natural-ja-3topics-6turns-3runs",
+    "gitSha": "111c73e",
+    "sourceKind": "stable-snapshot",
+    "topics": [
+      "Today's Meal",
+      "AGI",
+      "AI Consciousness"
+    ],
+    "firstAudioStreamingSec": 1.22,
+    "firstAudioBatchSec": 10.91,
+    "firstAudioGainSec": 9.7,
+    "firstAudioGainPct": 88.9,
+    "handoffStreamingSec": 2.3,
+    "handoffBatchSec": 11.91,
+    "handoffGainSec": 9.61,
+    "handoffGainPct": 80.7
+  }
+]

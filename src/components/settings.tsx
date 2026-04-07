@@ -2,7 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { IconButton } from "./iconButton";
 import { TextButton } from "./textButton";
 import { Link } from "./link";
-import { Message } from "@/features/messages/messages";
+import {
+  getMessageListLabel,
+  Message,
+} from "@/features/messages/messages";
 import {
   DEFAULT_GEMINI_VOICE_NAME,
   GEMINI_VOICE_PRESETS,
@@ -146,6 +149,7 @@ export const Settings = ({
                 <div className="mt-16">
                   <label
                     htmlFor="settings-podcast-turn-count"
+                    id="settings-podcast-turn-count-label"
                     className="my-12 block font-bold"
                   >
                     Maximum loop count
@@ -170,13 +174,19 @@ export const Settings = ({
                     Yukito once and Kiyoka once.
                   </div>
                 </div>
-                <div className="mt-16 flex flex-wrap gap-8">
+                <div
+                  role="radiogroup"
+                  aria-labelledby="settings-podcast-turn-count-label"
+                  className="mt-16 flex flex-wrap gap-8"
+                >
                   {[2, 4, 6, 8, 12].map((presetCount) => {
                     const isSelected = presetCount === podcastTurnCount;
                     return (
                       <button
                         key={presetCount}
                         type="button"
+                        role="radio"
+                        aria-checked={isSelected}
                         onClick={() => onChangePodcastTurnCount(presetCount)}
                         className={`rounded-full px-12 py-6 text-sm font-bold transition ${
                           isSelected
@@ -269,7 +279,11 @@ export const Settings = ({
                 <div className="my-16 typography-20 font-bold">
                   Conversation mode
                 </div>
-                <div className="grid gap-12 md:grid-cols-2">
+                <div
+                  role="radiogroup"
+                  aria-label="Conversation mode"
+                  className="grid gap-12 md:grid-cols-2"
+                >
                   {(["chat", "podcast"] as const).map((mode) => {
                     const isSelected = interactionMode === mode;
 
@@ -277,6 +291,8 @@ export const Settings = ({
                       <button
                         key={mode}
                         type="button"
+                        role="radio"
+                        aria-checked={isSelected}
                         onClick={() => onChangeInteractionMode(mode)}
                         className={`rounded-16 border px-16 py-16 text-left transition ${
                           isSelected
@@ -579,11 +595,7 @@ export const Settings = ({
                         className="my-8 grid grid-flow-col grid-cols-[min-content_1fr] gap-x-fixed"
                       >
                         <div className="w-[80px] py-8">
-                          {value.role === "assistant"
-                            ? "Assistant"
-                            : value.role === "system"
-                              ? "System"
-                              : (value.name ?? "You")}
+                          {getMessageListLabel(value)}
                         </div>
                         <input
                           aria-label={`Chat log entry ${index + 1}`}

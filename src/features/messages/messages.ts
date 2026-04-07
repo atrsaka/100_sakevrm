@@ -12,6 +12,46 @@ export type Message = {
   receivedAt?: string;
 };
 
+export const getMessageBadgeLabel = (message: Message): string => {
+  if (message.source === "podcast") {
+    return `PODCAST ${message.name ?? "Host"}`;
+  }
+
+  if (message.role === "assistant") {
+    return "CHARACTER";
+  }
+
+  if (message.source === "youtube") {
+    return `YOUTUBE ${message.name ?? "Viewer"}`;
+  }
+
+  if (message.role === "system" || message.source === "system") {
+    return "SYSTEM";
+  }
+
+  return message.name ?? "YOU";
+};
+
+export const getMessageListLabel = (message: Message): string => {
+  if (message.source === "podcast") {
+    return `Podcast: ${message.name ?? "Host"}`;
+  }
+
+  if (message.role === "assistant") {
+    return "Assistant";
+  }
+
+  if (message.role === "system" || message.source === "system") {
+    return "System";
+  }
+
+  if (message.source === "youtube") {
+    return `YouTube: ${message.name ?? "Viewer"}`;
+  }
+
+  return message.name ?? "You";
+};
+
 const talkStyles = [
   "talk",
   "happy",

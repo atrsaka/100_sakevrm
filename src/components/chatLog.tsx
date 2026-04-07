@@ -1,5 +1,8 @@
 import { useEffect, useRef } from "react";
-import { Message } from "@/features/messages/messages";
+import {
+  getMessageBadgeLabel,
+  Message,
+} from "@/features/messages/messages";
 type Props = {
   messages: Message[];
 };
@@ -48,12 +51,7 @@ const Chat = ({ message }: { message: Message }) => {
         ? "text-primary"
         : "text-primary";
   const offsetX = message.role === "user" ? "pl-40" : "pr-40";
-  const label =
-    message.role === "assistant"
-      ? "CHARACTER"
-      : message.source === "youtube"
-        ? `YOUTUBE ${message.name ?? "Viewer"}`
-        : message.name ?? "YOU";
+  const label = getMessageBadgeLabel(message);
   const bodyText = message.displayContent ?? message.content;
 
   return (

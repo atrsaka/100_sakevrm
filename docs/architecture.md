@@ -15,7 +15,7 @@ The current architecture optimizes for:
 
 1. The user sends a prompt from the main page.
 2. `src/pages/index.tsx` starts streaming playback mode on the active model.
-3. `src/features/chat/geminiLiveChat.ts` opens a Gemini Live session and forwards transcript updates plus audio chunks.
+3. `src/features/chat/geminiLiveChat.ts` opens a Gemini Live session, sends the active turn through `sendRealtimeInput`, and forwards transcript updates plus audio chunks.
 4. `src/features/lipSync/lipSync.ts` validates PCM metadata, queues chunk playback, and keeps the analyser fed for mouth movement.
 5. `src/features/vrmViewer/model.ts` bridges the audio stream into the VRM runtime.
 6. `src/features/emoteController/*` updates expression, eye, blink, and lip sync state each frame.
@@ -32,7 +32,7 @@ The current architecture optimizes for:
 - `src/pages/index.tsx`
   - user input, streaming state, and chat flow
 - `src/features/chat/geminiLiveChat.ts`
-  - Gemini Live connection lifecycle, chunk forwarding, transcript assembly, and fallback model handling
+  - Gemini Live connection lifecycle, realtime text input formatting for `gemini-3.1-flash-live-preview`, chunk forwarding, and transcript assembly
 - `src/features/chat/geminiLiveConfig.ts`
   - default model and voice preset configuration
 - `src/features/lipSync/lipSync.ts`

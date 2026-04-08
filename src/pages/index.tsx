@@ -787,7 +787,7 @@ export default function Home() {
             if (!completion) {
               completion = session.then((relaySession) => relaySession.audioStreamEnd());
               void completion.catch(() => {
-                // Deferred to the active turn fallback path.
+                // Deferred to the active turn error path.
               });
             }
           },
@@ -868,7 +868,7 @@ export default function Home() {
           const turnStartedAtMs = performance.now();
           let firstAssistantAudioAtMs: number | null = null;
           let responseResolvedAtMs: number | null = null;
-          let responsePath: "opening" | "prepared" | "batch" | "prepared-fallback" =
+          let responsePath: "opening" | "prepared" | "batch" =
             latestPartnerTurn == null
               ? "opening"
               : preparedSessionForCurrentTurn
@@ -962,9 +962,9 @@ export default function Home() {
             });
           }
 
-          const runFallbackRelayResponse = async () => {
+          const runBatchRelayResponse = async () => {
             if (!latestPartnerTurn) {
-              throw new Error("Fallback relay response has no previous turn.");
+              throw new Error("Batch relay response has no previous turn.");
             }
 
             logPodcastDebugEvent("batch-relay-start", {
@@ -991,7 +991,6 @@ export default function Home() {
               ),
               relayAudioBytes: latestPartnerTurn.audioBytes,
               relayAudioMimeType: latestPartnerTurn.audioMimeType,
-              relayTranscript: latestPartnerTurn.transcript,
               model: geminiModel,
               voiceName: speaker.voiceName,
               onAudioChunk: (chunk) => {
@@ -1028,13 +1027,12 @@ export default function Home() {
 
           const runRelayResponse = async () => {
             if (!preparedSessionForCurrentTurn) {
-              return runFallbackRelayResponse();
+              return runBatchRelayResponse();
             }
 
             try {
               return await preparedSessionForCurrentTurn.getResponse();
             } catch (error) {
-              responsePath = "prepared-fallback";
               preparedSessionForCurrentTurn.setOutputSink(null);
               preparedSessionForCurrentTurn.setPartialTranscriptSink(null);
               preparedSessionForCurrentTurn.close(error);
@@ -1042,26 +1040,13 @@ export default function Home() {
               if (preparedSessionForFollowingTurn) {
                 closePreparedRelaySession(
                   preparedSessionForFollowingTurn,
-                  "Discarding prewarmed next relay after current turn relay failure.",
+                  "Discarding prewarmed next relay after prepared relay failure.",
                 );
                 preparedSessionForFollowingTurn = null;
                 preparedSessionForNextTurn = null;
               }
 
-              if (relayMode === "streaming" && turnIndex < podcastTurnCount - 1) {
-                preparedSessionForFollowingTurn = createPreparedRelaySession(
-                  nextSpeaker,
-                  speaker,
-                  priorTurns,
-                  turnIndex + 1,
-                );
-                preparedSessionForNextTurn = preparedSessionForFollowingTurn;
-              }
-
-              speakerModel.stopSpeaking();
-              hasStartedAudio = false;
-              await speakerModel.beginStreamingSpeak(createNeutralScreenplay(""));
-              return runFallbackRelayResponse();
+              throw error;
             }
           };
 
@@ -1130,10 +1115,6 @@ export default function Home() {
           );
           const inputTranscript =
             "inputTranscript" in response ? response.inputTranscript : "";
-          const usedFallbackTextInput =
-            "usedFallbackTextInput" in response
-              ? response.usedFallbackTextInput
-              : false;
 
           const transcript =
             response.transcript.trim() ||
@@ -1161,7 +1142,6 @@ export default function Home() {
             responsePath,
             transcript,
             inputTranscript,
-            usedFallbackTextInput,
             audioMimeType: response.audioMimeType,
             audioBytesLength: response.audioBytes.byteLength,
             turnDurationMs: responseResolvedAtMs - turnStartedAtMs,

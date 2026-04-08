@@ -81,11 +81,8 @@ See [.env.example](./.env.example).
 - `NEXT_PUBLIC_GEMINI_LIVE_VOICE`
   - Optional default Gemini prebuilt voice name
 
-If the default preview alias is not available for your account, switch the model to:
-
-```text
-gemini-2.5-flash-native-audio-preview-12-2025
-```
+This app is tuned for `gemini-3.1-flash-live-preview` and no longer auto-falls
+back to older Gemini Live preview models.
 
 ## How To Use
 
@@ -152,7 +149,7 @@ npm run build:pages
 npm run e2e:smoke
 ```
 
-The smoke test checks that the app boots, the send flow works, and known chunk/icon/fallback request failures stay absent. When no Gemini API key is present, the missing-key error path is treated as a valid smoke outcome.
+The smoke test checks that the app boots, the send flow works, and known chunk/icon/runtime request failures stay absent. When no Gemini API key is present, the missing-key error path is treated as a valid smoke outcome.
 
 ## Podcast Benchmark Safety
 

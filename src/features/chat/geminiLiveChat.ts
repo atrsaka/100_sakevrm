@@ -2,13 +2,11 @@ import {
   GoogleGenAI,
   MediaResolution,
   Modality,
-  type Content,
   type LiveServerMessage,
 } from "@google/genai";
 import type { Message } from "../messages/messages";
 import {
   DEFAULT_GEMINI_LIVE_MODEL,
-  FALLBACK_GEMINI_LIVE_MODEL,
   DEFAULT_GEMINI_VOICE_NAME,
   resolveGeminiVoiceName,
 } from "./geminiLiveConfig";
@@ -49,50 +47,15 @@ export async function getGeminiLiveChatResponse({
     throw new Error("Gemini API key is required.");
   }
 
-  let primaryStreamStarted = false;
-  const handlePrimaryAudioChunk = onAudioChunk
-    ? (chunk: GeminiLiveAudioChunk) => {
-        primaryStreamStarted = true;
-        onAudioChunk(chunk);
-      }
-    : (chunk: GeminiLiveAudioChunk) => {
-        primaryStreamStarted = true;
-        void chunk;
-      };
-
-  try {
-    return await runGeminiLiveChat({
-      apiKey,
-      messages,
-      model,
-      onAudioChunk: handlePrimaryAudioChunk,
-      onPartialTranscript,
-      systemPrompt,
-      voiceName,
-    });
-  } catch (primaryError) {
-    if (
-      model !== DEFAULT_GEMINI_LIVE_MODEL ||
-      model === FALLBACK_GEMINI_LIVE_MODEL ||
-      primaryStreamStarted
-    ) {
-      throw primaryError;
-    }
-
-    try {
-      return await runGeminiLiveChat({
-        apiKey,
-        messages,
-        model: FALLBACK_GEMINI_LIVE_MODEL,
-        onAudioChunk,
-        onPartialTranscript,
-        systemPrompt,
-        voiceName,
-      });
-    } catch (fallbackError) {
-      throw buildFallbackError(primaryError, fallbackError);
-    }
-  }
+  return runGeminiLiveChat({
+    apiKey,
+    messages,
+    model,
+    onAudioChunk,
+    onPartialTranscript,
+    systemPrompt,
+    voiceName,
+  });
 }
 
 async function runGeminiLiveChat({
@@ -207,9 +170,8 @@ async function runGeminiLiveChat({
   });
 
   try {
-    session.sendClientContent({
-      turns: messagesToGeminiTurns(messages),
-      turnComplete: true,
+    session.sendRealtimeInput({
+      text: buildRealtimeTextInput(messages),
     });
 
     await turnFinished;
@@ -226,31 +188,6 @@ async function runGeminiLiveChat({
     audioMimeType,
     audioBytes: concatenateAudioChunks(audioChunks),
   };
-}
-
-function buildFallbackError(primaryError: unknown, fallbackError: unknown) {
-  const primaryMessage =
-    primaryError instanceof Error ? primaryError.message : String(primaryError);
-  const fallbackMessage =
-    fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
-
-  return new Error(
-    [
-      `Gemini Live failed with default model "${DEFAULT_GEMINI_LIVE_MODEL}".`,
-      `Fallback model "${FALLBACK_GEMINI_LIVE_MODEL}" also failed.`,
-      `Primary error: ${primaryMessage}`,
-      `Fallback error: ${fallbackMessage}`,
-    ].join(" ")
-  );
-}
-
-export function messagesToGeminiTurns(messages: Message[]): Content[] {
-  return messages
-    .filter((message) => message.role !== "system")
-    .map((message) => ({
-      role: message.role === "assistant" ? "model" : "user",
-      parts: [{ text: message.content }],
-    }));
 }
 
 function collectAudio(
@@ -300,4 +237,40 @@ function concatenateAudioChunks(chunks: Uint8Array[]): Uint8Array {
   }
 
   return merged;
+}
+
+function buildRealtimeTextInput(messages: Message[]): string {
+  const conversationalMessages = messages.filter(
+    (message) => message.role !== "system",
+  );
+  const latestMessage = conversationalMessages.at(-1);
+
+  if (!latestMessage) {
+    throw new Error("Gemini Live requires at least one user message.");
+  }
+
+  if (conversationalMessages.length === 1) {
+    return latestMessage.content;
+  }
+
+  const history = conversationalMessages
+    .slice(0, -1)
+    .map((message) => `${getRealtimeSpeakerLabel(message)}: ${message.content}`)
+    .join("\n");
+
+  return [
+    "Conversation so far:",
+    history,
+    "",
+    "Latest user message:",
+    latestMessage.content,
+  ].join("\n");
+}
+
+function getRealtimeSpeakerLabel(message: Message): string {
+  if (message.role === "assistant") {
+    return message.name?.trim() || "Assistant";
+  }
+
+  return message.name?.trim() || "User";
 }

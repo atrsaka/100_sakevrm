@@ -80,6 +80,9 @@ Pages workflow は次を対象にしています。
 - `NEXT_PUBLIC_GEMINI_API_KEY`
 - `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
 
+GeminiVRM は `gemini-3.1-flash-live-preview` 前提で調整しており、
+古い Gemini Live preview model への自動フォールバックは無効です。
+
 任意の YouTube relay を公開環境で使う場合は、次も必要です。
 
 - 公開するブラウザ origin と完全一致する Google OAuth Web client の設定
@@ -89,7 +92,8 @@ Pages workflow は次を対象にしています。
 
 ## Troubleshooting
 
-- preview model alias が使えない場合は `gemini-2.5-flash-native-audio-preview-12-2025` を使用
+- `NEXT_PUBLIC_GEMINI_LIVE_MODEL` は、意図的な検証でない限り `gemini-3.1-flash-live-preview` のまま使う
 - 再生がブロックされる場合はページを一度操作して再試行
 - 古い dev chunk を握ったタブはハードリロード
+- `next build` と `next dev` を切り替えた直後は、browser runtime を見直す前に dev server を立て直す
 - 公開 docs surface まで確認する場合は `npm run build` だけでなく `npm run build:pages` を使う

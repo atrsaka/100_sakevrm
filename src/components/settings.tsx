@@ -318,9 +318,9 @@ export const Settings = ({
                 </div>
                 <div className="mt-8 text-sm">
                   Podcast mode relays the previous speaker&apos;s audio into the
-                  next
-                  Gemini Live turn, with transcript fallback if the relay cannot
-                  be used.
+                  next Gemini Live turn. If the relay fails, the app now stops
+                  on that exact Gemini Live error instead of silently switching
+                  to another path.
                 </div>
               </div>
 
@@ -404,8 +404,9 @@ export const Settings = ({
                   onChange={onChangeGeminiModel}
                 />
                 <div className="mt-8 text-sm">
-                  If your account does not expose the default preview alias, try
-                  `gemini-2.5-flash-native-audio-preview-12-2025`.
+                  This app is tuned for
+                  <code>gemini-3.1-flash-live-preview</code>. Automatic fallback
+                  to other Gemini Live models is disabled.
                 </div>
               </div>
 

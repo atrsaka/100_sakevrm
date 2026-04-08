@@ -8,22 +8,18 @@ import {
   TurnCoverage,
 } from "@google/genai";
 import type { Message } from "../messages/messages";
-import { buildPodcastRelayFallbackLogPayload } from "./podcastDebug";
 import {
   DEFAULT_GEMINI_LIVE_MODEL,
   DEFAULT_GEMINI_VOICE_NAME,
   resolveGeminiVoiceName,
 } from "../chat/geminiLiveConfig";
 import {
-  getGeminiLiveChatResponse,
   type GeminiLiveAudioChunk,
-  messagesToGeminiTurns,
   type GeminiLiveTurnResult,
 } from "../chat/geminiLiveChat";
 
 export type GeminiLiveAudioRelayResponse = GeminiLiveTurnResult & {
   inputTranscript: string;
-  usedFallbackTextInput: boolean;
 };
 
 type GeminiLiveAudioRelayParams = {
@@ -33,7 +29,6 @@ type GeminiLiveAudioRelayParams = {
   historyTurnComplete?: boolean;
   relayAudioBytes: Uint8Array;
   relayAudioMimeType: string;
-  relayTranscript?: string;
   model?: string;
   voiceName?: string;
   onPartialTranscript?: (transcript: string) => void;
@@ -48,7 +43,7 @@ export type GeminiLiveAudioRelaySession = {
 
 type GeminiLiveAudioRelaySessionParams = Omit<
   GeminiLiveAudioRelayParams,
-  "relayAudioBytes" | "relayAudioMimeType" | "relayTranscript"
+  "relayAudioBytes" | "relayAudioMimeType"
 >;
 
 export async function createGeminiLiveAudioRelaySession(
@@ -56,9 +51,7 @@ export async function createGeminiLiveAudioRelaySession(
 ): Promise<GeminiLiveAudioRelaySession> {
   const {
     apiKey,
-    historyMessages,
     systemPrompt,
-    historyTurnComplete = false,
     model = DEFAULT_GEMINI_LIVE_MODEL,
     voiceName = DEFAULT_GEMINI_VOICE_NAME,
     onPartialTranscript,
@@ -195,13 +188,6 @@ export async function createGeminiLiveAudioRelaySession(
     },
   });
 
-  if (historyMessages.length > 0) {
-    session.sendClientContent({
-      turns: messagesToGeminiTurns(historyMessages),
-      turnComplete: historyTurnComplete,
-    });
-  }
-
   const normalizeAndSendRelayAudioChunk = (
     audioBytes: Uint8Array,
     audioMimeType: string
@@ -289,7 +275,6 @@ export async function createGeminiLiveAudioRelaySession(
         audioMimeType,
         audioBytes: concatenateAudioChunks(audioChunks),
         inputTranscript: inputTranscript.trim(),
-        usedFallbackTextInput: false,
       };
     })();
 
@@ -317,76 +302,28 @@ export async function getGeminiLiveAudioRelayResponse({
   systemPrompt,
   relayAudioBytes,
   relayAudioMimeType,
-  relayTranscript,
-  historyTurnComplete = false,
   model = DEFAULT_GEMINI_LIVE_MODEL,
   voiceName = DEFAULT_GEMINI_VOICE_NAME,
   onPartialTranscript,
   onAudioChunk,
 }: GeminiLiveAudioRelayParams): Promise<GeminiLiveAudioRelayResponse> {
-  try {
-    const session = await createGeminiLiveAudioRelaySession({
-      apiKey,
-      historyMessages,
-      historyTurnComplete,
-      model,
-      systemPrompt,
-      voiceName,
-      onAudioChunk,
-      onPartialTranscript,
-    });
+  const session = await createGeminiLiveAudioRelaySession({
+    apiKey,
+    historyMessages,
+    model,
+    systemPrompt,
+    voiceName,
+    onAudioChunk,
+    onPartialTranscript,
+  });
 
-    session.sendRelayAudioChunk(relayAudioBytes, relayAudioMimeType);
+  session.sendRelayAudioChunk(relayAudioBytes, relayAudioMimeType);
 
-    const response = await session.audioStreamEnd();
+  const response = await session.audioStreamEnd();
 
-    return {
-      ...response,
-      usedFallbackTextInput: false,
-    };
-  } catch (audioRelayError) {
-    const trimmedTranscript = relayTranscript?.trim();
-    if (!trimmedTranscript) {
-      throw audioRelayError;
-    }
-
-    console.warn(
-      "Podcast audio relay fell back to transcript input.",
-      buildPodcastRelayFallbackLogPayload({
-        relayAudioMimeType,
-        relayAudioBytesLength: relayAudioBytes.byteLength,
-        relayTranscript: trimmedTranscript,
-        error:
-          audioRelayError instanceof Error
-            ? audioRelayError.message
-            : String(audioRelayError),
-      }),
-    );
-
-    const fallbackResponse = await getGeminiLiveChatResponse({
-      apiKey,
-      messages: [
-        ...historyMessages,
-        {
-          role: "user",
-          content: trimmedTranscript,
-          name: "PARTNER",
-          source: "podcast",
-        },
-      ],
-      systemPrompt,
-      model,
-      voiceName,
-      onAudioChunk,
-      onPartialTranscript,
-    });
-
-    return {
-      ...fallbackResponse,
-      inputTranscript: trimmedTranscript,
-      usedFallbackTextInput: true,
-    };
-  }
+  return {
+    ...response,
+  };
 }
 
 function collectAudio(

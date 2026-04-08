@@ -26,7 +26,9 @@ Important notes:
 
 - podcast mode is a turn-based back-and-forth, not simultaneous duet playback
 - later turns relay the previous speaker's audio into Gemini Live when possible
-- if the relay path cannot be reused, GeminiVRM falls back to transcript-driven continuation instead of stopping the run
+- if a prepared relay path fails, GeminiVRM now stops on the exact Gemini Live
+  error instead of silently switching to transcript-driven continuation or an
+  older model
 
 ## Settings You Can Tune
 
@@ -76,7 +78,7 @@ The app exposes a `Docs` shortcut in the top-right action area.
 ## What To Watch During Testing
 
 - transcript updates appear before the full turn completes
-- audio starts without chunk or fallback errors
+- audio starts without chunk or Gemini Live request errors
 - mouth movement remains synchronized with audio playback
 - podcast mode waits for both viewers and stops at the configured turn cap
 - switching voice, motion, or conversation mode does not break the next run

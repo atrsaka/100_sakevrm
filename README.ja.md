@@ -81,11 +81,8 @@ npm run dev:all
 - `NEXT_PUBLIC_GEMINI_LIVE_VOICE`
   - UI に初期表示する Gemini の prebuilt voice
 
-既定の preview alias が使えない場合は、次の model を試してください。
-
-```text
-gemini-2.5-flash-native-audio-preview-12-2025
-```
+このアプリは `gemini-3.1-flash-live-preview` 前提で調整しており、
+古い Gemini Live preview model への自動フォールバックは行いません。
 
 ## 使い方
 
@@ -152,7 +149,7 @@ npm run build:pages
 npm run e2e:smoke
 ```
 
-smoke test では、アプリ起動、送信フロー、既知の chunk / icon / fallback 系エラー不在を確認します。Gemini API key がない場合は missing-key エラー経路を正常系として扱います。
+smoke test では、アプリ起動、送信フロー、既知の chunk / icon / runtime 系エラー不在を確認します。Gemini API key がない場合は missing-key エラー経路を正常系として扱います。
 
 ## Podcast Benchmark の安全な回し方
 

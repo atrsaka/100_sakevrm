@@ -19,7 +19,7 @@ GeminiVRM は、ChatVRM のブラウザ完結な VRM 会話体験を保ったま
 
 1. ユーザーがメイン画面からプロンプトを送信します。
 2. `src/pages/index.tsx` がアクティブな model に対してストリーミング再生モードを開始します。
-3. `src/features/chat/geminiLiveChat.ts` が Gemini Live session を開き、transcript 更新と audio chunk を上流へ流します。
+3. `src/features/chat/geminiLiveChat.ts` が Gemini Live session を開き、`sendRealtimeInput` で現在ターンを送りつつ transcript 更新と audio chunk を上流へ流します。
 4. `src/features/lipSync/lipSync.ts` が PCM metadata を検証し、chunk を再生キューへ積み、analyser を更新して口パクを駆動します。
 5. `src/features/vrmViewer/model.ts` が音声ストリームを VRM ランタイムへ橋渡しします。
 6. `src/features/emoteController/*` が毎フレーム表情、視線、まばたき、口パクを更新します。
@@ -36,7 +36,7 @@ GeminiVRM は、ChatVRM のブラウザ完結な VRM 会話体験を保ったま
 - `src/pages/index.tsx`
   - ユーザー入力、ストリーミング状態、チャットフロー
 - `src/features/chat/geminiLiveChat.ts`
-  - Gemini Live 接続、chunk 転送、transcript 組み立て、fallback model 制御
+  - Gemini Live 接続、`gemini-3.1-flash-live-preview` 向け realtime text 入力整形、chunk 転送、transcript 組み立て
 - `src/features/chat/geminiLiveConfig.ts`
   - 既定 model と voice preset 設定
 - `src/features/lipSync/lipSync.ts`

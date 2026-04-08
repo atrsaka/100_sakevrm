@@ -80,32 +80,4 @@ export function logPodcastDebugEvent(
   console.info(`[PodcastDebug] ${eventName}`, eventEntry);
 }
 
-export function buildPodcastRelayFallbackLogPayload({
-  relayAudioMimeType,
-  relayAudioBytesLength,
-  relayTranscript,
-  error,
-}: {
-  relayAudioMimeType: string;
-  relayAudioBytesLength: number;
-  relayTranscript: string;
-  error: string;
-}): Record<string, unknown> {
-  const basePayload = {
-    relayAudioMimeType,
-    relayAudioBytesLength,
-    hasRelayTranscript: relayTranscript.length > 0,
-    error,
-  };
-
-  if (!isPodcastDebugEnabled()) {
-    return basePayload;
-  }
-
-  return {
-    ...basePayload,
-    relayTranscript,
-  };
-}
-
 export { PODCAST_DEBUG_STORAGE_KEY, PODCAST_RELAY_MODE_STORAGE_KEY };

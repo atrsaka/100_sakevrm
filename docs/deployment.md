@@ -76,6 +76,9 @@ Optional public environment variables:
 - `NEXT_PUBLIC_GEMINI_API_KEY`
 - `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
 
+GeminiVRM is tuned for `gemini-3.1-flash-live-preview`, and automatic fallback
+to older Gemini Live preview models is disabled.
+
 If you expose the optional YouTube relay in a deployed environment:
 
 - configure the Google OAuth web client for the exact browser origin you publish
@@ -85,7 +88,8 @@ For public deployments, avoid shipping a real Gemini API key in repository secre
 
 ## Troubleshooting
 
-- If the preview model alias is unavailable, use `gemini-2.5-flash-native-audio-preview-12-2025`.
+- Keep `NEXT_PUBLIC_GEMINI_LIVE_MODEL` on `gemini-3.1-flash-live-preview` unless you are intentionally testing another Live model.
 - If playback is blocked, interact with the page once and retry.
 - If a browser tab keeps old dev chunks, perform a hard refresh.
+- If you switch between `next build` and `next dev`, restart the dev server before validating the browser runtime again.
 - If you are validating the published docs surface, use `npm run build:pages` instead of only `npm run build`.

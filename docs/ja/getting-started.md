@@ -25,6 +25,11 @@ npm run dev -- --hostname 127.0.0.1 --port 3100
 
 `http://127.0.0.1:3100` を開き、Gemini API key を入力して `Start` を押します。
 
+GeminiVRM は現在 `gemini-3.1-flash-live-preview` 前提で調整しています。
+別の Live model を意図的に試すのでなければ、
+`NEXT_PUBLIC_GEMINI_LIVE_MODEL` はこの値のまま使ってください。
+古い preview model への自動フォールバックは無効です。
+
 ## アプリと docs を同時起動
 
 ```bash

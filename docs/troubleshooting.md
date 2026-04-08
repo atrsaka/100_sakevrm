@@ -4,13 +4,12 @@ title: Troubleshooting
 
 # Troubleshooting
 
-## Gemini Model Alias Is Unavailable
+## Gemini Live Returns `Request contains an invalid argument`
 
-Try:
-
-```text
-gemini-2.5-flash-native-audio-preview-12-2025
-```
+- confirm the live model is still `gemini-3.1-flash-live-preview`
+- hard refresh the tab after changing the model or after pulling runtime code changes
+- if you were alternating between `next build` and `next dev`, restart the dev server before retrying
+- the app no longer auto-falls back to older Gemini Live preview models, so fix the 3.1 request path instead of swapping models
 
 ## Audio Playback Does Not Start
 

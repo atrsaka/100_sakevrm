@@ -4,19 +4,18 @@ title: トラブルシュート
 
 # トラブルシュート
 
-## Gemini Model Alias が使えない
+## Gemini Live で `Request contains an invalid argument` が出る
 
-次を試してください。
-
-```text
-gemini-2.5-flash-native-audio-preview-12-2025
-```
+- live model が `gemini-3.1-flash-live-preview` のままか確認する
+- model を変えた直後や runtime の変更を引いた直後は、タブをハードリロードする
+- `next build` と `next dev` を行き来した直後なら、dev server を立て直してから再試行する
+- このアプリは古い Gemini Live preview model へ自動フォールバックしないため、model を差し替えるより 3.1 の request 内容を直す
 
 ## 音声再生が始まらない
 
 - 一度ページを操作してから再試行する
 - ブラウザの autoplay ブロックを確認する
-- console に PCM metadata や fallback request のエラーがないか確認する
+- console に PCM metadata や Gemini Live request のエラーがないか確認する
 
 ## ローカル docs リンクが開けない
 

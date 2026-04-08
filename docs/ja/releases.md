@@ -11,6 +11,10 @@ title: Release Notes
 
 GeminiVRM の versioned release notes をここにまとめています。feature release では、構造化されたリリースノートに加えて、運用者向けの companion walkthrough を並べます。
 
+現行の runtime ガイドは、過去の release note より先に更新される場合があります。
+最新の `gemini-3.1-flash-live-preview` 前提の挙動とトラブルシュートは、
+Getting Started、Usage、Troubleshooting を正としてください。
+
 | Version | Status | Scope |
 | --- | --- | --- |
 | [v0.2.0](./releases/v0.2.0.md) | 公開済み feature release | 正確な比較範囲 `v0.1.0..v0.2.0` |

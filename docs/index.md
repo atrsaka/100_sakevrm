@@ -29,8 +29,8 @@ Use this site when you want to run, understand, publish, verify, or automate Gem
 
 ## Reference
 
-- [Latest Release Note: v0.2.0](./releases/v0.2.0.md)
-- [Latest Companion Guide: v0.2.0 Podcast Mode Guide](./articles/v0.2.0-podcast-mode.md)
+- [Latest Release Note: v0.3.0](./releases/v0.3.0.md)
+- [Latest Companion Guide: v0.3.0 Runtime And Benchmark Guide](./articles/v0.3.0-runtime-and-benchmark-guide.md)
 - [Release Notes](./releases.md)
 - [Release Articles](./articles.md)
 - [Repository QA Inventory](./repository-qa-inventory.md)

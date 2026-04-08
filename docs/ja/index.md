@@ -29,8 +29,8 @@ title: GeminiVRM ドキュメント
 
 ## 参照
 
-- [最新の v0.2.0 リリースノート](./releases/v0.2.0.md)
-- [最新の v0.2.0 Podcast Mode ガイド](./articles/v0.2.0-podcast-mode.md)
+- [最新の v0.3.0 リリースノート](./releases/v0.3.0.md)
+- [最新の v0.3.0 Runtime と Benchmark ガイド](./articles/v0.3.0-runtime-and-benchmark-guide.md)
 - [Release Notes](./releases.md)
 - [Release Articles](./articles.md)
 - [Repository QA Inventory](./repository-qa-inventory.md)

@@ -15,7 +15,7 @@ This release aligns GeminiVRM with Gemini 3.1 realtime input, productizes podcas
 ## Highlights
 
 - Character chat and podcast mode now default to `gemini-3.1-flash-live-preview`, send text through the Gemini Live realtime input path, and surface the exact request error instead of silently falling back to older preview models.
-- The podcast relay can prewarm the next speaker session, stream live audio into that prepared turn, and record per-turn first-audio and playback timing in the debug log.
+- `v0.3.0` also introduces the streaming podcast relay path itself: the app can prewarm the next speaker session, stream live audio into that prepared turn, and record per-turn first-audio and playback timing in the debug log.
 - GeminiVRM now ships a reproducible podcast relay benchmark workflow with a dedicated Playwright relay E2E, a repeatable benchmark runner, bilingual chart generation, and tracked JSON/CSV history under `docs/public/benchmarks`.
 - The checked-in benchmark snapshot shows the streaming relay path averaging `1.22s` to first audio and `2.30s` of handoff silence versus `10.91s` and `11.91s` for batch mode on the tracked three-topic, six-turn run set.
 - Message labels, settings radio groups, speech-recognition typing, and repo tooling were tightened together with the flat ESLint runner and dependency updates for `@google/genai` `1.48.0`, Tailwind `4.2.2`, TypeScript `6.0.2`, and `actions/configure-pages@v6`.
@@ -23,6 +23,7 @@ This release aligns GeminiVRM with Gemini 3.1 realtime input, productizes podcas
 ## Scope Notes
 
 - The app no longer auto-falls back to older Gemini Live preview models; invalid 3.1 requests must be fixed on the active runtime path.
+- The streaming relay implementation landed in commit `7a5a1c9` on `2026-03-31 JST`, with prepared-session stabilization in `6e2f181` on `2026-04-01 JST`.
 - Podcast mode remains turn-based. It does not overlap both hosts speaking at once.
 - The checked-in benchmark report still carries one AGI run mean from preserved console logs because the earliest artifact folder was overwritten before the temp-dir safeguard landed.
 - The YouTube relay remains inbound-only and does not post Gemini replies back into YouTube chat.

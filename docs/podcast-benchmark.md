@@ -14,10 +14,10 @@ This page captures the current bilingual chart workflow for the natural Japanese
 
 ## Current Results
 
-| Metric | Streaming | Batch | Gain |
-| --- | ---: | ---: | ---: |
-| First audio mean | 1.22s | 10.91s | 9.70s faster |
-| Handoff mean | 2.30s | 11.91s | 9.61s faster |
+| Metric | Streaming | Batch | Gain | Relative |
+| --- | ---: | ---: | ---: | ---: |
+| First audio mean | 1.22s | 10.91s | 9.70s faster | 8.94x faster / 88.9% lower |
+| Handoff mean | 2.30s | 11.91s | 9.61s faster | 5.18x shorter / 80.7% lower |
 
 ### Per-topic means
 

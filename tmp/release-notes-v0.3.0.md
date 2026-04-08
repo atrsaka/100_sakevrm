@@ -17,7 +17,7 @@ This release aligns GeminiVRM with Gemini 3.1 realtime input, productizes podcas
 - Character chat and podcast mode now default to `gemini-3.1-flash-live-preview`, send text through the Gemini Live realtime input path, and surface the exact request error instead of silently falling back to older preview models.
 - `v0.3.0` also introduces the streaming podcast relay path itself: the app can prewarm the next speaker session, stream live audio into that prepared turn, and record per-turn first-audio and playback timing in the debug log.
 - GeminiVRM now ships a reproducible podcast relay benchmark workflow with a dedicated Playwright relay E2E, a repeatable benchmark runner, bilingual chart generation, and tracked JSON/CSV history under `docs/public/benchmarks`.
-- The checked-in benchmark snapshot shows the streaming relay path averaging `1.22s` to first audio and `2.30s` of handoff silence versus `10.91s` and `11.91s` for batch mode on the tracked three-topic, six-turn run set.
+- The checked-in benchmark snapshot shows the streaming relay path averaging `1.22s` to first audio and `2.30s` of handoff silence versus `10.91s` and `11.91s` for batch mode on the tracked three-topic, six-turn run set, which means first audio arrives about `8.94x` faster (`88.9%` lower latency) and handoff silence is about `5.18x` shorter (`80.7%` lower latency).
 - Message labels, settings radio groups, speech-recognition typing, and repo tooling were tightened together with the flat ESLint runner and dependency updates for `@google/genai` `1.48.0`, Tailwind `4.2.2`, TypeScript `6.0.2`, and `actions/configure-pages@v6`.
 
 ## Scope Notes

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Viewer } from "@/features/vrmViewer/viewer";
 import {
   DEFAULT_PODCAST_PARTICIPANTS,
@@ -15,6 +15,9 @@ export type PodcastStageProps = {
   onViewersReady?: (viewers: PodcastViewerRegistry) => void;
   className?: string;
 };
+
+const PODCAST_VIEWER_CAMERA_STORAGE_KEY_PREFIX =
+  "geminiVrmPodcastViewerCameraStateV1";
 
 const DEFAULT_PARTICIPANTS: [PodcastParticipant, PodcastParticipant] = [
   DEFAULT_PODCAST_PARTICIPANTS.yukito,
@@ -36,9 +39,15 @@ export function PodcastStage({
   className,
 }: PodcastStageProps) {
   const [leftParticipant, rightParticipant] = participants;
-  const [leftViewer] = useState(() => new Viewer());
-  const [rightViewer] = useState(() => new Viewer());
   const onViewersReadyRef = useRef(onViewersReady);
+  const leftViewer = useMemo(
+    () => createPodcastViewer(leftParticipant.id),
+    [leftParticipant.id],
+  );
+  const rightViewer = useMemo(
+    () => createPodcastViewer(rightParticipant.id),
+    [rightParticipant.id],
+  );
 
   useEffect(() => {
     onViewersReadyRef.current = onViewersReady;
@@ -104,6 +113,15 @@ export function PodcastStage({
       </div>
     </section>
   );
+}
+
+function createPodcastViewer(
+  speakerId: PodcastSpeakerId
+): Viewer {
+  return new Viewer({
+    persistViewState: true,
+    cameraViewStorageKey: `${PODCAST_VIEWER_CAMERA_STORAGE_KEY_PREFIX}:${speakerId}`,
+  });
 }
 
 function PodcastStageCard({

@@ -64,6 +64,16 @@ import {
   type PodcastTurn,
 } from "@/features/podcast/podcastConfig";
 import {
+  parseDocument,
+  type DocumentContent,
+} from "@/features/document/documentParser";
+import {
+  buildDocumentChatSystemPrompt,
+  buildDocumentPodcastOpeningPrompt,
+  buildDocumentPodcastRelaySystemPrompt,
+  getDocumentSummaryForPersona,
+} from "@/features/document/documentPromptBuilder";
+import {
   clearPodcastDebugEvents,
   logPodcastDebugEvent,
   resolvePodcastRelayMode,
@@ -127,6 +137,9 @@ export default function Home() {
   );
   const [interactionMode, setInteractionMode] =
     useState<InteractionMode>("chat");
+  const [isDocumentMode, setIsDocumentMode] = useState(false);
+  const [documentContent, setDocumentContent] =
+    useState<DocumentContent | null>(null);
   const [podcastTurnCount, setPodcastTurnCount] = useState(
     DEFAULT_PODCAST_TURN_COUNT,
   );
@@ -696,10 +709,15 @@ export default function Home() {
       try {
         await activeModel?.beginStreamingSpeak(screenplay);
 
+        const effectiveSystemPrompt =
+          isDocumentMode && documentContent
+            ? buildDocumentChatSystemPrompt(systemPrompt, documentContent)
+            : systemPrompt;
+
         const response = await getGeminiLiveChatResponse({
           apiKey: geminiApiKey,
           messages: messageLog,
-          systemPrompt,
+          systemPrompt: effectiveSystemPrompt,
           model: geminiModel,
           voiceName: geminiVoiceName,
           onAudioChunk: (chunk) => {
@@ -1091,14 +1109,27 @@ export default function Home() {
           }
         };
 
+        const relaySystemPrompt =
+          isDocumentMode && documentContent
+            ? buildDocumentPodcastRelaySystemPrompt(
+                targetSpeaker,
+                partnerSpeaker,
+                documentContent,
+                turnsForHistory
+                  .slice(-6)
+                  .map((t) => `${t.speakerName}: ${t.transcript}`)
+                  .join("\n") || "No prior podcast turns yet.",
+              )
+            : buildPodcastRelaySystemPrompt(
+                targetSpeaker,
+                partnerSpeaker,
+                turnsForHistory,
+              );
+
         const session = createGeminiLiveAudioRelaySession({
           apiKey: geminiApiKey,
           historyMessages: [],
-          systemPrompt: buildPodcastRelaySystemPrompt(
-            targetSpeaker,
-            partnerSpeaker,
-            turnsForHistory,
-          ),
+          systemPrompt: relaySystemPrompt,
           model: geminiModel,
           voiceName: targetSpeaker.voiceName,
           onAudioChunk: (chunk) => {
@@ -1384,15 +1415,29 @@ export default function Home() {
               relayAudioMimeType: latestPartnerTurn.audioMimeType,
             });
 
+            const fallbackRelayPrompt =
+              isDocumentMode && documentContent
+                ? buildDocumentPodcastRelaySystemPrompt(
+                    speaker,
+                    partner,
+                    documentContent,
+                    priorTurns
+                      .slice(-6)
+                      .map((t) => `${t.speakerName}: ${t.transcript}`)
+                      .join("\n") || "No prior podcast turns yet.",
+                    latestPartnerTurn.transcript,
+                  )
+                : buildPodcastRelaySystemPrompt(
+                    speaker,
+                    partner,
+                    priorTurns,
+                    latestPartnerTurn.transcript,
+                  );
+
             return getGeminiLiveAudioRelayResponse({
               apiKey: geminiApiKey,
               historyMessages: priorMessages,
-              systemPrompt: buildPodcastRelaySystemPrompt(
-                speaker,
-                partner,
-                priorTurns,
-                latestPartnerTurn.transcript,
-              ),
+              systemPrompt: fallbackRelayPrompt,
               relayAudioBytes: latestPartnerTurn.audioBytes,
               relayAudioMimeType: latestPartnerTurn.audioMimeType,
               model: geminiModel,
@@ -1462,12 +1507,20 @@ export default function Home() {
                     ...priorMessages,
                     {
                       role: "user",
-                      content: buildPodcastOpeningPrompt(
-                        trimmedTopic,
-                        speaker,
-                        partner,
-                        podcastTurnCount,
-                      ),
+                      content:
+                        isDocumentMode && documentContent
+                          ? buildDocumentPodcastOpeningPrompt(
+                              speaker,
+                              partner,
+                              documentContent,
+                              podcastTurnCount,
+                            )
+                          : buildPodcastOpeningPrompt(
+                              trimmedTopic,
+                              speaker,
+                              partner,
+                              podcastTurnCount,
+                            ),
                       name: "PODCAST",
                       source: "podcast",
                     },
@@ -1668,6 +1721,10 @@ export default function Home() {
           topic: trimmedTopic,
           yukitoDisplayName: podcastParticipants.yukito.displayName,
           kiyokaDisplayName: podcastParticipants.kiyoka.displayName,
+          documentSummary:
+            isDocumentMode && documentContent
+              ? getDocumentSummaryForPersona(documentContent)
+              : undefined,
         });
         setPodcastPreflightPersona(persona);
       } catch (error) {
@@ -2377,10 +2434,7 @@ export default function Home() {
           </div>
         </div>
       ) : null}
-      <Introduction
-        geminiApiKey={geminiApiKey}
-        onChangeGeminiApiKey={setGeminiApiKey}
-      />
+      <Introduction />
       {podcastPreflightOpen && (
         <PodcastPreflight
           topic={podcastPreflightTopic}
@@ -2461,6 +2515,18 @@ export default function Home() {
           setChatLog([]);
         }}
         handleClickResetSystemPrompt={() => setSystemPrompt(SYSTEM_PROMPT)}
+        isDocumentMode={isDocumentMode}
+        onChangeDocumentMode={setIsDocumentMode}
+        documentContent={documentContent}
+        onDocumentUpload={async (file: File) => {
+          try {
+            const doc = await parseDocument(file);
+            setDocumentContent(doc);
+          } catch (e) {
+            alert(e instanceof Error ? e.message : "ドキュメントの読み込みに失敗しました");
+          }
+        }}
+        onDocumentClear={() => setDocumentContent(null)}
         youtubeSection={
           <YoutubeLiveControlDeck
             googleClientId={youtubeClientId}

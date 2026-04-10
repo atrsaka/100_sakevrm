@@ -1,23 +1,8 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Link } from "./link";
 
-type Props = {
-  geminiApiKey: string;
-  onChangeGeminiApiKey: (apiKey: string) => void;
-};
-
-export const Introduction = ({
-  geminiApiKey,
-  onChangeGeminiApiKey,
-}: Props) => {
+export const Introduction = () => {
   const [opened, setOpened] = useState(true);
-
-  const handleApiKeyChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      onChangeGeminiApiKey(event.target.value);
-    },
-    [onChangeGeminiApiKey]
-  );
 
   return opened ? (
     <div className="absolute z-40 h-full w-full bg-black/30 px-24 py-40 font-M_PLUS_2">
@@ -33,7 +18,7 @@ export const Introduction = ({
             id="intro-title"
             className="my-8 typography-20 font-bold text-secondary"
           >
-            GeminiVRM へようこそ
+            おしゃべりVRM へようこそ
           </div>
           <div id="intro-description">
             このアプリは ChatVRM のブラウザビューアと入力フローをそのまま活かしつつ、応答経路を Gemini Live のネイティブ音声に置き換えた派生版です。VRM アバターと日本語で自然に会話したり、2 人のホストによるポッドキャストを自動生成できます。
@@ -59,33 +44,12 @@ export const Introduction = ({
               url="https://www.npmjs.com/package/@google/genai"
               label="@google/genai"
             />
-            経由で利用しています。
-          </div>
-        </div>
-
-        <div className="my-24">
-          <label
-            htmlFor="intro-gemini-api-key"
-            className="my-8 block typography-20 font-bold text-secondary"
-          >
-            Gemini API キー
-          </label>
-          <input
-            id="intro-gemini-api-key"
-            type="password"
-            placeholder="AIza..."
-            value={geminiApiKey}
-            onChange={handleApiKeyChange}
-            aria-describedby="intro-gemini-api-key-help"
-            className="my-4 h-40 w-full rounded-4 bg-surface3 px-16 py-8 text-ellipsis hover:bg-surface3-hover"
-          />
-          <div id="intro-gemini-api-key-help">
-            API キーは{" "}
+            経由で利用しています。また、音声合成には{" "}
             <Link
-              url="https://aistudio.google.com/apikey"
-              label="Google AI Studio"
+              url="https://elevenlabs.io/"
+              label="ElevenLabs"
             />
-            で発行できます。このアプリは ChatVRM と同様にブラウザから直接 Gemini API にリクエストを送るため、入力したキーはローカルに保存されるのみで、外部サーバーには送信されません。
+            にも対応しており、より自然な音声での会話が可能です。
           </div>
         </div>
 

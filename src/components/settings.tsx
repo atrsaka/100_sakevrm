@@ -16,6 +16,8 @@ import {
 } from "@/features/vrmViewer/builtInMotions";
 import { InteractionMode } from "@/features/podcast/podcastConfig";
 import type { VoiceProvider } from "@/features/tts/elevenLabsConfig";
+import type { DocumentContent } from "@/features/document/documentParser";
+import { SUPPORTED_EXTENSIONS } from "@/features/document/documentParser";
 import {
   listElevenLabsVoices,
   type ElevenLabsVoice,
@@ -64,6 +66,11 @@ type Props = {
   onClickOpenVrmFile: () => void;
   onClickResetChatLog: () => void;
   onClickResetSystemPrompt: () => void;
+  isDocumentMode: boolean;
+  onChangeDocumentMode: (enabled: boolean) => void;
+  documentContent: DocumentContent | null;
+  onDocumentUpload: (file: File) => void;
+  onDocumentClear: () => void;
   youtubeSection?: React.ReactNode;
 };
 
@@ -110,6 +117,11 @@ export const Settings = ({
   onClickOpenVrmFile,
   onClickResetChatLog,
   onClickResetSystemPrompt,
+  isDocumentMode,
+  onChangeDocumentMode,
+  documentContent,
+  onDocumentUpload,
+  onDocumentClear,
   youtubeSection,
 }: Props) => {
   const [activePage, setActivePage] = useState<"main" | "podcast" | "youtube">(
@@ -309,7 +321,7 @@ export const Settings = ({
               <div className="mt-24 rounded-16 border border-black/10 bg-white/70 px-16 py-16">
                 <div className="typography-20 font-bold">ホスト別の音声</div>
                 <div className="mt-8 text-sm text-text2">
-                  Gemini Live の prebuilt voice 名を入力してください。利用可能: <code>Charon</code> / <code>Aoede</code> / <code>Puck</code> / <code>Kore</code> / <code>Leda</code> / <code>Fenrir</code>。空欄にすると既定の <code>{DEFAULT_GEMINI_VOICE_NAME}</code> が使われます。
+                  Gemini Live の prebuilt voice から選択してください。空欄にすると既定の <code>{DEFAULT_GEMINI_VOICE_NAME}</code> が使われます。
                 </div>
                 <div className="mt-16">
                   <label
@@ -318,16 +330,19 @@ export const Settings = ({
                   >
                     Yukito の音声
                   </label>
-                  <input
+                  <select
                     id="settings-podcast-yukito-voice"
                     className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
-                    type="text"
-                    placeholder="例: Puck"
-                    value={podcastYukitoVoiceName}
+                    value={podcastYukitoVoiceName || ""}
                     onChange={(event) =>
                       onChangePodcastYukitoVoiceName(event.target.value)
                     }
-                  />
+                  >
+                    <option value="">既定 ({DEFAULT_GEMINI_VOICE_NAME})</option>
+                    {GEMINI_VOICE_PRESETS.map((v) => (
+                      <option key={v} value={v}>{v}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="mt-16">
                   <label
@@ -336,19 +351,22 @@ export const Settings = ({
                   >
                     Kiyoka の音声
                   </label>
-                  <input
+                  <select
                     id="settings-podcast-kiyoka-voice"
                     className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
-                    type="text"
-                    placeholder="例: Charon"
-                    value={podcastKiyokaVoiceName}
+                    value={podcastKiyokaVoiceName || ""}
                     onChange={(event) =>
                       onChangePodcastKiyokaVoiceName(event.target.value)
                     }
-                  />
+                  >
+                    <option value="">既定 ({DEFAULT_GEMINI_VOICE_NAME})</option>
+                    {GEMINI_VOICE_PRESETS.map((v) => (
+                      <option key={v} value={v}>{v}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="mt-8 text-sm text-text2">
-                  ここの設定はポッドキャストモード専用です。通常のキャラクターチャット用の音声には影響しません。現在の音声プロバイダは <strong>{voiceProvider === "gemini" ? "Gemini Live" : "ElevenLabs"}</strong> で、上の項目は Gemini Live の prebuilt voice に対応します。
+                  ここの設定はポッドキャストモード専用です。通常のキャラクターチャット用の音声には影響しません。
                 </div>
               </div>
               {voiceProvider === "elevenlabs" && (
@@ -459,7 +477,7 @@ export const Settings = ({
                 YouTube Live 連携
               </div>
               <div className="mb-16 text-sm text-text2">
-                YouTube Live の配信コメントを GeminiVRM に取り込み、アバターに自動応答させるオプション機能です。利用には Google OAuth Web クライアント ID のログインが必要です。
+                YouTube Live の配信コメントをおしゃべりVRM に取り込み、アバターに自動応答させるオプション機能です。利用には Google OAuth Web クライアント ID のログインが必要です。
               </div>
               {youtubeSection}
             </>
@@ -516,6 +534,87 @@ export const Settings = ({
                 <div className="mt-8 text-sm">
                   ポッドキャストモードは、直前の話者の音声を次の Gemini Live ターンに渡して会話を繋げます。リレーが失敗した場合は別経路に切り替えず、その時点で Gemini Live のエラーメッセージを表示して停止します。
                 </div>
+              </div>
+
+              <div className="my-24">
+                <div className="my-16 typography-20 font-bold">
+                  ドキュメントモード
+                </div>
+                <label className="flex items-center gap-8 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isDocumentMode}
+                    onChange={(e) => onChangeDocumentMode(e.target.checked)}
+                    className="w-18 h-18 accent-primary"
+                  />
+                  <span className="text-sm font-bold">
+                    ドキュメントに基づいた対話を行う
+                  </span>
+                </label>
+                <p className="mt-4 text-sm text-text2">
+                  有効にすると、アップロードしたドキュメントの内容のみに基づいて対話します。ドキュメントに記載のない内容には回答しません。チャット・ポッドキャスト両方で使えます。
+                </p>
+
+                {isDocumentMode && (
+                  <div className="mt-12 rounded-16 border border-black/10 bg-white/70 p-16">
+                    {!documentContent ? (
+                      <div>
+                        <label className="block cursor-pointer rounded-12 border-2 border-dashed border-primary/30 bg-primary/5 p-20 text-center transition hover:border-primary/60 hover:bg-primary/10">
+                          <input
+                            type="file"
+                            accept={SUPPORTED_EXTENSIONS.join(",")}
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) onDocumentUpload(file);
+                              e.target.value = "";
+                            }}
+                          />
+                          <div className="typography-16 font-bold text-primary">
+                            ファイルを選択
+                          </div>
+                          <div className="mt-4 text-xs text-text2">
+                            PDF / テキスト / Markdown ({SUPPORTED_EXTENSIONS.join(", ")})
+                          </div>
+                        </label>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="typography-16 font-bold text-text1">
+                              {documentContent.fileName}
+                            </div>
+                            <div className="mt-2 text-xs text-text2">
+                              {documentContent.charCount.toLocaleString()} 文字
+                              {documentContent.truncated && (
+                                <span className="ml-8 text-red-500 font-bold">
+                                  (30,000文字に切り詰め済み)
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={onDocumentClear}
+                            className="rounded-8 border border-red-300 px-12 py-4 text-xs text-red-500 hover:bg-red-50 transition"
+                          >
+                            クリア
+                          </button>
+                        </div>
+                        <details className="mt-8">
+                          <summary className="cursor-pointer text-xs text-text2 hover:text-primary">
+                            プレビュー (先頭500文字)
+                          </summary>
+                          <pre className="mt-4 max-h-[200px] overflow-auto rounded-8 bg-black/5 p-8 text-xs text-text2 whitespace-pre-wrap">
+                            {documentContent.textContent.slice(0, 500)}
+                            {documentContent.textContent.length > 500 ? "..." : ""}
+                          </pre>
+                        </details>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="my-40">
@@ -580,25 +679,7 @@ export const Settings = ({
                     <div className="mt-8 text-sm text-text2">
                       <code>.env.local</code> に <code>NEXT_PUBLIC_ELEVENLABS_AGENT_ID</code> を設定すれば自動で埋まります。Public agent の場合は API キー不要で接続できます。
                     </div>
-                    <label
-                      htmlFor="settings-elevenlabs-api-key"
-                      className="my-8 mt-16 block font-bold"
-                    >
-                      API キー(voice 一覧取得・Private agent 用)
-                    </label>
-                    <input
-                      id="settings-elevenlabs-api-key"
-                      type="password"
-                      className="w-full rounded-8 bg-surface1 px-16 py-8 hover:bg-surface1-hover"
-                      placeholder="sk_..."
-                      value={elevenLabsApiKey}
-                      onChange={(event) =>
-                        onChangeElevenLabsApiKey(event.target.value)
-                      }
-                    />
-                    <div className="mt-8 text-sm text-text2">
-                      My Voices 一覧の取得に使います。Private agent を利用する場合は signed URL 生成にも使われます。Public agent のみでドロップダウンから voice を手入力する場合は省略可能です。
-                    </div>
+                    {/* ElevenLabs API キー入力は非表示 */}
                     {elevenVoicesError && (
                       <div className="mt-8 rounded-8 bg-red-50 px-12 py-8 text-sm text-red-700">
                         voices 取得エラー: {elevenVoicesError}
@@ -654,31 +735,7 @@ export const Settings = ({
                 </button>
               </div>
 
-              <div className="my-24">
-                <label
-                  htmlFor="settings-gemini-api-key"
-                  className="my-16 block typography-20 font-bold"
-                >
-                  Gemini API キー
-                </label>
-                <input
-                  id="settings-gemini-api-key"
-                  className="w-col-span-2 rounded-8 bg-surface1 px-16 py-8 text-ellipsis hover:bg-surface1-hover"
-                  type="password"
-                  placeholder="AIza..."
-                  value={geminiApiKey}
-                  onChange={onChangeGeminiApiKey}
-                  aria-describedby="settings-gemini-api-key-help"
-                />
-                <div id="settings-gemini-api-key-help" className="mt-8 text-sm text-text2">
-                  Gemini Live API にアクセスするための API キーです。{" "}
-                  <Link
-                    url="https://aistudio.google.com/apikey"
-                    label="Google AI Studio"
-                  />
-                  で発行してください。キーはブラウザのローカルストレージに保存され、サーバーには送信されません。
-                </div>
-              </div>
+              {/* Gemini API キー入力は非表示 */}
 
               <div className="my-24">
                 <label

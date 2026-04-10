@@ -45,7 +45,7 @@ export function PodcastStage({
     [leftParticipant.id],
   );
   const rightViewer = useMemo(
-    () => createPodcastViewer(rightParticipant.id),
+    () => createPodcastViewer(rightParticipant.id, 3.5),
     [rightParticipant.id],
   );
 
@@ -116,11 +116,13 @@ export function PodcastStage({
 }
 
 function createPodcastViewer(
-  speakerId: PodcastSpeakerId
+  speakerId: PodcastSpeakerId,
+  motionOffsetSeconds = 0,
 ): Viewer {
   return new Viewer({
     persistViewState: true,
     cameraViewStorageKey: `${PODCAST_VIEWER_CAMERA_STORAGE_KEY_PREFIX}:${speakerId}`,
+    motionOffsetSeconds,
   });
 }
 

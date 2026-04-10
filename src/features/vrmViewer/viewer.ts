@@ -34,6 +34,7 @@ type PersistedCameraState = {
 type ViewerOptions = {
   persistViewState?: boolean;
   cameraViewStorageKey?: string;
+  motionOffsetSeconds?: number;
 };
 
 /**
@@ -64,10 +65,12 @@ export class Viewer {
   private _lastRandomMotionPaths: Map<string, string>;
   private _cachedMixamoClips: Map<string, THREE.AnimationClip>;
   private _lastSpeakingDetectedAtMs: number;
+  private _motionOffsetSeconds: number;
 
   constructor({
     persistViewState = false,
     cameraViewStorageKey = CAMERA_VIEW_STORAGE_KEY,
+    motionOffsetSeconds = 0,
   }: ViewerOptions = {}) {
     this.isReady = false;
     this._idleMotion = BUILT_IN_MOTIONS[DEFAULT_BUILT_IN_MOTION_ID];
@@ -81,6 +84,7 @@ export class Viewer {
     this._persistViewState = persistViewState;
     this._cameraViewStorageKey = persistViewState ? cameraViewStorageKey : undefined;
     this._didRestoreCameraView = false;
+    this._motionOffsetSeconds = motionOffsetSeconds;
 
     const scene = new THREE.Scene();
     this._scene = scene;
@@ -120,6 +124,12 @@ export class Viewer {
         this._isTalkingMotionActive = false;
         this._lastSpeakingDetectedAtMs = 0;
         this._activeMotion = this._idleMotion;
+
+        if (this._motionOffsetSeconds > 0) {
+          await new Promise((r) => setTimeout(r, this._motionOffsetSeconds * 1000));
+          if (this.model !== nextModel) return;
+        }
+
         await this.loadCurrentMotion(nextModel, this._activeMotion);
         void this.prefetchMotionPaths(TALKING_MOTION, nextModel, this._motionLoadToken);
 

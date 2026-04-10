@@ -2,7 +2,7 @@ import { buildUrl } from "@/utils/buildUrl";
 import Head from "next/head";
 
 export const Meta = () => {
-  const title = "GeminiVRM";
+  const title = "おしゃべりVRM";
   const description =
     "Browser-first VRM chat powered by Gemini Live native audio and streamed playback.";
   const imageUrl = buildUrl("/ogp.jpg");

@@ -32,6 +32,8 @@ export type GeneratePodcastPersonaParams = {
   yukitoDisplayName?: string;
   kiyokaDisplayName?: string;
   model?: string;
+  /** ドキュメントモード時にドキュメント概要テキストを渡す */
+  documentSummary?: string;
 };
 
 const SCHEMA = {
@@ -98,23 +100,31 @@ export async function generatePodcastPersona({
   yukitoDisplayName = "Yukito",
   kiyokaDisplayName = "Kiyoka",
   model = DEFAULT_PERSONA_MODEL,
+  documentSummary,
 }: GeneratePodcastPersonaParams): Promise<PodcastPersonaPlan> {
   if (!apiKey) {
     throw new Error("Gemini API key is required for persona generation.");
   }
-  if (!topic.trim()) {
+  if (!topic.trim() && !documentSummary) {
     throw new Error("テーマを入力してください。");
   }
 
   const ai = new GoogleGenAI({ apiKey });
 
+  const topicLine = documentSummary
+    ? `次のドキュメントの内容に基づいてポッドキャスト番組の設計をしてください。\n\n${documentSummary}`
+    : `次のテーマでポッドキャスト番組の設計をしてください。テーマ: "${topic.trim()}"`;
+
   const prompt = [
-    `次のテーマでポッドキャスト番組の設計をしてください。テーマ: "${topic.trim()}"`,
+    topicLine,
     `このポッドキャストはホスト ${yukitoDisplayName} と ${kiyokaDisplayName} の 2 人による日本語の雑談番組です。`,
     "VRM アバターが画面上で交互に短い掛け合いをします。各ターンは 1〜2 文の短い発話なので、それに合った軽快なノリのキャラ設定を考えてください。",
     `${yukitoDisplayName} と ${kiyokaDisplayName} は対比のあるキャラにしてください(例: 元気 vs 落ち着き、楽観 vs 慎重 など)。`,
+    documentSummary
+      ? "ドキュメントの内容に適したキャラ設定にしてください。ドキュメントに書かれていない内容には触れないでください。"
+      : "",
     "出力は指定された JSON スキーマに厳密に従ってください。",
-  ].join("\n\n");
+  ].filter(Boolean).join("\n\n");
 
   const result = await ai.models.generateContent({
     model,

@@ -8,6 +8,7 @@ import { AssistantText } from "./assistantText";
 import { BuiltInMotionId } from "@/features/vrmViewer/builtInMotions";
 import { InteractionMode } from "@/features/podcast/podcastConfig";
 import type { VoiceProvider } from "@/features/tts/elevenLabsConfig";
+import type { DocumentContent } from "@/features/document/documentParser";
 
 type Props = {
   geminiApiKey: string;
@@ -53,6 +54,11 @@ type Props = {
   onChangeChatLog: (index: number, text: string) => void;
   handleClickResetChatLog: () => void;
   handleClickResetSystemPrompt: () => void;
+  isDocumentMode: boolean;
+  onChangeDocumentMode: (enabled: boolean) => void;
+  documentContent: DocumentContent | null;
+  onDocumentUpload: (file: File) => void;
+  onDocumentClear: () => void;
   youtubeSection?: React.ReactNode;
 };
 
@@ -100,6 +106,11 @@ export const Menu = ({
   onChangeChatLog,
   handleClickResetChatLog,
   handleClickResetSystemPrompt,
+  isDocumentMode,
+  onChangeDocumentMode,
+  documentContent,
+  onDocumentUpload,
+  onDocumentClear,
   youtubeSection,
 }: Props) => {
   const [showSettings, setShowSettings] = useState(false);
@@ -233,6 +244,11 @@ export const Menu = ({
           onClickOpenVrmFile={handleClickOpenVrmFile}
           onClickResetChatLog={handleClickResetChatLog}
           onClickResetSystemPrompt={handleClickResetSystemPrompt}
+          isDocumentMode={isDocumentMode}
+          onChangeDocumentMode={onChangeDocumentMode}
+          documentContent={documentContent}
+          onDocumentUpload={onDocumentUpload}
+          onDocumentClear={onDocumentClear}
           youtubeSection={youtubeSection}
         />
       )}

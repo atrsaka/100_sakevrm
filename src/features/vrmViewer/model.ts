@@ -52,7 +52,16 @@ export class Model {
         })
     );
 
-    const gltf = await loader.loadAsync(url);
+    // Fetch the full ArrayBuffer first to avoid XHR truncation on large files.
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Failed to fetch VRM: ${res.status}`);
+    const buffer = await res.arrayBuffer();
+
+    const gltf = await new Promise<import("three/examples/jsm/loaders/GLTFLoader").GLTF>(
+      (resolve, reject) => {
+        loader.parse(buffer, "", resolve, reject);
+      }
+    );
 
     const vrm = (this.vrm = gltf.userData.vrm);
     vrm.scene.name = "VRMRoot";

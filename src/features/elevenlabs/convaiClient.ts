@@ -64,8 +64,10 @@ const WSS_BASE = "wss://api.elevenlabs.io/v1/convai/conversation";
 const SIGNED_URL_BASE =
   "https://api.elevenlabs.io/v1/convai/conversation/get-signed-url";
 
-// ターン終了検出: agent_response 受信 + audio chunk が N ms 途切れたら done
-const TURN_AUDIO_IDLE_MS = 600;
+// ターン終了検出: audio chunk が N ms 途切れたら done
+const TURN_AUDIO_IDLE_MS = 1200;
+// 初回 audio chunk が届くまでの最大待機時間
+const FIRST_AUDIO_TIMEOUT_MS = 8000;
 
 async function resolveSocketUrl(
   agentId: string,
@@ -132,22 +134,27 @@ export async function openConvaiSession(
     receivedAudio: boolean;
     gotAgentResponse: boolean;
     audioIdleTimer: ReturnType<typeof setTimeout> | null;
+    firstAudioTimer: ReturnType<typeof setTimeout> | null;
     resolve: (result: ConvaiTurnResult) => void;
     reject: (error: Error) => void;
   };
   let activeTurn: TurnState | null = null;
 
-  const clearAudioIdleTimer = (turn: TurnState) => {
+  const clearTimers = (turn: TurnState) => {
     if (turn.audioIdleTimer) {
       clearTimeout(turn.audioIdleTimer);
       turn.audioIdleTimer = null;
+    }
+    if (turn.firstAudioTimer) {
+      clearTimeout(turn.firstAudioTimer);
+      turn.firstAudioTimer = null;
     }
   };
 
   const finishTurn = (turn: TurnState) => {
     if (activeTurn !== turn) return;
     activeTurn = null;
-    clearAudioIdleTimer(turn);
+    clearTimers(turn);
     if (!turn.receivedAudio) {
       turn.reject(new Error("ElevenLabs agent returned no audio."));
       return;
@@ -155,8 +162,23 @@ export async function openConvaiSession(
     turn.resolve({ transcript: turn.transcript.trim() });
   };
 
+  /** 初回 audio chunk 到着前に呼ぶ長めのタイムアウトを設定 */
+  const startFirstAudioTimer = (turn: TurnState) => {
+    if (turn.firstAudioTimer) return;
+    turn.firstAudioTimer = setTimeout(() => {
+      turn.firstAudioTimer = null;
+      if (!turn.receivedAudio) {
+        finishTurn(turn);
+      }
+    }, FIRST_AUDIO_TIMEOUT_MS);
+  };
+
+  /** audio chunk 受信ごとにリセットするアイドルタイマー */
   const startAudioIdleTimer = (turn: TurnState) => {
-    clearAudioIdleTimer(turn);
+    if (turn.audioIdleTimer) {
+      clearTimeout(turn.audioIdleTimer);
+      turn.audioIdleTimer = null;
+    }
     turn.audioIdleTimer = setTimeout(() => {
       if (turn.gotAgentResponse) {
         finishTurn(turn);
@@ -180,7 +202,7 @@ export async function openConvaiSession(
     if (activeTurn) {
       const turn = activeTurn;
       activeTurn = null;
-      clearAudioIdleTimer(turn);
+      clearTimers(turn);
       turn.reject(err);
     }
     try {
@@ -231,6 +253,10 @@ export async function openConvaiSession(
           const pcm = decodeBase64(base64);
           if (pcm.byteLength === 0) break;
           if (activeTurn) {
+            if (!activeTurn.receivedAudio && activeTurn.firstAudioTimer) {
+              clearTimeout(activeTurn.firstAudioTimer);
+              activeTurn.firstAudioTimer = null;
+            }
             activeTurn.receivedAudio = true;
             activeTurn.audioSink(pcm, ELEVENLABS_PCM_MIME_TYPE);
             startAudioIdleTimer(activeTurn);
@@ -335,10 +361,12 @@ export async function openConvaiSession(
           receivedAudio: false,
           gotAgentResponse: false,
           audioIdleTimer: null,
+          firstAudioTimer: null,
           resolve,
           reject,
         };
         activeTurn = turn;
+        startFirstAudioTimer(turn);
         try {
           ws.send(
             JSON.stringify({
@@ -348,6 +376,7 @@ export async function openConvaiSession(
           );
         } catch (error) {
           activeTurn = null;
+          clearTimers(turn);
           reject(
             error instanceof Error
               ? error
@@ -363,7 +392,7 @@ export async function openConvaiSession(
       if (activeTurn) {
         const turn = activeTurn;
         activeTurn = null;
-        clearAudioIdleTimer(turn);
+        clearTimers(turn);
         turn.reject(
           new Error(
             reason instanceof Error

@@ -19,6 +19,7 @@ truth.
 
 | Version | Status | Scope |
 | --- | --- | --- |
+| [v0.3.1](./releases/v0.3.1.md) | Published patch release | Document mode, VRM asset update, ConvAI timing fix |
 | [v0.3.0](./releases/v0.3.0.md) | Published feature release | Exact compare range `v0.2.0..v0.3.0` |
 | [v0.2.0](./releases/v0.2.0.md) | Published feature release | Exact compare range `v0.1.0..v0.2.0` |
 | [v0.1.0](./releases/v0.1.0.md) | Published initial release | Exact compare range `991bff6..v0.1.0` |

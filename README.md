@@ -31,8 +31,10 @@ The current build focuses on:
 
 - Stream Gemini Live transcript and audio in the browser for character chat
 - Switch between `Character chat` and `Podcast mode` from `Settings`
+- **Document mode**: upload PDF / text / Markdown files and ground conversations on their content — works in both character chat and podcast mode
 - Start with bundled `Kiyoka.vrm` and `Yukito.vrm`, or load your own local `.vrm`
 - Tune the live model, single-chat voice, system prompt, podcast turn cap, and per-host podcast voices from the UI
+- Choose **Gemini Live** or **ElevenLabs ConvAI** as the voice provider from Settings
 - Reuse the VRM lip-sync pipeline with bundled Mixamo idle and talking motion rotation
 - Configure an optional YouTube Live relay from `Settings` -> `Streaming` and receive inbound live chat comments inside GeminiVRM
 - Drive the app from `window.geminiVrmControl` or `postMessage` for local automation and orchestration
@@ -45,6 +47,7 @@ The current build focuses on:
 - React 18
 - `@google/genai`
 - `@pixiv/three-vrm`
+- ElevenLabs Conversational AI (WebSocket)
 - TypeScript
 - Tailwind CSS
 - Playwright
@@ -103,6 +106,9 @@ src/components/               UI components
 src/features/chat/            Gemini Live transport and config
 src/features/externalControl/ Browser automation and postMessage control hooks
 src/features/lipSync/         Audio playback and analysis
+src/features/document/        Document parsing and grounding prompt builder
+src/features/elevenlabs/      ElevenLabs ConvAI WebSocket client
+src/features/tts/             ElevenLabs config and TTS streaming
 src/features/podcast/         Dual-host podcast orchestration
 src/features/vrmViewer/       Viewer and model runtime
 src/lib/fbxAnimation/         Mixamo retargeting helpers for bundled motions
@@ -119,7 +125,8 @@ docs/                         Architecture, deployment, release, and QA notes
 - [YouTube Relay Guide](./docs/youtube-relay.md)
 - [Release Notes](./docs/releases.md)
 - [Release Articles](./docs/articles.md)
-- [Latest v0.3.0 Release Notes](./docs/releases/v0.3.0.md)
+- [Latest v0.3.1 Release Notes](./docs/releases/v0.3.1.md)
+- [v0.3.0 Release Notes](./docs/releases/v0.3.0.md)
 - [Latest v0.3.0 Runtime And Benchmark Guide](./docs/articles/v0.3.0-runtime-and-benchmark-guide.md)
 - [Architecture notes](./docs/architecture.md)
 - [Deployment guide](./docs/deployment.md)

@@ -1,12 +1,13 @@
 <div align="center">
-  <img src="./public/ogp.jpg" alt="GeminiVRM hero" width="960" />
-  <h1>GeminiVRM</h1>
-  <p>Browser-first VRM chat and podcast staging powered by Gemini Live native audio.</p>
+  <img src="./public/ogp.jpg" alt="100_sakevrm hero" width="960" />
+  <h1>100_sakevrm</h1>
+  <p>Gemini Live + ElevenLabs ConvAI で動く、ブラウザ中心の VRM チャット / AI ポッドキャスト体験</p>
   <p>
     <a href="https://github.com/Sunwood-ai-labs/GeminiVRM/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Sunwood-ai-labs/GeminiVRM/ci.yml?branch=main&label=ci" /></a>
     <a href="./LICENSE"><img alt="License" src="https://img.shields.io/github/license/Sunwood-ai-labs/GeminiVRM" /></a>
     <img alt="Next.js" src="https://img.shields.io/badge/Next.js-15-black" />
     <img alt="Gemini Live" src="https://img.shields.io/badge/Gemini-Live-2F7CF6" />
+    <img alt="ElevenLabs" src="https://img.shields.io/badge/ElevenLabs-ConvAI-6C47FF" />
     <img alt="VRM" src="https://img.shields.io/badge/VRM-Avatar-00B894" />
   </p>
   <p>

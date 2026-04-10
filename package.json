@@ -35,7 +35,7 @@
     "typescript": "6.0.2"
   },
   "devDependencies": {
-    "@charcoal-ui/tailwind-config": "^5.8.1",
+    "@charcoal-ui/tailwind-config": "^5.9.0",
     "@gltf-transform/core": "^4.3.0",
     "@pixiv/three-vrm": "^3.5.1",
     "@tailwindcss/postcss": "^4.2.2",

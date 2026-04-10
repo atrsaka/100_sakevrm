@@ -1,15 +1,13 @@
-const MIXAMO_IDLE_MOTION_PATHS = [
-  "/motions/idle/Idle1.fbx",
-  "/motions/idle/Idle2.fbx",
-  "/motions/idle/Standing Idle.fbx",
+// NOTE: Mixamo .fbx files are not bundled with this repository.
+// All built-in motions below use the bundled VRMA assets only.
+const BUNDLED_IDLE_MOTION_PATHS = [
+  "/motions/accad_female1_stand.vrma",
+  "/motions/accad_female1_sway.vrma",
+  "/motions/accad_female1_wait.vrma",
 ] as const;
 
-const MIXAMO_TALKING_MOTION_PATHS = [
-  "/motions/Talking/Talking1.fbx",
-  "/motions/Talking/Talking2.fbx",
-  "/motions/Talking/Talking3.fbx",
-  "/motions/Talking/Talking4.fbx",
-  "/motions/Talking/Talking5.fbx",
+const BUNDLED_TALKING_MOTION_PATHS = [
+  "/motions/accad_female1_sway.vrma",
 ] as const;
 
 type MotionFormat = "vrma" | "fbx";
@@ -31,9 +29,9 @@ export type MotionDefinition = {
 export const BUILT_IN_MOTIONS = {
   default: {
     id: "default",
-    label: "Default",
-    durationLabel: "11s",
-    description: "Original bundled idle loop.",
+    label: "デフォルト",
+    durationLabel: "11秒",
+    description: "ChatVRM 同梱の標準アイドルループ。",
     format: "vrma" as MotionFormat,
     paths: ["/idle_loop.vrma"],
     playback: "loop" as MotionPlayback,
@@ -42,20 +40,20 @@ export const BUILT_IN_MOTIONS = {
   },
   mixamoRandom: {
     id: "mixamoRandom",
-    label: "Random Idle",
-    durationLabel: "Auto",
-    description: "Cycles through three bundled Mixamo idle motions.",
-    format: "fbx" as MotionFormat,
-    paths: MIXAMO_IDLE_MOTION_PATHS,
+    label: "ランダム",
+    durationLabel: "自動",
+    description: "同梱の VRMA モーションをランダムに切り替えます。",
+    format: "vrma" as MotionFormat,
+    paths: BUNDLED_IDLE_MOTION_PATHS,
     playback: "random" as MotionPlayback,
-    smoothingWindowSize: 0,
-    facingCorrection: "stabilize" as MotionFacingCorrection,
+    smoothingWindowSize: 2,
+    facingCorrection: "none" as MotionFacingCorrection,
   },
   stand: {
     id: "stand",
-    label: "Stand",
-    durationLabel: "3s",
-    description: "Shortest neutral pose.",
+    label: "直立",
+    durationLabel: "3秒",
+    description: "動きの少ない最短のニュートラル立ちポーズ。",
     format: "vrma" as MotionFormat,
     paths: ["/motions/accad_female1_stand.vrma"],
     playback: "loop" as MotionPlayback,
@@ -64,9 +62,9 @@ export const BUILT_IN_MOTIONS = {
   },
   sway: {
     id: "sway",
-    label: "Sway",
-    durationLabel: "12s",
-    description: "Soft breathing and body sway.",
+    label: "呼吸・揺れ",
+    durationLabel: "12秒",
+    description: "呼吸に合わせた柔らかな体の揺れ。",
     format: "vrma" as MotionFormat,
     paths: ["/motions/accad_female1_sway.vrma"],
     playback: "loop" as MotionPlayback,
@@ -75,9 +73,9 @@ export const BUILT_IN_MOTIONS = {
   },
   wait: {
     id: "wait",
-    label: "Wait",
-    durationLabel: "39s",
-    description: "Longer idle performance.",
+    label: "待機(長め)",
+    durationLabel: "39秒",
+    description: "より長い演技付きのアイドルモーション。",
     format: "vrma" as MotionFormat,
     paths: ["/motions/accad_female1_wait.vrma"],
     playback: "loop" as MotionPlayback,
@@ -90,19 +88,19 @@ export const TALKING_MOTION = {
   id: "talkingRandom",
   label: "Random Talking",
   durationLabel: "Auto",
-  description: "Cycles through bundled Mixamo talking motions while audio plays.",
-  format: "fbx" as MotionFormat,
-  paths: MIXAMO_TALKING_MOTION_PATHS,
-  playback: "random" as MotionPlayback,
-  smoothingWindowSize: 0,
-  facingCorrection: "stabilize" as MotionFacingCorrection,
+  description: "Plays a bundled VRMA motion while audio plays.",
+  format: "vrma" as MotionFormat,
+  paths: BUNDLED_TALKING_MOTION_PATHS,
+  playback: "loop" as MotionPlayback,
+  smoothingWindowSize: 2,
+  facingCorrection: "none" as MotionFacingCorrection,
 } as const satisfies MotionDefinition;
 
 export type BuiltInMotionId = keyof typeof BUILT_IN_MOTIONS;
 export type BuiltInMotionDefinition =
   (typeof BUILT_IN_MOTIONS)[BuiltInMotionId];
 
-export const DEFAULT_BUILT_IN_MOTION_ID: BuiltInMotionId = "mixamoRandom";
+export const DEFAULT_BUILT_IN_MOTION_ID: BuiltInMotionId = "sway";
 
 export const BUILT_IN_MOTION_LIST = Object.values(BUILT_IN_MOTIONS);
 

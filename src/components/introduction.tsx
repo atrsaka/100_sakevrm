@@ -33,34 +33,33 @@ export const Introduction = ({
             id="intro-title"
             className="my-8 typography-20 font-bold text-secondary"
           >
-            Gemini Live VRM chat
+            GeminiVRM へようこそ
           </div>
           <div id="intro-description">
-            This build keeps the original ChatVRM browser viewer and input flow,
-            but swaps the response path to Gemini Live native audio.
+            このアプリは ChatVRM のブラウザビューアと入力フローをそのまま活かしつつ、応答経路を Gemini Live のネイティブ音声に置き換えた派生版です。VRM アバターと日本語で自然に会話したり、2 人のホストによるポッドキャストを自動生成できます。
           </div>
         </div>
 
         <div className="my-24">
           <div className="my-8 typography-20 font-bold text-secondary">
-            References
+            使用している技術
           </div>
           <div>
-            VRM rendering uses{" "}
+            VRM の描画には{" "}
             <Link url="https://github.com/pixiv/three-vrm" label="@pixiv/three-vrm" />
-            . The base application comes from{" "}
-            <Link url="https://github.com/pixiv/ChatVRM" label="pixiv/ChatVRM" />.
-            Gemini Live uses the official{" "}
+            を使用しています。ベースアプリは{" "}
+            <Link url="https://github.com/pixiv/ChatVRM" label="pixiv/ChatVRM" />
+            から派生し、音声応答は公式の{" "}
             <Link
               url="https://ai.google.dev/gemini-api/docs/live-api"
               label="Gemini Live API"
-            />{" "}
-            via{" "}
+            />
+            を{" "}
             <Link
               url="https://www.npmjs.com/package/@google/genai"
               label="@google/genai"
             />
-            .
+            経由で利用しています。
           </div>
         </div>
 
@@ -69,7 +68,7 @@ export const Introduction = ({
             htmlFor="intro-gemini-api-key"
             className="my-8 block typography-20 font-bold text-secondary"
           >
-            Gemini API key
+            Gemini API キー
           </label>
           <input
             id="intro-gemini-api-key"
@@ -81,20 +80,18 @@ export const Introduction = ({
             className="my-4 h-40 w-full rounded-4 bg-surface3 px-16 py-8 text-ellipsis hover:bg-surface3-hover"
           />
           <div id="intro-gemini-api-key-help">
-            Create a key in{" "}
+            API キーは{" "}
             <Link
               url="https://aistudio.google.com/apikey"
               label="Google AI Studio"
             />
-            . This local version sends the key from the browser, similar to the
-            original ChatVRM setup style.
+            で発行できます。このアプリは ChatVRM と同様にブラウザから直接 Gemini API にリクエストを送るため、入力したキーはローカルに保存されるのみで、外部サーバーには送信されません。
           </div>
         </div>
 
         <div className="my-24">
           <div className="rounded-8 bg-surface3 px-16 py-12 text-sm text-secondary">
-            Advanced settings such as the live model and voice name are
-            available from the Settings panel after launch.
+            Live モデル名や音声タイプなどの詳細設定は、起動後に左上の「設定」パネルからいつでも変更できます。
           </div>
         </div>
 
@@ -103,7 +100,7 @@ export const Introduction = ({
             onClick={() => setOpened(false)}
             className="rounded-oval bg-secondary px-24 py-8 font-bold text-white hover:bg-secondary-hover active:bg-secondary-press"
           >
-            Start
+            はじめる
           </button>
         </div>
       </div>

@@ -132,7 +132,9 @@ function PodcastStageCard({
   viewer,
 }: PodcastStageCardProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const modelUrl = buildUrl(participant.vrmPath);
+  const modelUrl = /^(blob:|https?:)/.test(participant.vrmPath)
+    ? participant.vrmPath
+    : buildUrl(participant.vrmPath);
 
   useEffect(() => {
     const canvas = canvasRef.current;

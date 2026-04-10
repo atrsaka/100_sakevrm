@@ -7,6 +7,7 @@ import { ViewerContext } from "@/features/vrmViewer/viewerContext";
 import { AssistantText } from "./assistantText";
 import { BuiltInMotionId } from "@/features/vrmViewer/builtInMotions";
 import { InteractionMode } from "@/features/podcast/podcastConfig";
+import type { VoiceProvider } from "@/features/tts/elevenLabsConfig";
 
 type Props = {
   geminiApiKey: string;
@@ -30,6 +31,24 @@ type Props = {
   onChangePodcastTurnCount: (turnCount: number) => void;
   onChangePodcastYukitoVoiceName: (voiceName: string) => void;
   onChangePodcastKiyokaVoiceName: (voiceName: string) => void;
+  podcastYukitoVrmLoaded: boolean;
+  podcastKiyokaVrmLoaded: boolean;
+  onLoadPodcastYukitoVrm: (file: File) => void;
+  onLoadPodcastKiyokaVrm: (file: File) => void;
+  onResetPodcastYukitoVrm: () => void;
+  onResetPodcastKiyokaVrm: () => void;
+  voiceProvider: VoiceProvider;
+  onChangeVoiceProvider: (provider: VoiceProvider) => void;
+  elevenLabsApiKey: string;
+  onChangeElevenLabsApiKey: (key: string) => void;
+  elevenLabsAgentId: string;
+  onChangeElevenLabsAgentId: (agentId: string) => void;
+  elevenLabsVoiceId: string;
+  onChangeElevenLabsVoiceId: (voiceId: string) => void;
+  elevenLabsPodcastYukitoVoiceId: string;
+  onChangeElevenLabsPodcastYukitoVoiceId: (voiceId: string) => void;
+  elevenLabsPodcastKiyokaVoiceId: string;
+  onChangeElevenLabsPodcastKiyokaVoiceId: (voiceId: string) => void;
   onChangeMotion: (motionId: BuiltInMotionId) => void;
   onChangeChatLog: (index: number, text: string) => void;
   handleClickResetChatLog: () => void;
@@ -59,6 +78,24 @@ export const Menu = ({
   onChangePodcastTurnCount,
   onChangePodcastYukitoVoiceName,
   onChangePodcastKiyokaVoiceName,
+  podcastYukitoVrmLoaded,
+  podcastKiyokaVrmLoaded,
+  onLoadPodcastYukitoVrm,
+  onLoadPodcastKiyokaVrm,
+  onResetPodcastYukitoVrm,
+  onResetPodcastKiyokaVrm,
+  voiceProvider,
+  onChangeVoiceProvider,
+  elevenLabsApiKey,
+  onChangeElevenLabsApiKey,
+  elevenLabsAgentId,
+  onChangeElevenLabsAgentId,
+  elevenLabsVoiceId,
+  onChangeElevenLabsVoiceId,
+  elevenLabsPodcastYukitoVoiceId,
+  onChangeElevenLabsPodcastYukitoVoiceId,
+  elevenLabsPodcastKiyokaVoiceId,
+  onChangeElevenLabsPodcastKiyokaVoiceId,
   onChangeMotion,
   onChangeChatLog,
   handleClickResetChatLog,
@@ -129,21 +166,21 @@ export const Menu = ({
         <div className="grid grid-flow-col gap-[8px]">
           <IconButton
             iconName="24/Menu"
-            label="Settings"
+            label="設定"
             isProcessing={false}
             onClick={() => setShowSettings(true)}
           />
           {showChatLog ? (
             <IconButton
               iconName="24/CommentOutline"
-              label="Chat Log"
+              label="会話ログ"
               isProcessing={false}
               onClick={() => setShowChatLog(false)}
             />
           ) : (
             <IconButton
               iconName="24/CommentFill"
-              label="Chat Log"
+              label="会話ログ"
               isProcessing={false}
               disabled={chatLog.length <= 0}
               onClick={() => setShowChatLog(true)}
@@ -172,6 +209,24 @@ export const Menu = ({
           onChangePodcastTurnCount={onChangePodcastTurnCount}
           onChangePodcastYukitoVoiceName={onChangePodcastYukitoVoiceName}
           onChangePodcastKiyokaVoiceName={onChangePodcastKiyokaVoiceName}
+          podcastYukitoVrmLoaded={podcastYukitoVrmLoaded}
+          podcastKiyokaVrmLoaded={podcastKiyokaVrmLoaded}
+          onLoadPodcastYukitoVrm={onLoadPodcastYukitoVrm}
+          onLoadPodcastKiyokaVrm={onLoadPodcastKiyokaVrm}
+          onResetPodcastYukitoVrm={onResetPodcastYukitoVrm}
+          onResetPodcastKiyokaVrm={onResetPodcastKiyokaVrm}
+          voiceProvider={voiceProvider}
+          onChangeVoiceProvider={onChangeVoiceProvider}
+          elevenLabsApiKey={elevenLabsApiKey}
+          onChangeElevenLabsApiKey={onChangeElevenLabsApiKey}
+          elevenLabsAgentId={elevenLabsAgentId}
+          onChangeElevenLabsAgentId={onChangeElevenLabsAgentId}
+          elevenLabsVoiceId={elevenLabsVoiceId}
+          onChangeElevenLabsVoiceId={onChangeElevenLabsVoiceId}
+          elevenLabsPodcastYukitoVoiceId={elevenLabsPodcastYukitoVoiceId}
+          onChangeElevenLabsPodcastYukitoVoiceId={onChangeElevenLabsPodcastYukitoVoiceId}
+          elevenLabsPodcastKiyokaVoiceId={elevenLabsPodcastKiyokaVoiceId}
+          onChangeElevenLabsPodcastKiyokaVoiceId={onChangeElevenLabsPodcastKiyokaVoiceId}
           onChangeMotion={onChangeMotion}
           onChangeSystemPrompt={handleChangeSystemPrompt}
           onChangeChatLog={onChangeChatLog}

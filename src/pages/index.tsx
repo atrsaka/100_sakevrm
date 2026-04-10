@@ -25,6 +25,27 @@ import {
 } from "@/features/chat/geminiLiveConfig";
 import { getGeminiLiveChatResponse } from "@/features/chat/geminiLiveChat";
 import {
+  runConvaiTurn,
+  openConvaiSession,
+  type ConvaiSession,
+} from "@/features/elevenlabs/convaiClient";
+import {
+  generatePodcastPersona,
+  buildHostSystemPromptFromPersona,
+  PODCAST_STYLE_GUIDE,
+  type PodcastPersonaPlan,
+} from "@/features/podcast/podcastPersonaDesigner";
+import { PodcastPreflight } from "@/components/podcastPreflight";
+import {
+  DEFAULT_ELEVENLABS_API_KEY,
+  DEFAULT_ELEVENLABS_AGENT_ID,
+  DEFAULT_ELEVENLABS_VOICE_ID,
+  DEFAULT_ELEVENLABS_PODCAST_YUKITO_VOICE_ID,
+  DEFAULT_ELEVENLABS_PODCAST_KIYOKA_VOICE_ID,
+  DEFAULT_VOICE_PROVIDER,
+  type VoiceProvider,
+} from "@/features/tts/elevenLabsConfig";
+import {
   createGeminiLiveAudioRelaySession,
   getGeminiLiveAudioRelayResponse,
   type GeminiLiveAudioRelayResponse,
@@ -115,6 +136,36 @@ export default function Home() {
   const [podcastKiyokaVoiceName, setPodcastKiyokaVoiceName] = useState(
     DEFAULT_PODCAST_PARTICIPANTS.kiyoka.voiceName,
   );
+  const [podcastYukitoVrmUrl, setPodcastYukitoVrmUrl] = useState<string | null>(
+    null,
+  );
+  const [podcastKiyokaVrmUrl, setPodcastKiyokaVrmUrl] = useState<string | null>(
+    null,
+  );
+  const [voiceProvider, setVoiceProvider] = useState<VoiceProvider>(
+    DEFAULT_VOICE_PROVIDER,
+  );
+  const [elevenLabsApiKey, setElevenLabsApiKey] = useState(
+    DEFAULT_ELEVENLABS_API_KEY,
+  );
+  const [elevenLabsAgentId, setElevenLabsAgentId] = useState(
+    DEFAULT_ELEVENLABS_AGENT_ID,
+  );
+  const [elevenLabsVoiceId, setElevenLabsVoiceId] = useState(
+    DEFAULT_ELEVENLABS_VOICE_ID,
+  );
+  const [elevenLabsPodcastYukitoVoiceId, setElevenLabsPodcastYukitoVoiceId] =
+    useState(DEFAULT_ELEVENLABS_PODCAST_YUKITO_VOICE_ID);
+  const [elevenLabsPodcastKiyokaVoiceId, setElevenLabsPodcastKiyokaVoiceId] =
+    useState(DEFAULT_ELEVENLABS_PODCAST_KIYOKA_VOICE_ID);
+  const [podcastPreflightOpen, setPodcastPreflightOpen] = useState(false);
+  const [podcastPreflightTopic, setPodcastPreflightTopic] = useState("");
+  const [podcastPreflightPersona, setPodcastPreflightPersona] =
+    useState<PodcastPersonaPlan | null>(null);
+  const [podcastPreflightLoading, setPodcastPreflightLoading] = useState(false);
+  const [podcastPreflightError, setPodcastPreflightError] =
+    useState<string | null>(null);
+  const podcastPersonaRef = useRef<PodcastPersonaPlan | null>(null);
   const [selectedMotionId, setSelectedMotionId] = useState<BuiltInMotionId>(
     DEFAULT_BUILT_IN_MOTION_ID,
   );
@@ -222,6 +273,31 @@ export default function Home() {
             : DEFAULT_PODCAST_PARTICIPANTS.kiyoka.voiceName,
         );
         if (
+          params.voiceProvider === "gemini" ||
+          params.voiceProvider === "elevenlabs"
+        ) {
+          setVoiceProvider(params.voiceProvider);
+        }
+        if (typeof params.elevenLabsApiKey === "string") {
+          setElevenLabsApiKey(params.elevenLabsApiKey);
+        }
+        if (typeof params.elevenLabsAgentId === "string") {
+          setElevenLabsAgentId(params.elevenLabsAgentId);
+        }
+        if (typeof params.elevenLabsVoiceId === "string") {
+          setElevenLabsVoiceId(params.elevenLabsVoiceId);
+        }
+        if (typeof params.elevenLabsPodcastYukitoVoiceId === "string") {
+          setElevenLabsPodcastYukitoVoiceId(
+            params.elevenLabsPodcastYukitoVoiceId,
+          );
+        }
+        if (typeof params.elevenLabsPodcastKiyokaVoiceId === "string") {
+          setElevenLabsPodcastKiyokaVoiceId(
+            params.elevenLabsPodcastKiyokaVoiceId,
+          );
+        }
+        if (
           typeof params.selectedMotionId === "string" &&
           isBuiltInMotionId(params.selectedMotionId)
         ) {
@@ -316,6 +392,12 @@ export default function Home() {
         selectedYoutubeBroadcastId,
         isYoutubeRelayMode,
         isYoutubeAutoReplyEnabled,
+        voiceProvider,
+        elevenLabsApiKey,
+        elevenLabsAgentId,
+        elevenLabsVoiceId,
+        elevenLabsPodcastYukitoVoiceId,
+        elevenLabsPodcastKiyokaVoiceId,
       }),
     );
   }, [
@@ -333,6 +415,12 @@ export default function Home() {
     selectedYoutubeBroadcastId,
     isYoutubeRelayMode,
     isYoutubeAutoReplyEnabled,
+    voiceProvider,
+    elevenLabsApiKey,
+    elevenLabsAgentId,
+    elevenLabsVoiceId,
+    elevenLabsPodcastYukitoVoiceId,
+    elevenLabsPodcastKiyokaVoiceId,
   ]);
 
   useEffect(() => {
@@ -382,7 +470,40 @@ export default function Home() {
   const podcastParticipants = buildRuntimePodcastParticipants({
     yukitoVoiceName: podcastYukitoVoiceName,
     kiyokaVoiceName: podcastKiyokaVoiceName,
+    yukitoVrmPath: podcastYukitoVrmUrl ?? undefined,
+    kiyokaVrmPath: podcastKiyokaVrmUrl ?? undefined,
   });
+
+  const handleLoadPodcastYukitoVrm = useCallback((file: File) => {
+    const url = window.URL.createObjectURL(
+      new Blob([file], { type: "application/octet-stream" }),
+    );
+    setPodcastYukitoVrmUrl((prev) => {
+      if (prev) window.URL.revokeObjectURL(prev);
+      return url;
+    });
+  }, []);
+  const handleLoadPodcastKiyokaVrm = useCallback((file: File) => {
+    const url = window.URL.createObjectURL(
+      new Blob([file], { type: "application/octet-stream" }),
+    );
+    setPodcastKiyokaVrmUrl((prev) => {
+      if (prev) window.URL.revokeObjectURL(prev);
+      return url;
+    });
+  }, []);
+  const handleResetPodcastYukitoVrm = useCallback(() => {
+    setPodcastYukitoVrmUrl((prev) => {
+      if (prev) window.URL.revokeObjectURL(prev);
+      return null;
+    });
+  }, []);
+  const handleResetPodcastKiyokaVrm = useCallback(() => {
+    setPodcastKiyokaVrmUrl((prev) => {
+      if (prev) window.URL.revokeObjectURL(prev);
+      return null;
+    });
+  }, []);
 
   const getExternalControlState = useCallback(
     (): GeminiVrmExternalControlState => {
@@ -484,7 +605,11 @@ export default function Home() {
       setChatProcessing(true);
       setAssistantSpeakerName("CHARACTER");
       setAssistantMessage("");
-      setAssistantStatus("Connecting to Gemini Live...");
+      setAssistantStatus(
+        voiceProvider === "elevenlabs"
+          ? "Gemini テキスト生成中..."
+          : "Connecting to Gemini Live...",
+      );
 
       const messageLog: Message[] = [
         ...chatLogRef.current,
@@ -496,6 +621,78 @@ export default function Home() {
       const activeModel = viewer.model;
       let hasStartedAudio = false;
 
+      // --- ElevenLabs (ConvAI Agent) 経路 ---
+      if (voiceProvider === "elevenlabs") {
+        try {
+          if (!elevenLabsAgentId) {
+            throw new Error("ElevenLabs Agent ID を設定してください。");
+          }
+          if (!elevenLabsVoiceId) {
+            throw new Error("ElevenLabs の voice を選択してください。");
+          }
+
+          setAssistantStatus("ElevenLabs Agent に接続中...");
+          await activeModel?.beginStreamingSpeak(screenplay);
+
+          const result = await runConvaiTurn({
+            agentId: elevenLabsAgentId,
+            apiKey: elevenLabsApiKey || undefined,
+            userText: trimmedContent,
+            overrides: {
+              systemPrompt: [
+                systemPrompt,
+                "重要: 必ず日本語 1〜2 文、最大 40 文字程度のごく短い応答に収めてください。相槌やテンポ優先で、長い説明や列挙は禁止です。",
+              ].join("\n\n"),
+              voiceId: elevenLabsVoiceId,
+              language: "ja",
+              firstMessage: "",
+            },
+            onPartialTranscript: (partial) => {
+              setAssistantMessage(partial);
+            },
+            onAudioChunk: (chunk, mimeType) => {
+              if (!hasStartedAudio) {
+                hasStartedAudio = true;
+                setAssistantStatus("Playing audio...");
+              }
+              activeModel?.appendPCMChunk(chunk, mimeType);
+            },
+          });
+
+          const finalText = result.transcript || "(no transcript)";
+          const updatedChatLog = [
+            ...messageLog,
+            {
+              role: "assistant" as const,
+              content: finalText,
+              source: "assistant" as const,
+              name: "CHARACTER",
+            },
+          ];
+          chatLogRef.current = updatedChatLog;
+          setChatLog(updatedChatLog);
+          setAssistantMessage(finalText);
+
+          await activeModel?.finishStreamingSpeak();
+          setAssistantStatus("");
+          return true;
+        } catch (error) {
+          activeModel?.stopSpeaking();
+          console.error(error);
+          setAssistantStatus("Error");
+          setAssistantMessage(
+            error instanceof Error
+              ? error.message
+              : "ElevenLabs ConvAI request failed.",
+          );
+          return false;
+        } finally {
+          chatProcessingRef.current = false;
+          setChatProcessing(false);
+        }
+      }
+
+      // --- Gemini Live (既定) 経路 ---
       try {
         await activeModel?.beginStreamingSpeak(screenplay);
 
@@ -554,7 +751,17 @@ export default function Home() {
         setChatProcessing(false);
       }
     },
-    [geminiApiKey, geminiModel, geminiVoiceName, systemPrompt, viewer.model],
+    [
+      geminiApiKey,
+      geminiModel,
+      geminiVoiceName,
+      systemPrompt,
+      viewer.model,
+      voiceProvider,
+      elevenLabsApiKey,
+      elevenLabsAgentId,
+      elevenLabsVoiceId,
+    ],
   );
 
   const startPodcastConversation = useCallback(
@@ -582,6 +789,203 @@ export default function Home() {
           `${podcastParticipants[missingSpeaker].displayName} is not ready yet.`,
         );
         return false;
+      }
+
+      // --- ElevenLabs (ConvAI Agent) 経路 ---
+      const runElevenLabsPodcast = async (
+        topicText: string,
+      ): Promise<boolean> => {
+        if (!elevenLabsAgentId) {
+          setAssistantStatus("Error");
+          setAssistantMessage("ElevenLabs Agent ID を設定してください。");
+          return false;
+        }
+        const voiceIdByHost: Record<PodcastSpeakerId, string> = {
+          yukito: elevenLabsPodcastYukitoVoiceId,
+          kiyoka: elevenLabsPodcastKiyokaVoiceId,
+        };
+        if (!voiceIdByHost.yukito || !voiceIdByHost.kiyoka) {
+          setAssistantStatus("Error");
+          setAssistantMessage(
+            "Yukito と Kiyoka 両方に ElevenLabs voice を設定してください。",
+          );
+          return false;
+        }
+
+        const runToken = ++podcastRunTokenRef.current;
+        podcastTurnsRef.current = [];
+        setPodcastLog([]);
+        chatProcessingRef.current = true;
+        setChatProcessing(true);
+        setAssistantSpeakerName("");
+        setAssistantMessage("");
+        setAssistantStatus("ElevenLabs Agent に接続中...");
+
+        const transcriptHistory: {
+          speakerId: PodcastSpeakerId;
+          text: string;
+        }[] = [];
+        const turnCount = podcastTurnCount;
+
+        // 各ホスト用に override system prompt を組み立てる
+        const buildHostOverridePrompt = (
+          turnSpeakerId: PodcastSpeakerId,
+        ): string => {
+          const turnSpeaker = podcastParticipants[turnSpeakerId];
+          const turnPartnerId: PodcastSpeakerId =
+            turnSpeakerId === "yukito" ? "kiyoka" : "yukito";
+          const turnPartner = podcastParticipants[turnPartnerId];
+
+          const persona = podcastPersonaRef.current;
+          const personaPrompt = persona
+            ? buildHostSystemPromptFromPersona(
+                persona,
+                turnSpeakerId,
+                turnSpeaker.displayName,
+                turnPartner.displayName,
+              )
+            : null;
+
+          if (personaPrompt) return personaPrompt;
+
+          return [
+            turnSpeaker.systemPrompt,
+            `あなたはポッドキャスト番組のホスト ${turnSpeaker.displayName} です。相手のホストは ${turnPartner.displayName} です。`,
+            "次に届く user_message は、相手の発話か番組冒頭のトピックです。",
+            PODCAST_STYLE_GUIDE,
+          ]
+            .filter(Boolean)
+            .join("\n\n");
+        };
+
+        // 各ホスト用 ConvAI セッションを並列で open
+        // 接続 + init オーバーヘッドはここで一度だけ。あとは sendTurn を回すだけ。
+        const sessions: Partial<Record<PodcastSpeakerId, ConvaiSession>> = {};
+
+        try {
+          const [yukitoSession, kiyokaSession] = await Promise.all([
+            openConvaiSession({
+              agentId: elevenLabsAgentId,
+              apiKey: elevenLabsApiKey || undefined,
+              overrides: {
+                systemPrompt: buildHostOverridePrompt("yukito"),
+                voiceId: voiceIdByHost.yukito,
+                language: "ja",
+                firstMessage: "",
+              },
+            }),
+            openConvaiSession({
+              agentId: elevenLabsAgentId,
+              apiKey: elevenLabsApiKey || undefined,
+              overrides: {
+                systemPrompt: buildHostOverridePrompt("kiyoka"),
+                voiceId: voiceIdByHost.kiyoka,
+                language: "ja",
+                firstMessage: "",
+              },
+            }),
+          ]);
+          sessions.yukito = yukitoSession;
+          sessions.kiyoka = kiyokaSession;
+
+          for (let i = 0; i < turnCount; i += 1) {
+            if (runToken !== podcastRunTokenRef.current) {
+              return false;
+            }
+
+            const speakerId: PodcastSpeakerId =
+              i % 2 === 0 ? "yukito" : "kiyoka";
+            const speaker = podcastParticipants[speakerId];
+            const speakerViewer = podcastViewerRegistryRef.current[speakerId];
+            const speakerModel = speakerViewer?.model;
+            const session = sessions[speakerId];
+
+            if (!session) {
+              throw new Error(
+                `${speaker.displayName} のセッションが開かれていません。`,
+              );
+            }
+
+            setActivePodcastSpeakerId(speakerId);
+            setAssistantSpeakerName(speaker.displayName);
+            setAssistantStatus(`${speaker.displayName}: 応答生成中...`);
+            setAssistantMessage("");
+
+            // ターンごとに渡すユーザー発話: 冒頭 / 中盤 / 最終で内容を変える
+            const isFirstTurn = i === 0;
+            const isLastTurn = i === turnCount - 1;
+            const partnerLastText =
+              transcriptHistory[transcriptHistory.length - 1]?.text ?? "";
+
+            let userText: string;
+            if (isFirstTurn) {
+              userText = `【番組の最初のターンです】今日のトピック: ${topicText}。${speaker.displayName} として番組っぽく自然に切り出してください。`;
+            } else if (isLastTurn) {
+              userText = `${partnerLastText}\n\n【これが最後のターンです】番組を自然に締めてください。リスナーにコメントや感想を促して終わってください。`;
+            } else {
+              userText = partnerLastText;
+            }
+
+            await speakerModel?.beginStreamingSpeak(createNeutralScreenplay(""));
+
+            const result = await session.sendTurn({
+              userText,
+              onPartialTranscript: (partial) => {
+                setAssistantMessage(partial);
+              },
+              onAudioChunk: (chunk, mimeType) => {
+                speakerModel?.appendPCMChunk(chunk, mimeType);
+              },
+            });
+
+            await speakerModel?.finishStreamingSpeak();
+
+            const finalText = result.transcript || "(no transcript)";
+            transcriptHistory.push({ speakerId, text: finalText });
+            setPodcastLog((prev) => [
+              ...prev,
+              {
+                role: "assistant" as const,
+                content: finalText,
+                name: speaker.displayName,
+                source: "podcast" as const,
+              },
+            ]);
+            setAssistantMessage(finalText);
+          }
+
+          setActivePodcastSpeakerId(null);
+          setAssistantStatus("");
+          return true;
+        } catch (error) {
+          console.error(error);
+          setAssistantStatus("Error");
+          setAssistantMessage(
+            error instanceof Error
+              ? error.message
+              : "ElevenLabs podcast failed.",
+          );
+          return false;
+        } finally {
+          // 開いた ConvAI セッションをすべて閉じる
+          for (const speakerId of PODCAST_SPEAKER_IDS) {
+            const session = sessions[speakerId];
+            if (session && !session.closed) {
+              try {
+                session.close("podcast finished");
+              } catch {
+                // ignore
+              }
+            }
+          }
+          chatProcessingRef.current = false;
+          setChatProcessing(false);
+          setActivePodcastSpeakerId(null);
+        }
+      };
+
+      if (voiceProvider === "elevenlabs") {
+        return runElevenLabsPodcast(trimmedTopic);
       }
 
       const relayMode = resolvePodcastRelayMode();
@@ -1234,8 +1638,70 @@ export default function Home() {
       geminiModel,
       podcastParticipants,
       podcastTurnCount,
+      voiceProvider,
+      elevenLabsApiKey,
+      elevenLabsAgentId,
+      elevenLabsPodcastYukitoVoiceId,
+      elevenLabsPodcastKiyokaVoiceId,
     ],
   );
+
+  const openPodcastPreflight = useCallback(
+    async (topic: string) => {
+      const trimmedTopic = topic.trim();
+      if (!trimmedTopic) return;
+      if (!geminiApiKey) {
+        setAssistantStatus("Error");
+        setAssistantMessage(
+          "Persona 生成には Gemini API キーが必要です。",
+        );
+        return;
+      }
+      setPodcastPreflightTopic(trimmedTopic);
+      setPodcastPreflightOpen(true);
+      setPodcastPreflightLoading(true);
+      setPodcastPreflightError(null);
+      setPodcastPreflightPersona(null);
+      try {
+        const persona = await generatePodcastPersona({
+          apiKey: geminiApiKey,
+          topic: trimmedTopic,
+          yukitoDisplayName: podcastParticipants.yukito.displayName,
+          kiyokaDisplayName: podcastParticipants.kiyoka.displayName,
+        });
+        setPodcastPreflightPersona(persona);
+      } catch (error) {
+        setPodcastPreflightError(
+          error instanceof Error ? error.message : String(error),
+        );
+      } finally {
+        setPodcastPreflightLoading(false);
+      }
+    },
+    [geminiApiKey, podcastParticipants],
+  );
+
+  const handleConfirmPodcastPreflight = useCallback(async () => {
+    if (!podcastPreflightPersona) return;
+    podcastPersonaRef.current = podcastPreflightPersona;
+    const topic = podcastPreflightTopic;
+    setPodcastPreflightOpen(false);
+    await startPodcastConversation(topic);
+  }, [
+    podcastPreflightPersona,
+    podcastPreflightTopic,
+    startPodcastConversation,
+  ]);
+
+  const handleCancelPodcastPreflight = useCallback(() => {
+    setPodcastPreflightOpen(false);
+    setPodcastPreflightPersona(null);
+    setPodcastPreflightError(null);
+  }, []);
+
+  const handleRegeneratePodcastPreflight = useCallback(() => {
+    void openPodcastPreflight(podcastPreflightTopic);
+  }, [openPodcastPreflight, podcastPreflightTopic]);
 
   const handleSendChat = useCallback(
     async (text: string) => {
@@ -1244,6 +1710,12 @@ export default function Home() {
       }
 
       if (interactionMode === "podcast") {
+        // ElevenLabs 経路では先に preflight でキャラ&世界観を生成する
+        if (voiceProvider === "elevenlabs") {
+          await openPodcastPreflight(text);
+          return;
+        }
+        podcastPersonaRef.current = null;
         await startPodcastConversation(text);
         return;
       }
@@ -1255,7 +1727,13 @@ export default function Home() {
         name: "YOU",
       });
     },
-    [interactionMode, startChatTurn, startPodcastConversation],
+    [
+      interactionMode,
+      voiceProvider,
+      openPodcastPreflight,
+      startChatTurn,
+      startPodcastConversation,
+    ],
   );
 
   const dispatchExternalControlCommand = useCallback(
@@ -1903,6 +2381,18 @@ export default function Home() {
         geminiApiKey={geminiApiKey}
         onChangeGeminiApiKey={setGeminiApiKey}
       />
+      {podcastPreflightOpen && (
+        <PodcastPreflight
+          topic={podcastPreflightTopic}
+          persona={podcastPreflightPersona}
+          loading={podcastPreflightLoading}
+          error={podcastPreflightError}
+          onChangePersona={setPodcastPreflightPersona}
+          onRegenerate={handleRegeneratePodcastPreflight}
+          onCancel={handleCancelPodcastPreflight}
+          onConfirm={handleConfirmPodcastPreflight}
+        />
+      )}
       {interactionMode === "podcast" ? (
         <PodcastStage
           participants={[podcastParticipants.yukito, podcastParticipants.kiyoka]}
@@ -1940,6 +2430,24 @@ export default function Home() {
         }
         onChangePodcastYukitoVoiceName={setPodcastYukitoVoiceName}
         onChangePodcastKiyokaVoiceName={setPodcastKiyokaVoiceName}
+        podcastYukitoVrmLoaded={podcastYukitoVrmUrl != null}
+        podcastKiyokaVrmLoaded={podcastKiyokaVrmUrl != null}
+        onLoadPodcastYukitoVrm={handleLoadPodcastYukitoVrm}
+        onLoadPodcastKiyokaVrm={handleLoadPodcastKiyokaVrm}
+        onResetPodcastYukitoVrm={handleResetPodcastYukitoVrm}
+        onResetPodcastKiyokaVrm={handleResetPodcastKiyokaVrm}
+        voiceProvider={voiceProvider}
+        onChangeVoiceProvider={setVoiceProvider}
+        elevenLabsApiKey={elevenLabsApiKey}
+        onChangeElevenLabsApiKey={setElevenLabsApiKey}
+        elevenLabsAgentId={elevenLabsAgentId}
+        onChangeElevenLabsAgentId={setElevenLabsAgentId}
+        elevenLabsVoiceId={elevenLabsVoiceId}
+        onChangeElevenLabsVoiceId={setElevenLabsVoiceId}
+        elevenLabsPodcastYukitoVoiceId={elevenLabsPodcastYukitoVoiceId}
+        onChangeElevenLabsPodcastYukitoVoiceId={setElevenLabsPodcastYukitoVoiceId}
+        elevenLabsPodcastKiyokaVoiceId={elevenLabsPodcastKiyokaVoiceId}
+        onChangeElevenLabsPodcastKiyokaVoiceId={setElevenLabsPodcastKiyokaVoiceId}
         onChangeMotion={setSelectedMotionId}
         onChangeSystemPrompt={setSystemPrompt}
         onChangeChatLog={handleChangeChatLog}
@@ -2090,7 +2598,7 @@ function clampPodcastTurnCount(value: unknown): number {
     return DEFAULT_PODCAST_TURN_COUNT;
   }
 
-  return Math.min(Math.max(parsed, 2), 12);
+  return Math.min(Math.max(parsed, 2), 30);
 }
 
 function resolveExternalVoiceName(value: string, fallback: string): string {
@@ -2100,20 +2608,26 @@ function resolveExternalVoiceName(value: string, fallback: string): string {
 function buildRuntimePodcastParticipants({
   yukitoVoiceName,
   kiyokaVoiceName,
+  yukitoVrmPath,
+  kiyokaVrmPath,
 }: {
   yukitoVoiceName: string;
   kiyokaVoiceName: string;
+  yukitoVrmPath?: string;
+  kiyokaVrmPath?: string;
 }): Record<PodcastSpeakerId, PodcastParticipant> {
   return {
     yukito: {
       ...DEFAULT_PODCAST_PARTICIPANTS.yukito,
       voiceName:
         yukitoVoiceName.trim() || DEFAULT_PODCAST_PARTICIPANTS.yukito.voiceName,
+      vrmPath: yukitoVrmPath || DEFAULT_PODCAST_PARTICIPANTS.yukito.vrmPath,
     },
     kiyoka: {
       ...DEFAULT_PODCAST_PARTICIPANTS.kiyoka,
       voiceName:
         kiyokaVoiceName.trim() || DEFAULT_PODCAST_PARTICIPANTS.kiyoka.voiceName,
+      vrmPath: kiyokaVrmPath || DEFAULT_PODCAST_PARTICIPANTS.kiyoka.vrmPath,
     },
   };
 }
